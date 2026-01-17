@@ -1,0 +1,143 @@
+---
+// src/components/store/StoreTemplate.astro
+/**
+ * StoreTemplate
+ * Renders a store storefront for:
+ * - live preview (create-store)
+ * - public store page (/store/[slug])
+ */
+
+const {
+  store = {},
+  theme = {},
+  products = [],
+  isPreview = false,
+} = Astro.props;
+
+// Defensive defaults
+const safeStore = {
+  name: store.name ?? 'Your Store Name',
+  tagline: store.tagline ?? 'A short soulful tagline',
+  about: store.about ?? 'Tell customers about your craft, your journey, and what makes you special.',
+  logo: store.logo ?? null,
+};
+
+// Support both preview theme (flat) and DB theme (nested under colors)
+const colors = theme.colors ?? {
+  primary: theme.primary ?? '#CD5C5C',
+  secondary: theme.secondary ?? '#f5f5f0',
+  background: theme.background ?? '#FFFDF5',
+  text: theme.text ?? '#0e1b19',
+};
+---
+
+<div
+  class="store-template"
+  data-preview={isPreview}
+  style={`background-color: ${colors.background}; color: ${colors.text};`}
+>
+  <!-- Header -->
+  <header class="store-header" style={`background-color: ${colors.primary};`}>
+    <div class="store-header-content">
+      <div class="store-logo">
+        {safeStore.logo ? (
+          <img src={safeStore.logo} alt={safeStore.name} />
+        ) : (
+          <span class="store-logo-initial">
+            {safeStore.name.charAt(0) || 'Y'}
+          </span>
+        )}
+      </div>
+
+      <h1 class="store-name">{safeStore.name}</h1>
+
+      <nav class="store-nav">
+        <span>Shop</span>
+        <span>About</span>
+        <span>Cart (0)</span>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="store-hero">
+    <h2 class="store-tagline">{safeStore.tagline}</h2>
+
+    <div class="store-about-preview">
+      <p>
+        {safeStore.about.substring(0, 180)}
+        {safeStore.about.length > 180 && '...'}
+      </p>
+
+      <button
+        class="hero-cta"
+        style={`background-color: ${colors.primary};`}
+        disabled={isPreview}
+      >
+        Explore Collection
+      </button>
+    </div>
+  </section>
+
+  <!-- Products -->
+  <section class="store-products">
+    <div class="products-header">
+      <h3>Signature Collection</h3>
+      <span class="view-all">View All</span>
+    </div>
+
+    <div class="products-grid">
+      {products.length > 0 ? (
+        products.map((product) => (
+          <div class="product-card">
+            <div class="product-image">
+              <img src={product.image} alt={product.name} />
+              {product.badge && (
+                <span class="product-badge">{product.badge}</span>
+              )}
+            </div>
+
+            <h4 class="product-name">{product.name}</h4>
+
+            <div class="product-footer">
+              <span class="product-price">${product.price.toFixed(2)}</span>
+              <button
+                class="product-add"
+                style={`color: ${colors.primary};`}
+                disabled
+              >
+                <span class="add-icon">+</span>
+              </button>
+            </div>
+          </div>
+        ))
+      ) : (
+        <div class="products-empty">
+          <p>Your products will appear here once you add them.</p>
+        </div>
+      )}
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="store-footer" style={`background-color: ${colors.secondary};`}>
+    <div class="footer-content">
+      <div class="footer-logo">{safeStore.name.charAt(0) || 'Y'}</div>
+
+      <p class="footer-about">
+        {safeStore.about.substring(0, 120)}
+        {safeStore.about.length > 120 && '...'}
+      </p>
+
+      <div class="footer-social">
+        <span class="social-icon">🌐</span>
+        <span class="social-icon">✉</span>
+        <span class="social-icon">💬</span>
+      </div>
+
+      <p class="footer-credit">
+        © 2024 {safeStore.name}. Crafted with Panchasara.
+      </p>
+    </div>
+  </footer>
+</div>

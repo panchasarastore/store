@@ -1,0 +1,387 @@
+---
+import StoreTemplate from '../components/store/StoreTemplate.astro';
+
+// Placeholder preview data - in production this would come from form state
+const previewData = {
+  storeName: "The Sourdough Studio",
+  tagline: "Slow-fermented love from my heart to yours",
+  about: "Every loaf I bake is a 48-hour labor of love. I began my journey in a small kitchen in Tuscany, learning the ancient art of wild yeast fermentation. Today, I bring that same patience and purity to your morning table.",
+  storeUrl: "sourdoughstudio",
+  category: "Sourdough Baking",
+  colors: {
+    primary: "#CD5C5C",
+    secondary: "#14b89c",
+    background: "#FFFDF5",
+    text: "#0e1b19"
+  },
+  fonts: {
+    heading: "Playfair Display",
+    body: "Plus Jakarta Sans"
+  },
+  template: "classic",
+  contact: {
+    email: "",
+    whatsapp: "",
+    instagram: "",
+    facebook: ""
+  },
+  whatsappEnabled: true
+};
+---
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Your Store - Panchasara</title>
+  <link rel="stylesheet" href="/styles/create-store.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="page-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <div class="logo-icon">
+          <svg fill="currentColor" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+            <path clip-rule="evenodd" d="M24 0.757355L47.2426 24L24 47.2426L0.757355 24L24 0.757355ZM21 35.7574V12.2426L9.24264 24L21 35.7574Z" fill-rule="evenodd"></path>
+          </svg>
+        </div>
+        <h2 class="logo-text">Panchasara</h2>
+      </div>
+      <div class="header-right">
+        <nav class="header-nav">
+          <a href="#" class="nav-link">Help Center</a>
+          <a href="#" class="nav-link">Community</a>
+        </nav>
+        <button class="btn-save">Save & Exit</button>
+        <div class="profile-pic"></div>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <!-- Left Panel: Form -->
+      <div class="form-panel">
+        <div class="form-container">
+          <!-- Progress Bar -->
+          <div class="progress-section">
+            <div class="progress-header">
+              <span class="progress-step">Step 2 of 4</span>
+              <span class="progress-percentage">45% Complete</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: 45%;"></div>
+            </div>
+          </div>
+
+          <form class="store-form">
+            <!-- Section 1: Store Basics -->
+            <section class="form-section">
+              <h2 class="section-title">Store Basics</h2>
+              <p class="section-description">Let's start with the essentials of your artisan brand.</p>
+              
+              <div class="form-fields">
+                <div class="field-group">
+                  <label class="field-label">Store Name *</label>
+                  <input 
+                    type="text" 
+                    class="field-input" 
+                    placeholder="e.g., The Sourdough Studio"
+                    value="The Sourdough Studio"
+                    required
+                  >
+                </div>
+
+                <div class="field-group">
+                  <label class="field-label">Store URL Slug *</label>
+                  <div class="url-input-group">
+                    <span class="url-prefix">panchasara.com/</span>
+                    <input 
+                      type="text" 
+                      class="field-input url-slug" 
+                      placeholder="your-store-name"
+                      value="sourdoughstudio"
+                      required
+                    >
+                  </div>
+                </div>
+
+                <div class="field-group">
+                  <label class="field-label">Artisan Category</label>
+                  <select class="field-select">
+                    <option>Sourdough Baking</option>
+                    <option>Handmade Ceramics</option>
+                    <option>Textile Arts</option>
+                    <option>Botanical Design</option>
+                  </select>
+                </div>
+              </div>
+            </section>
+
+            <!-- Section 2: Brand Voice -->
+            <section class="form-section">
+              <h2 class="section-title">Brand Voice</h2>
+              <p class="section-description">Your story is what connects you to your customers. Make it soulful.</p>
+              
+              <div class="form-fields">
+                <div class="field-group">
+                  <label class="field-label">Brand Tagline</label>
+                  <input 
+                    type="text" 
+                    class="field-input" 
+                    placeholder="e.g., Slow-fermented love from my kitchen to yours"
+                    value="Slow-fermented love from my heart to yours"
+                  >
+                </div>
+
+                <div class="field-group">
+                  <label class="field-label">About the Store</label>
+                  <textarea 
+                    class="field-textarea" 
+                    rows="5"
+                    placeholder="Tell your story..."
+                  >Every loaf I bake is a 48-hour labor of love. I began my journey in a small kitchen in Tuscany, learning the ancient art of wild yeast fermentation. Today, I bring that same patience and purity to your morning table.</textarea>
+                </div>
+              </div>
+            </section>
+
+            <!-- Section 3: Visual Identity - Colors -->
+            <section class="form-section">
+              <h2 class="section-title">Visual Identity - Colors</h2>
+              <p class="section-description">Choose colors that represent your brand.</p>
+              
+              <div class="color-grid">
+                <div class="field-group">
+                  <label class="field-label">Primary Color</label>
+                  <div class="color-picker">
+                    <div class="color-preview" style="background-color: #CD5C5C;"></div>
+                    <input type="color" value="#CD5C5C" class="color-input">
+                    <span class="color-code">#CD5C5C</span>
+                  </div>
+                </div>
+
+                <div class="field-group">
+                  <label class="field-label">Secondary Color</label>
+                  <div class="color-picker">
+                    <div class="color-preview" style="background-color: #14b89c;"></div>
+                    <input type="color" value="#14b89c" class="color-input">
+                    <span class="color-code">#14b89c</span>
+                  </div>
+                </div>
+
+                <div class="field-group">
+                  <label class="field-label">Background Color</label>
+                  <div class="color-picker">
+                    <div class="color-preview" style="background-color: #FFFDF5;"></div>
+                    <input type="color" value="#FFFDF5" class="color-input">
+                    <span class="color-code">#FFFDF5</span>
+                  </div>
+                </div>
+
+                <div class="field-group">
+                  <label class="field-label">Text Color</label>
+                  <div class="color-picker">
+                    <div class="color-preview" style="background-color: #0e1b19;"></div>
+                    <input type="color" value="#0e1b19" class="color-input">
+                    <span class="color-code">#0e1b19</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Section 4: Visual Identity - Fonts -->
+            <section class="form-section">
+              <h2 class="section-title">Visual Identity - Fonts</h2>
+              <p class="section-description">Select a font pairing for your store.</p>
+              
+              <div class="font-presets">
+                <label class="font-preset-card active">
+                  <input type="radio" name="font-preset" value="classic" checked>
+                  <div class="preset-content">
+                    <span class="preset-name">Classic</span>
+                    <div class="preset-preview">
+                      <span class="preview-heading">Playfair Display</span>
+                      <span class="preview-body">Plus Jakarta Sans</span>
+                    </div>
+                  </div>
+                </label>
+
+                <label class="font-preset-card">
+                  <input type="radio" name="font-preset" value="modern">
+                  <div class="preset-content">
+                    <span class="preset-name">Modern</span>
+                    <div class="preset-preview">
+                      <span class="preview-heading">Poppins</span>
+                      <span class="preview-body">Inter</span>
+                    </div>
+                  </div>
+                </label>
+
+                <label class="font-preset-card">
+                  <input type="radio" name="font-preset" value="earthy">
+                  <div class="preset-content">
+                    <span class="preset-name">Earthy</span>
+                    <div class="preset-preview">
+                      <span class="preview-heading">Cormorant Garamond</span>
+                      <span class="preview-body">Source Serif 4</span>
+                    </div>
+                  </div>
+                </label>
+
+                <label class="font-preset-card">
+                  <input type="radio" name="font-preset" value="minimal">
+                  <div class="preset-content">
+                    <span class="preset-name">Minimal</span>
+                    <div class="preset-preview">
+                      <span class="preview-heading">Inter</span>
+                      <span class="preview-body">Inter</span>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </section>
+
+            <!-- Section 5: Store Template -->
+            <section class="form-section">
+              <h2 class="section-title">Store Template</h2>
+              <p class="section-description">Choose a layout style for your storefront.</p>
+              
+              <div class="template-options">
+                <label class="template-card active">
+                  <input type="radio" name="template" value="classic" checked>
+                  <div class="template-preview">
+                    <div class="template-mockup classic-mockup"></div>
+                  </div>
+                  <span class="template-name">Classic</span>
+                </label>
+
+                <label class="template-card">
+                  <input type="radio" name="template" value="minimal">
+                  <div class="template-preview">
+                    <div class="template-mockup minimal-mockup"></div>
+                  </div>
+                  <span class="template-name">Minimal</span>
+                </label>
+
+                <label class="template-card">
+                  <input type="radio" name="template" value="bold">
+                  <div class="template-preview">
+                    <div class="template-mockup bold-mockup"></div>
+                  </div>
+                  <span class="template-name">Bold</span>
+                </label>
+              </div>
+            </section>
+
+            <!-- Section 6: Logo Upload -->
+            <section class="form-section">
+              <h2 class="section-title">Logo Upload</h2>
+              <p class="section-description">Add your brand logo (optional).</p>
+              
+              <div class="logo-upload">
+                <div class="upload-area">
+                  <span class="material-symbols-outlined upload-icon">upload</span>
+                  <p class="upload-text">Click to upload or drag and drop</p>
+                  <p class="upload-hint">PNG, JPG or SVG (max. 2MB)</p>
+                  <input type="file" class="file-input" accept="image/*">
+                </div>
+              </div>
+            </section>
+
+            <!-- Section 7: Contact & Social -->
+            <section class="form-section">
+              <h2 class="section-title">Connect</h2>
+              <p class="section-description">How can customers reach you for custom orders?</p>
+              
+              <div class="form-fields">
+                <div class="field-group">
+                  <label class="field-label">Contact Email</label>
+                  <input 
+                    type="email" 
+                    class="field-input" 
+                    placeholder="hello@yourstore.com"
+                  >
+                </div>
+
+                <div class="field-group">
+                  <label class="field-label">WhatsApp Number</label>
+                  <input 
+                    type="tel" 
+                    class="field-input" 
+                    placeholder="+91 98765 43210"
+                  >
+                </div>
+
+                <div class="field-group">
+                  <label class="field-label">Instagram URL</label>
+                  <input 
+                    type="url" 
+                    class="field-input" 
+                    placeholder="https://instagram.com/yourstore"
+                  >
+                </div>
+
+                <div class="field-group">
+                  <label class="field-label">Facebook URL</label>
+                  <input 
+                    type="url" 
+                    class="field-input" 
+                    placeholder="https://facebook.com/yourstore"
+                  >
+                </div>
+
+                <div class="whatsapp-toggle">
+                  <div class="toggle-info">
+                    <span class="material-symbols-outlined toggle-icon">chat</span>
+                    <div>
+                      <p class="toggle-title">WhatsApp Integration</p>
+                      <p class="toggle-subtitle">Enable direct chat orders</p>
+                    </div>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+            </section>
+          </form>
+
+          <!-- Sticky Bottom Action Bar -->
+          <div class="action-bar">
+            <button type="button" class="btn-back">Back</button>
+            <button type="submit" class="btn-continue">Continue to Storefront</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel: Live Preview -->
+      <div class="preview-panel">
+        <div class="preview-decoration preview-decoration-1"></div>
+        <div class="preview-decoration preview-decoration-2"></div>
+        
+        <div class="preview-indicator">
+          <span class="preview-pulse"></span>
+          <span class="preview-label">Live Preview</span>
+        </div>
+
+        <div class="preview-browser">
+          <div class="browser-chrome">
+            <div class="browser-dots">
+              <span class="dot"></span>
+              <span class="dot"></span>
+              <span class="dot"></span>
+            </div>
+            <div class="browser-url">sourdoughstudio.panchasara.com</div>
+          </div>
+          
+          <div class="preview-content">
+            <StoreTemplate {...previewData} />
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

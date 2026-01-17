@@ -1,0 +1,88 @@
+---
+export const prerender = false;
+
+import { supabase } from '../lib/supabase';
+import { getSession } from '../lib/auth';
+import '../styles/auth.css';
+
+// 🔁 Redirect logged-in users
+const session = await getSession();
+if (session) {
+  return Astro.redirect('/dashboard');
+}
+
+let error = '';
+let success = '';
+
+if (Astro.request.method === 'POST') {
+  try {
+    const formData = await Astro.request.formData();
+
+    const email = formData.get('email')?.toString().trim();
+    const password = formData.get('password')?.toString();
+    const confirmPassword = formData.get('confirmPassword')?.toString();
+
+    if (!email || !password || !confirmPassword) {
+      error = 'All fields are required';
+    } else if (password !== confirmPassword) {
+      error = 'Passwords do not match';
+    } else {
+      const { data, error: signUpError } =
+        await supabase.auth.signUp({ email, password });
+
+      if (signUpError?.code === 'over_email_send_rate_limit') {
+        error = 'Please wait a few seconds before trying again.';
+      } else if (signUpError) {
+        error = signUpError.message;
+      } else {
+        if (data?.session) {
+          return Astro.redirect('/dashboard');
+        } else {
+          success = 'Signup successful! Please log in to continue.';
+        }
+      }
+    }
+  } catch {
+    error = 'Something went wrong. Please try again.';
+  }
+}
+---
+
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-form">
+      <h1>Panchasara</h1>
+      <h2>Create your store owner account</h2>
+
+      <form method="POST">
+        <input type="email" name="email" placeholder="Email" required />
+        <input type="password" name="password" placeholder="Password" required />
+        <input
+          type="password"
+          name="confirmPassword"
+          placeholder="Confirm Password"
+          required
+        />
+
+        <button type="submit">Create Account</button>
+      </form>
+
+      {error && <p class="error">{error}</p>}
+      {success && (
+        <p class="success">
+          {success} <br />
+          <a href="/login">Go to Login</a>
+        </p>
+      )}
+
+      <p class="switch">
+        Already have an account?
+        <a href="/login">Log in</a>
+      </p>
+    </div>
+
+    <div class="auth-image">
+      <img src="/images/signup.jpg" alt="Artisan Working" />
+    </div>
+  </div>
+</div>

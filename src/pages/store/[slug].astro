@@ -1,0 +1,69 @@
+---
+// src/pages/store/[slug].astro
+import StoreTemplate from '../../components/store/StoreTemplate.astro';
+
+const { slug } = Astro.params;
+
+const store = {
+  name: 'The Sourdough Studio',
+  tagline: 'Slow-fermented love from my heart to yours',
+  about: 'Every loaf I bake is a 48-hour labor of love. I began my journey in a small kitchen in Tuscany, learning the ancient art of wild yeast fermentation. Today, I bring that same patience and purity to your morning table.',
+  logo: null
+};
+
+const theme = {
+  primary: '#CD5C5C',
+  secondary: '#f5f5f0',
+  background: '#FFFDF5',
+  text: '#0e1b19'
+};
+
+const products = [
+  {
+    id: 1,
+    name: 'Heritage White',
+    price: 12.00,
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCgQdsI6Kz_9kXKxwPTfisvn2G3t0hO5uCUHp24eywji6d9BhK-F4EPumjugjFgRSewmolrYESeM_vn1F0Y17f27iUyYGLsK86Le5gPkgFauZqOLGr-AiVEKZCEJGWzv_e9AMR6fX-qCP-Czo9UtYmgDzcVibbtsrVkOL5OtOuHBSdIKlyUvy57Ms6ZcFJLq9o5ONChnhir9IgTglYJZTEokWqEb06hBfzP8I_zMycmv_IXczkd13jIImOj9dx0mNJGG6K4LTep7yNQ',
+    badge: 'Organic'
+  },
+  {
+    id: 2,
+    name: 'Multi-Grain Bloom',
+    price: 14.50,
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuADywyyt_FrPS3iG3u0ssLqn5gRIEyuxpXoPe03Bsr9s78P9LyJrBdZAMdm1D_yX0JqjFjjM_0VI5rffRSpbLH8dLQ467gXjKmzhkXCZHHqbfJeElXNjmR4352uOsFjyUOSsWkiyw9EiETpSWGlXHKK3OWLPI1uZpWwcioeDJZUYFTQSvEzQW1FUkvozd6Vt9KTKb7qXiC5zEOlS-Fsf-3ffyySopKTOAdo3CXFdhMm089T5N-AJMsmfP-UAbCjzc3etox0XGIl9oCz',
+    badge: null
+  },
+  {
+    id: 3,
+    name: 'Wild Honey Rye',
+    price: 16.00,
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAKEr5jreNIRfOEAbai_jN6tl8Inp_ufpfGsq2CVAdljIuG3IubGywJAb1iZwUW5Grs-Pi3208O_t0R008Jg9JwrxhdNzbZwlFt8TvTo1VrptBAg3_Z6ct4h_MXzRu898BJBQ1n-DIbFGC6tkhyv2Fm3Rmi7TM-1bnJ59cmIxX9YXJ1i40pK67VfG0ssCP04fK929F9yHEb-N8lcAxVG1b2JyaQnjjX-xuAKyWkOdEX18wxICjwvuhwF00G4GTMfCzWLdqTDDRPhBjr',
+    badge: null
+  },
+  {
+    id: 4,
+    name: 'Olive Rosemary',
+    price: 15.00,
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCgQdsI6Kz_9kXKxwPTfisvn2G3t0hO5uCUHp24eywji6d9BhK-F4EPumjugjFgRSewmolrYESeM_vn1F0Y17f27iUyYGLsK86Le5gPkgFauZqOLGr-AiVEKZCEJGWzv_e9AMR6fX-qCP-Czo9UtYmgDzcVibbtsrVkOL5OtOuHBSdIKlyUvy57Ms6ZcFJLq9o5ONChnhir9IgTglYJZTEokWqEb06hBfzP8I_zMycmv_IXczkd13jIImOj9dx0mNJGG6K4LTep7yNQ',
+    badge: null
+  }
+];
+---
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{store.name} - Panchasara</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles/store-template.css" />
+</head>
+<body>
+  <StoreTemplate 
+    store={store}
+    theme={theme}
+    products={products}
+    isPreview={false}
+  />
+</body>
+</html>
