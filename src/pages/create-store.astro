@@ -16,7 +16,6 @@ if (await hasStore()) {
 
 // ----------------------------------
 // Preview-only placeholder data
-// (form wiring comes later)
 // ----------------------------------
 const previewStore = {
   name: 'The Sourdough Studio',
@@ -27,10 +26,10 @@ const previewStore = {
 };
 
 const previewTheme = {
-  primary: '#CD5C5C',
-  secondary: '#7a5c3d',
-  background: '#FFFDF5',
-  text: '#0e1b19',
+  primary: '#c46a2b',    // Saffron (Your new Primary)
+  secondary: '#7a5c3d',  // Medium Brown (Your new Secondary)
+  background: '#fffaf0', // Floral White (Your new Bg)
+  text: '#5b3a1e',       // Dark Brown (Your new Text)
 };
 
 const previewProducts = [];
@@ -43,34 +42,25 @@ const previewProducts = [];
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Create Store – Panchasara</title>
 
-    <!-- Fonts -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
 
-    <!-- Styles -->
     <link rel="stylesheet" href="/styles/create-store.css" />
     <link rel="stylesheet" href="/styles/store-template.css" />
   </head>
 
   <body>
     <div class="create-store-layout">
-      <!-- ===================================================
-           LEFT PANEL — CREATE STORE FORM
-           =================================================== -->
       <section class="form-panel">
         <div class="form-container">
-          <!-- Page Header -->
           <header class="page-header">
             <h1>Create Your Store</h1>
             <p>Set up your artisan storefront</p>
           </header>
 
-          <form class="store-form">
-            <!-- =====================
-                 STORE BASICS
-                 ===================== -->
+          <form class="store-form" method="POST">
             <section class="form-section">
               <h2>Store Basics</h2>
 
@@ -98,9 +88,6 @@ const previewProducts = [];
               </label>
             </section>
 
-            <!-- =====================
-                 BRAND VOICE
-                 ===================== -->
             <section class="form-section">
               <h2>Brand Voice</h2>
 
@@ -123,16 +110,13 @@ const previewProducts = [];
               </label>
             </section>
 
-            <!-- =====================
-                 VISUAL IDENTITY — COLORS
-                 ===================== -->
             <section class="form-section">
               <h2>Visual Identity – Colors</h2>
 
               <div class="color-grid">
                 <label>
                   Primary
-                  <input type="color" name="color_primary" value="#CD5C5C" />
+                  <input type="color" name="color_primary" value="#c46a2b" />
                 </label>
 
                 <label>
@@ -142,43 +126,37 @@ const previewProducts = [];
 
                 <label>
                   Background
-                  <input type="color" name="color_background" value="#FFFDF5" />
+                  <input type="color" name="color_background" value="#fffaf0" />
                 </label>
 
                 <label>
                   Text
-                  <input type="color" name="color_text" value="#0e1b19" />
+                  <input type="color" name="color_text" value="#5b3a1e" />
                 </label>
               </div>
             </section>
 
-            <!-- =====================
-                 VISUAL IDENTITY — FONTS
-                 ===================== -->
             <section class="form-section">
               <h2>Visual Identity – Fonts</h2>
 
               <div class="font-options">
                 <label>
                   <input type="radio" name="font_preset" value="classic" checked />
-                  Playfair Display + Inter
+                  Playfair Display
                 </label>
 
                 <label>
                   <input type="radio" name="font_preset" value="modern" />
-                  Poppins + Inter
+                  Poppins
                 </label>
 
                 <label>
                   <input type="radio" name="font_preset" value="minimal" />
-                  Inter only
+                  Inter
                 </label>
               </div>
             </section>
 
-            <!-- =====================
-                 STORE TEMPLATE
-                 ===================== -->
             <section class="form-section">
               <h2>Store Layout</h2>
 
@@ -200,18 +178,26 @@ const previewProducts = [];
               </div>
             </section>
 
-            <!-- =====================
-                 LOGO UPLOAD
-                 ===================== -->
             <section class="form-section">
               <h2>Logo</h2>
 
-              <input type="file" name="logo" accept="image/*" />
+              <label class="file-upload-box">
+                <input type="file" name="logo" accept="image/*" />
+                
+                <div class="upload-icon-wrapper">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                  </svg>
+                </div>
+                <span class="upload-text">Click to upload brand logo</span>
+                <span class="upload-hint">SVG, PNG, JPG (Max 2MB)</span>
+                
+                <img class="logo-preview-thumb" />
+              </label>
             </section>
 
-            <!-- =====================
-                 CONTACT & SOCIAL
-                 ===================== -->
             <section class="form-section">
               <h2>Contact & Social</h2>
 
@@ -234,11 +220,9 @@ const previewProducts = [];
                 Facebook URL
                 <input type="url" name="facebook_url" />
               </label>
+
             </section>
 
-            <!-- =====================
-                 ACTIONS
-                 ===================== -->
             <footer class="form-actions">
               <button type="button" class="btn-secondary">
                 Back
@@ -252,9 +236,6 @@ const previewProducts = [];
         </div>
       </section>
 
-      <!-- ===================================================
-           RIGHT PANEL — LIVE PREVIEW
-           =================================================== -->
       <section class="preview-panel">
         <div class="preview-browser">
           <div class="browser-bar">
@@ -264,7 +245,7 @@ const previewProducts = [];
               <span></span>
             </div>
             <div class="browser-url">
-              sourdough-studio.panchasara.com
+              panchasara.com/sourdough-studio
             </div>
           </div>
 
@@ -279,5 +260,179 @@ const previewProducts = [];
         </div>
       </section>
     </div>
+
+    <script>
+      // 1. Select DOM Elements
+      const form = document.querySelector('.store-form');
+      const previewContainer = document.querySelector('.preview-content');
+      const browserUrl = document.querySelector('.browser-url');
+
+      // 2. State Mapping
+      const textMappings = {
+        'store_name': '.store-template-name', 
+        'store_tagline': '.store-template-tagline',
+        'about_us': '.store-template-about',
+      };
+
+      const cssVarMappings = {
+        'color_primary': '--theme-primary',
+        'color_secondary': '--theme-secondary',
+        'color_background': '--theme-background',
+        'color_text': '--theme-text'
+      };
+
+      // 3. Event Listener for Inputs
+      form.addEventListener('input', (e) => {
+        const input = e.target;
+        const name = input.name;
+        const val = input.value;
+
+        // --- HANDLE URL UPDATE (The logic you asked for!) ---
+        if (name === 'store_url_slug') {
+            // Convert "My Store" -> "my-store"
+            const slug = val.trim().toLowerCase().replace(/\s+/g, '-');
+            // Update the fake browser bar
+            if(slug.length > 0) {
+                browserUrl.textContent = `panchasara.com/${slug}`; 
+            } else {
+                browserUrl.textContent = 'panchasara.com/your-store.';
+            }
+        }
+
+        // --- Handle Standard Text Updates ---
+        if (textMappings[name]) {
+          const targetEl = previewContainer.querySelector(textMappings[name]);
+          if (targetEl) targetEl.textContent = val;
+        }
+
+        // --- Handle Color Updates (CSS Vars) ---
+        if (cssVarMappings[name]) {
+          previewContainer.style.setProperty(cssVarMappings[name], val);
+        }
+        
+        // --- Handle Fonts/Layouts (Classes) ---
+        if (name === 'font_preset') {
+          previewContainer.setAttribute('data-font-preset', val);
+        }
+      });
+
+      // 4. Handle Logo Preview (New Box Logic)
+      const logoInput = form.querySelector('input[name="logo"]');
+      const uploadBox = form.querySelector('.file-upload-box'); 
+      const thumb = uploadBox.querySelector('.logo-preview-thumb'); 
+
+      logoInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const result = e.target.result;
+            
+            // A. Update the Big Preview on the Right
+            const mainPreviewImg = previewContainer.querySelector('.store-template-logo');
+            if (mainPreviewImg) {
+                mainPreviewImg.src = result;
+                mainPreviewImg.style.display = 'block';
+            }
+
+            // B. Update the Tiny Thumbnail in the Form
+            if (thumb) {
+                thumb.src = result;
+                thumb.classList.add('preview-active');
+            }
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    </script>
+
+    <script>
+  // 1. Select the Form and the Preview Container
+  const form = document.querySelector('.store-form');
+  const previewContainer = document.querySelector('.store-template-wrapper');
+  const browserUrl = document.querySelector('.browser-url');
+
+  // 2. Map Form Input Names to CSS Classes in the Template
+  const textMappings = {
+    'store_name': ['.store-template-name', '.store-template-name-footer'], // Updates header and footer
+    'store_tagline': '.store-template-tagline',
+    'about_us': '.store-template-about',
+  };
+
+  // 3. Map Color Inputs to CSS Variables
+  const cssVarMappings = {
+    'color_primary': '--theme-primary',
+    'color_secondary': '--theme-secondary',
+    'color_background': '--theme-background',
+    'color_text': '--theme-text'
+  };
+
+  // 4. Main Event Listener
+  form.addEventListener('input', (e) => {
+    const input = e.target;
+    const name = input.name;
+    const val = input.value;
+
+    // --- A. Handle URL Address Bar Update ---
+    if (name === 'store_url_slug') {
+      const slug = val.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-');
+      browserUrl.textContent = slug ? `${slug}.panchasara.com` : 'your-store.panchasara.com';
+    }
+
+    // --- B. Handle Text Updates ---
+    if (textMappings[name]) {
+      const selectors = Array.isArray(textMappings[name]) ? textMappings[name] : [textMappings[name]];
+      selectors.forEach(selector => {
+        const targetEls = document.querySelectorAll(selector);
+        targetEls.forEach(el => el.textContent = val);
+      });
+    }
+
+    // --- C. Handle Color Updates ---
+    if (cssVarMappings[name]) {
+      // We set the variable on the wrapper so it cascades down
+      previewContainer.style.setProperty(cssVarMappings[name], val);
+    }
+    
+    // --- D. Handle Fonts (Data Attribute) ---
+    if (name === 'font_preset') {
+      previewContainer.setAttribute('data-font-preset', val);
+    }
+    
+    // --- E. Handle Layout (Data Attribute) ---
+    if (name === 'template') {
+      previewContainer.setAttribute('data-layout', val);
+    }
+  });
+
+  // 5. Handle Logo Upload (Image Preview)
+  const logoInput = form.querySelector('input[name="logo"]');
+  
+  logoInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target.result;
+        
+        // Update the Template Logo
+        const templateLogos = document.querySelectorAll('.store-template-logo');
+        templateLogos.forEach(img => {
+          img.src = result;
+          img.style.display = 'block';
+        });
+
+        // Update the Form Thumbnail (The little box in the upload area)
+        const formThumb = document.querySelector('.logo-preview-thumb');
+        if (formThumb) {
+            formThumb.src = result;
+            formThumb.classList.add('preview-active');
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+</script>
+
   </body>
 </html>

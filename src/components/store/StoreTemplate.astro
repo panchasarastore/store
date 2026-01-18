@@ -1,12 +1,4 @@
 ---
-// src/components/store/StoreTemplate.astro
-/**
- * StoreTemplate
- * Renders a store storefront for:
- * - live preview (create-store)
- * - public store page (/store/[slug])
- */
-
 const {
   store = {},
   theme = {},
@@ -14,7 +6,7 @@ const {
   isPreview = false,
 } = Astro.props;
 
-// Defensive defaults
+// 1. Safe Defaults
 const safeStore = {
   name: store.name ?? 'Your Store Name',
   tagline: store.tagline ?? 'A short soulful tagline',
@@ -22,34 +14,53 @@ const safeStore = {
   logo: store.logo ?? null,
 };
 
-// Support both preview theme (flat) and DB theme (nested under colors)
+// 2. Handle Colors (Support both flat and nested structures)
 const colors = theme.colors ?? {
-  primary: theme.primary ?? '#CD5C5C',
-  secondary: theme.secondary ?? '#f5f5f0',
-  background: theme.background ?? '#FFFDF5',
-  text: theme.text ?? '#0e1b19',
+  primary: theme.primary ?? '#c46a2b',
+  secondary: theme.secondary ?? '#7a5c3d',
+  background: theme.background ?? '#fffaf0',
+  text: theme.text ?? '#5b3a1e',
 };
+
+// 3. Generate CSS Variables String
+// We inject this into the wrapper so the JS can update them easily
+const themeStyles = `
+  --theme-primary: ${colors.primary};
+  --theme-secondary: ${colors.secondary};
+  --theme-background: ${colors.background};
+  --theme-text: ${colors.text};
+`;
+
+// 4. Placeholder Products (if empty)
+const displayProducts = products.length > 0 ? products : [
+  { name: 'Rustic Sourdough', price: 12.00, image: 'https://images.unsplash.com/photo-1585476644321-b97621402e89?auto=format&fit=crop&w=600&q=80' },
+  { name: 'Olive & Rosemary', price: 14.00, image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80' },
+  { name: 'Cranberry Walnut', price: 15.00, image: 'https://images.unsplash.com/photo-1550989460-0adf9ea622e2?auto=format&fit=crop&w=600&q=80' }
+];
 ---
 
 <div
-  class="store-template"
+  class="store-template-wrapper"
   data-preview={isPreview}
-  style={`background-color: ${colors.background}; color: ${colors.text};`}
+  style={themeStyles}
+  data-font-preset="classic" 
+  data-layout="classic"
 >
-  <!-- Header -->
-  <header class="store-header" style={`background-color: ${colors.primary};`}>
+  <header class="store-header">
     <div class="store-header-content">
-      <div class="store-logo">
+      <div class="store-logo-area">
         {safeStore.logo ? (
-          <img src={safeStore.logo} alt={safeStore.name} />
+          <img src={safeStore.logo} class="store-template-logo" alt={safeStore.name} />
         ) : (
-          <span class="store-logo-initial">
-            {safeStore.name.charAt(0) || 'Y'}
-          </span>
+          /* We keep the img hidden so JS can reveal it if user uploads a logo */
+          <>
+            <img class="store-template-logo" style="display:none" alt="Logo" />
+            <span class="store-logo-initial">{safeStore.name.charAt(0) || 'S'}</span>
+          </>
         )}
       </div>
 
-      <h1 class="store-name">{safeStore.name}</h1>
+      <h1 class="store-name store-template-name">{safeStore.name}</h1>
 
       <nav class="store-nav">
         <span>Shop</span>
@@ -59,27 +70,20 @@ const colors = theme.colors ?? {
     </div>
   </header>
 
-  <!-- Hero -->
   <section class="store-hero">
-    <h2 class="store-tagline">{safeStore.tagline}</h2>
+    <h2 class="store-tagline store-template-tagline">{safeStore.tagline}</h2>
 
     <div class="store-about-preview">
-      <p>
-        {safeStore.about.substring(0, 180)}
-        {safeStore.about.length > 180 && '...'}
+      <p class="store-template-about">
+        {safeStore.about}
       </p>
 
-      <button
-        class="hero-cta"
-        style={`background-color: ${colors.primary};`}
-        disabled={isPreview}
-      >
+      <button class="hero-cta">
         Explore Collection
       </button>
     </div>
   </section>
 
-  <!-- Products -->
   <section class="store-products">
     <div class="products-header">
       <h3>Signature Collection</h3>
@@ -87,56 +91,35 @@ const colors = theme.colors ?? {
     </div>
 
     <div class="products-grid">
-      {products.length > 0 ? (
-        products.map((product) => (
-          <div class="product-card">
-            <div class="product-image">
-              <img src={product.image} alt={product.name} />
-              {product.badge && (
-                <span class="product-badge">{product.badge}</span>
-              )}
-            </div>
-
-            <h4 class="product-name">{product.name}</h4>
-
-            <div class="product-footer">
-              <span class="product-price">${product.price.toFixed(2)}</span>
-              <button
-                class="product-add"
-                style={`color: ${colors.primary};`}
-                disabled
-              >
-                <span class="add-icon">+</span>
-              </button>
-            </div>
+      {displayProducts.map((product) => (
+        <div class="product-card">
+          <div class="product-image">
+            <img src={product.image} alt={product.name} />
           </div>
-        ))
-      ) : (
-        <div class="products-empty">
-          <p>Your products will appear here once you add them.</p>
+
+          <h4 class="product-name">{product.name}</h4>
+
+          <div class="product-footer">
+            <span class="product-price">${Number(product.price).toFixed(2)}</span>
+            <button class="product-add" disabled>
+              <span class="add-icon">+</span>
+            </button>
+          </div>
         </div>
-      )}
+      ))}
     </div>
   </section>
 
-  <!-- Footer -->
-  <footer class="store-footer" style={`background-color: ${colors.secondary};`}>
+  <footer class="store-footer">
     <div class="footer-content">
-      <div class="footer-logo">{safeStore.name.charAt(0) || 'Y'}</div>
-
-      <p class="footer-about">
-        {safeStore.about.substring(0, 120)}
-        {safeStore.about.length > 120 && '...'}
+      <div class="footer-logo">{safeStore.name.charAt(0) || 'S'}</div>
+      
+      <p class="footer-about store-template-about">
+        {safeStore.about.substring(0, 120)}...
       </p>
 
-      <div class="footer-social">
-        <span class="social-icon">🌐</span>
-        <span class="social-icon">✉</span>
-        <span class="social-icon">💬</span>
-      </div>
-
       <p class="footer-credit">
-        © 2024 {safeStore.name}. Crafted with Panchasara.
+        © {new Date().getFullYear()} <span class="store-template-name">{safeStore.name}</span>
       </p>
     </div>
   </footer>
