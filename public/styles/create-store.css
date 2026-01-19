@@ -100,7 +100,7 @@ body {
 }
 
 /* =========================================
-   INPUTS
+   INPUTS & FORMS
 ========================================= */
 .store-form { display: flex; flex-direction: column; gap: 3.5rem; }
 .form-section { display: flex; flex-direction: column; gap: 1.5rem; position: relative; }
@@ -120,6 +120,16 @@ label {
   display: flex; flex-direction: column; gap: 0.5rem;
   font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;
   font-weight: 600; color: var(--c-text-sub);
+}
+
+/* Small hint text for labels */
+.input-hint {
+  font-size: 0.7rem;
+  text-transform: none;
+  opacity: 0.7;
+  font-weight: 400;
+  margin-top: -0.2rem;
+  margin-bottom: 0.2rem;
 }
 
 input[type="text"], input[type="email"], input[type="tel"], input[type="url"], textarea {
@@ -142,6 +152,89 @@ input:focus, textarea:focus {
 }
 
 ::placeholder { color: var(--c-text-muted); opacity: 0.8; }
+
+/* =========================================
+   INPUT GROUPS (For Toggles)
+========================================= */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.input-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.2rem;
+}
+
+.input-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  color: var(--c-text-sub);
+}
+
+/* --- PREMIUM TOGGLE SWITCH --- */
+/* The Container */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  margin: 0; /* Reset margins from generic label */
+}
+
+/* Hide default HTML checkbox */
+.toggle-switch input { 
+  opacity: 0; 
+  width: 0; 
+  height: 0; 
+}
+
+/* The Slider (Background) */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #e5e7eb; /* Grey when off */
+  transition: .3s;
+  border-radius: 24px; /* Pill shape */
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+/* The Knob (Circle) */
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 2px; /* Center vertically */
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Checked State (On) */
+input:checked + .slider {
+  background-color: var(--c-primary); /* Uses Saffron */
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px); /* Slides right */
+}
+
+/* Hover effect */
+.toggle-switch:hover .slider {
+  background-color: #d1d5db;
+}
+input:checked:hover + .slider {
+  opacity: 0.9;
+}
 
 /* =========================================
    URL INPUT
@@ -173,7 +266,7 @@ input:focus, textarea:focus {
 }
 
 /* =========================================
-   CUSTOM LOGO UPLOAD (New)
+   CUSTOM LOGO UPLOAD
 ========================================= */
 .file-upload-box {
   position: relative;
@@ -189,7 +282,7 @@ input:focus, textarea:focus {
   transition: all 0.2s ease;
   min-height: 140px;
   text-align: center;
-  overflow: hidden; /* Ensures image stays inside radius */
+  overflow: hidden;
 }
 
 .file-upload-box:hover {
@@ -216,12 +309,8 @@ input:focus, textarea:focus {
   letter-spacing: normal;
 }
 
-/* Hidden native input */
-.file-upload-box input[type="file"] {
-  display: none;
-}
+.file-upload-box input[type="file"] { display: none; }
 
-/* Image Preview Styles */
 .file-upload-box img.logo-preview-thumb {
   position: absolute;
   top: 0; left: 0;
@@ -230,7 +319,7 @@ input:focus, textarea:focus {
   padding: 1rem;
   background: white;
   z-index: 5;
-  display: none; /* Hidden by default */
+  display: none;
 }
 
 .file-upload-box img.logo-preview-thumb.preview-active {
@@ -242,12 +331,11 @@ input:focus, textarea:focus {
 ========================================= */
 .color-grid { 
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* Creates a 2-column layout */
+  grid-template-columns: repeat(2, 1fr);
   gap: 1rem; 
 }
 
 .color-grid label {
-  /* This ensures the label text sits nicely above the color bar */
   align-items: flex-start; 
   width: 100%;
 }
@@ -255,14 +343,14 @@ input:focus, textarea:focus {
 .color-grid input[type="color"] {
   -webkit-appearance: none;
   border: 1px solid var(--c-border);
-  width: 100%;    /* Fills the width of the column */
-  height: 44px;   /* Standard button height (rectangular) */
-  border-radius: 0.5rem; /* Soft rounded corners (Squaricle) instead of Circle */
-  padding: 0.25rem; /* Creates a small white frame inside */
+  width: 100%;
+  height: 44px;
+  border-radius: 0.5rem;
+  padding: 0.25rem;
   background: white;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: none; /* Remove the floating shadow for a cleaner look */
+  box-shadow: none;
 }
 
 .color-grid input[type="color"]:hover {
@@ -270,14 +358,8 @@ input:focus, textarea:focus {
   transform: translateY(-1px);
 }
 
-/* Fix the internal swatch to be rectangular too */
-.color-grid input[type="color"]::-webkit-color-swatch-wrapper {
-  padding: 0;
-}
-.color-grid input[type="color"]::-webkit-color-swatch {
-  border: none;
-  border-radius: 0.3rem; /* Matches the outer radius slightly smaller */
-}
+.color-grid input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+.color-grid input[type="color"]::-webkit-color-swatch { border: none; border-radius: 0.3rem; }
 
 .template-options, .font-options {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 0.75rem;
@@ -302,7 +384,7 @@ input:focus, textarea:focus {
 ========================================= */
 .form-actions {
   position: fixed; bottom: 0; left: 0; width: 100%; z-index: 10;
-  background: rgba(255, 250, 240, 0.9); /* Floral white transparent */
+  background: rgba(255, 250, 240, 0.9);
   backdrop-filter: blur(12px);
   padding: 1.25rem 2rem;
   border-top: 1px solid var(--c-border);
@@ -331,13 +413,12 @@ input:focus, textarea:focus {
 }
 
 /* =========================================
-   RIGHT PANEL – PREVIEW (MAXIMIZED)
+   RIGHT PANEL – PREVIEW
 ========================================= */
 .preview-panel {
   display: none;
   flex: 1;
   background: var(--c-bg-page);
-  /* Reduced padding to maximize space */
   padding: 1rem; 
   height: 100vh;
   box-sizing: border-box;
@@ -347,16 +428,16 @@ input:focus, textarea:focus {
 
 .preview-browser {
   width: 100%;
-  height: 100%; /* Fill available space */
+  height: 100%;
   background: white;
-  border-radius: 0.75rem; /* Slightly tighter radius */
+  border-radius: 0.75rem;
   box-shadow: var(--shadow-soft);
   display: flex; flex-direction: column; overflow: hidden;
   border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .browser-bar {
-  height: 3rem; flex-shrink: 0; /* Don't shrink the header */
+  height: 3rem; flex-shrink: 0;
   display: grid; grid-template-columns: 60px 1fr 60px;
   align-items: center; padding: 0 1rem;
   border-bottom: 1px solid #f0f0f0; background: #fff;
@@ -364,8 +445,7 @@ input:focus, textarea:focus {
 
 .browser-dots { display: flex; gap: 0.4rem; }
 .browser-dots span { width: 0.7rem; height: 0.7rem; border-radius: 50%; background: #e5e7eb; }
-
-.browser-dots span:nth-child(1) { background: #ff5f56; } /* Mac-like dots */
+.browser-dots span:nth-child(1) { background: #ff5f56; }
 .browser-dots span:nth-child(2) { background: #ffbd2e; }
 .browser-dots span:nth-child(3) { background: #27c93f; }
 
@@ -382,4 +462,65 @@ input:focus, textarea:focus {
   background: #fff; 
   position: relative;
   scroll-behavior: smooth;
+}
+
+/* =========================================
+   MOBILE VIEW SWITCHER (The Magic Logic)
+========================================= */
+
+/* 1. The Floating Button */
+.mobile-toggle-btn {
+  display: none; /* Hidden on Desktop */
+  position: fixed;
+  bottom: 6rem; /* Above the "Save" footer */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  
+  background-color: var(--c-text-main);
+  color: #fff;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 50px;
+  
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s;
+}
+
+.mobile-toggle-btn:active { transform: translateX(-50%) scale(0.95); }
+
+.mobile-toggle-btn span {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* 2. Logic: Show Button ONLY on Mobile */
+@media (max-width: 1023px) {
+  .mobile-toggle-btn { display: flex; }
+  
+  /* 3. Default State: Show Form, Hide Preview */
+  .preview-panel { display: none; }
+  .form-panel { display: block; width: 100%; }
+
+  /* 4. Active Preview State (Toggled via JS) */
+  .create-store-layout.mobile-preview-active .form-panel {
+    display: none; /* Hide Form */
+  }
+  
+  .create-store-layout.mobile-preview-active .preview-panel {
+    display: flex; /* Show Preview */
+    padding: 0;    /* Full width on mobile */
+    background: #fff;
+  }
+  
+  /* Adjust the browser bar in mobile preview mode */
+  .create-store-layout.mobile-preview-active .preview-browser {
+    border-radius: 0;
+    border: none;
+  }
 }
