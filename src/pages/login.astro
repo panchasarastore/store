@@ -1,9 +1,9 @@
 ---
+// src/pages/login.astro
 export const prerender = false;
 
 import { supabase } from '../lib/supabase';
 import { getSession } from '../lib/auth';
-import '../styles/auth.css';
 
 // 🔁 Redirect logged-in users
 const session = await getSession();
@@ -38,29 +38,152 @@ if (Astro.request.method === 'POST') {
 }
 ---
 
-<div class="auth-page">
-  <div class="auth-card">
-    <div class="auth-form">
-      <h1>Panchasara</h1>
-      <h2>Welcome back</h2>
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log In | Panchasara</title>
+  
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  
+  <script is:inline src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  
+  <script is:inline>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#FF9D42",
+            "primary-hover": "#e88b32",
+          },
+          fontFamily: {
+            display: ["Lexend", "sans-serif"],
+            sans: ["Plus Jakarta Sans", "sans-serif"],
+          },
+          borderRadius: {
+            DEFAULT: "1rem",
+            pill: "9999px",
+            '2xl': '2rem',
+            '3xl': '3rem',
+          },
+        },
+      },
+    };
+  </script>
+</head>
+<body class="h-full font-sans text-slate-900 bg-white">
 
-      <form method="POST">
-        <input type="email" name="email" placeholder="Email" required />
-        <input type="password" name="password" placeholder="Password" required />
+  <div class="min-h-full flex flex-col lg:flex-row">
 
-        <button type="submit">Log in</button>
-      </form>
+    <div class="lg:hidden relative h-28 w-full bg-slate-100 shrink-0">
+      <img 
+        class="absolute inset-0 h-full w-full object-cover object-center" 
+        src="https://images.unsplash.com/photo-1556910103-1c02745a30bf?q=80&w=1000&auto=format&fit=crop" 
+        alt="Finishing touches on a cake"
+      >
+      <div class="absolute inset-0 bg-primary mix-blend-multiply opacity-20"></div>
+    </div>
+    
+    <div class="flex-1 flex flex-col justify-center py-10 px-4 sm:px-6 lg:flex-none lg:px-20 xl:px-24 bg-white z-10 relative">
+      <div class="mx-auto w-full max-w-sm lg:w-96">
+        
+        <div>
+          <a href="/" class="inline-flex items-center gap-2 group decoration-transparent">
+            <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+              <span class="text-white font-display font-bold text-lg">P</span>
+            </div>
+            <span class="font-display font-bold text-xl tracking-tight text-slate-900">Panchasara.</span>
+          </a>
+          <h2 class="mt-8 text-3xl font-display font-bold text-slate-900">Welcome back</h2>
+          <p class="mt-2 text-sm text-slate-500">
+            Log in to manage your store.
+          </p>
+        </div>
 
-      {error && <p class="error">{error}</p>}
+        <div class="mt-8">
+          <div class="mt-6">
+            <form method="POST" class="space-y-6">
+              
+              <div>
+                <label for="email" class="block text-sm font-semibold text-slate-700">Email Address</label>
+                <div class="mt-1">
+                  <input 
+                    id="email" 
+                    name="email" 
+                    type="email" 
+                    autocomplete="email" 
+                    required 
+                    placeholder="baker@example.com"
+                    class="appearance-none block w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-slate-50/50"
+                  >
+                </div>
+              </div>
 
-      <p class="switch">
-        Don&#39;t have an account?
-        <a href="/signup">Create one</a>
-      </p>
+              <div class="space-y-1">
+                <label for="password" class="block text-sm font-semibold text-slate-700">Password</label>
+                <div class="mt-1">
+                  <input 
+                    id="password" 
+                    name="password" 
+                    type="password" 
+                    autocomplete="current-password" 
+                    required 
+                    placeholder="••••••••"
+                    class="appearance-none block w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-slate-50/50"
+                  >
+                </div>
+              </div>
+
+              <div class="flex items-center justify-end">
+                <div class="text-sm">
+                  <a href="#" class="font-medium text-primary hover:text-primary-hover transition-colors">
+                    Forgot your password?
+                  </a>
+                </div>
+              </div>
+
+              <div>
+                <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-display font-bold text-white bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors cursor-pointer shadow-orange-100">
+                  Log in
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        {error && (
+          <div class="mt-6 p-4 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm text-center font-medium animate-pulse">
+            {error}
+          </div>
+        )}
+
+        <div class="mt-8 relative">
+          <div class="absolute inset-0 flex items-center" aria-hidden="true">
+            <div class="w-full border-t border-slate-200"></div>
+          </div>
+          <div class="relative flex justify-center text-sm">
+            <span class="px-2 bg-white text-slate-500">
+              Don't have an account? <a href="/signup" class="font-bold text-primary hover:text-primary-hover transition-colors">Create one</a>
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="auth-image">
-      <img src="/images/login.jpg" alt="Artisan food" />
+    <div class="hidden lg:block relative w-0 flex-1">
+      <img 
+        class="absolute inset-0 h-full w-full object-cover" 
+        src="https://images.unsplash.com/photo-1556910103-1c02745a30bf?q=80&w=2000&auto=format&fit=crop" 
+        alt="Baker decorating a cake"
+      >
+      <div class="absolute inset-0 bg-primary mix-blend-multiply opacity-20"></div>
+      <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-40"></div>
     </div>
   </div>
-</div>
+
+</body>
+</html>
