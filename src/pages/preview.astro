@@ -1,0 +1,51 @@
+---
+// src/pages/preview.astro
+export const prerender = false;
+import StoreTemplate from '../components/store/StoreTemplate.astro';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Store Preview</title>
+    
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;600&family=Oswald:wght@400;500;700&family=Dosis:wght@400;600;800&family=Quicksand:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  </head>
+  <body style="margin: 0; background: #fff;">
+    <StoreTemplate isPreview={true} />
+
+    <script>
+      // Load data from session storage
+      const data = JSON.parse(sessionStorage.getItem('panchasara_preview_data') || '{}');
+      const container = document.querySelector('.store-template-wrapper');
+
+      if (data && container) {
+        if(data.storeName) document.querySelectorAll('.store-template-name, .store-template-name-footer').forEach(el => el.textContent = data.storeName);
+        if(data.tagline) document.querySelectorAll('.store-template-tagline').forEach(el => el.textContent = data.tagline);
+        if(data.about) document.querySelectorAll('.store-template-about').forEach(el => el.textContent = data.about);
+        
+        if (data.cssVars) {
+          Object.entries(data.cssVars).forEach(([key, val]) => {
+            container.style.setProperty(key, val);
+          });
+        }
+
+        if (data.fontPreset) container.setAttribute('data-font-preset', data.fontPreset);
+        
+        if (data.logoSrc) {
+           document.querySelectorAll('.store-template-logo').forEach(img => {
+             img.src = data.logoSrc;
+             img.style.display = 'block';
+           });
+           document.querySelectorAll('.store-logo-initial').forEach(el => el.style.display = 'none');
+        }
+      }
+    </script>
+  </body>
+</html>

@@ -4,88 +4,102 @@ const {
   theme = {},
   products = [],
   isPreview = false,
+  layout = 'natural', 
+  font = 'classic'
 } = Astro.props;
 
 // 1. Safe Defaults
 const safeStore = {
-  name: store.name ?? 'Your Store Name',
-  tagline: store.tagline ?? 'A short soulful tagline',
-  about: store.about ?? 'Tell customers about your craft, your journey, and what makes you special.',
-  logo: store.logo ?? null,
-  email: store.contact_email ?? 'hello@panchasara.com',
-  whatsapp: store.whatsapp_number ?? '+91 98765 43210',
+  name: store.name || 'Your Store Name',
+  tagline: store.tagline || 'A short soulful tagline',
+  about: store.about || 'Tell customers about your craft, your journey, and what makes you special.',
+  logo: store.logo || null,
+  email: store.contact_email,
+  whatsapp: store.whatsapp_number,
 };
 
-// 2. NEW COLOR MAPPING (The 4-Bucket System)
-const colors = theme.colors ?? {
-  primary: theme.primary ?? '#5b3a1e',    // Brand Color (Store Name)
-  secondary: theme.secondary ?? '#c46a2b', // Accent Color (Buttons/Prices)
-  background: theme.background ?? '#fffaf0', // Page Background
-  text: theme.text ?? '#1f1f1f',           // Ink/Body Text
+// 2. Color Mapping
+const colorStyles = {
+  '--theme-brand': theme.primary || '#5b3a1e',
+  '--theme-accent': theme.secondary || '#c46a2b',
+  '--theme-page': theme.background || '#fffaf0',
+  '--theme-ink': theme.text || '#1f1f1f',
+  '--theme-header-bg': theme.header || theme.background || '#fffaf0',
 };
 
-// Map to the new CSS Variables used in store-template.css
-const themeStyles = `
-  --theme-brand: ${colors.primary};
-  --theme-accent: ${colors.secondary};
-  --theme-page: ${colors.background};
-  --theme-ink: ${colors.text};
-`;
+// 3. Categories (Mock)
+const categories = ['All', 'Cakes', 'Breads', 'Cookies', 'Hampers'];
 
-// 3. Placeholder Products
+// 4. Products
 const displayProducts = products.length > 0 ? products : [
-  { id: 1, name: 'Rustic Sourdough', price: 12.00, image: 'https://images.unsplash.com/photo-1585476644321-b97621402e89?q=80&w=800&auto=format&fit=crop' },
-  { id: 2, name: 'Rosemary Focaccia', price: 14.00, image: 'https://images.unsplash.com/photo-1573143926838-895c256795f5?q=80&w=800&auto=format&fit=crop' },
-  { id: 3, name: 'Cranberry Walnut', price: 15.00, image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?q=80&w=800&auto=format&fit=crop' }
+  { 
+    id: 1, 
+    name: 'Rustic Sourdough', 
+    price: 12.00, 
+    image: 'https://images.unsplash.com/photo-1585476644321-b97621402e89?q=80&w=800&auto=format&fit=crop',
+    description: 'Crispy crust with a chewy, airy interior.',
+    full_details: 'Our signature loaf, fermented for 48 hours using wild yeast.',
+    product_notice: null,
+    accepts_custom_note: false
+  },
+  { 
+    id: 2, 
+    name: 'Rosemary Focaccia', 
+    price: 14.00, 
+    image: 'https://images.unsplash.com/photo-1573143926838-895c256795f5?q=80&w=800&auto=format&fit=crop',
+    description: 'Infused with fresh rosemary and sea salt.',
+    full_details: 'Baked in olive oil for that perfect golden crunch.',
+    product_notice: 'Best eaten within 24 hours',
+    accepts_custom_note: false
+  },
+  { 
+    id: 3, 
+    name: 'Celebration Cake', 
+    price: 45.00, 
+    image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?q=80&w=800&auto=format&fit=crop',
+    description: 'Vanilla bean sponge with berry compote.',
+    full_details: 'A delicate sponge cake layered with fresh seasonal berries.',
+    product_notice: 'Requires 48hr advance notice',
+    accepts_custom_note: true 
+  }
 ];
 ---
 
 <div
   class="store-template-wrapper"
   data-preview={isPreview}
-  style={themeStyles}
-  data-font-preset="classic" 
-  data-layout="classic"
+  style={colorStyles}
+  data-font-preset={font} 
+  data-layout={layout}
 >
   <header class="store-header">
     <div class="store-header-inner">
-      
       <div class="header-brand-row">
         <div class="brand-logo-container">
             {safeStore.logo ? (
               <img src={safeStore.logo} class="store-template-logo store-logo-img" alt={safeStore.name} />
             ) : (
-              /* Fallback Monogram (Shows if no logo) */
-              <div class="store-logo-initial">
+              <div class="store-logo-initial store-logo-img">
                 {safeStore.name.charAt(0).toUpperCase()}
               </div>
             )}
-            
             <img class="store-template-logo store-logo-img" style="display:none" alt="Logo" />
         </div>
-        
         <h1 class="store-name store-template-name">{safeStore.name}</h1>
       </div>
 
       <div class="header-nav-row">
-        <nav class="header-nav">
-          <a href="#" class="nav-link">Shop</a>
-          <a href="#" class="nav-link">About</a>
-          <a href="#" class="nav-link">Contact</a>
-        </nav>
-
+        <nav class="header-nav"></nav>
         <div class="header-actions">
           <button class="icon-btn search-btn" aria-label="Search">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <span class="material-symbols-rounded">search</span>
           </button>
-          
           <button class="icon-btn cart-btn" aria-label="Cart">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+            <span class="material-symbols-rounded">shopping_bag</span>
             <span class="cart-count">0</span>
           </button>
         </div>
       </div>
-
     </div>
   </header>
 
@@ -93,28 +107,48 @@ const displayProducts = products.length > 0 ? products : [
     <h2 class="store-tagline store-template-tagline">{safeStore.tagline}</h2>
     <div class="store-about-preview">
       <p class="store-template-about">{safeStore.about}</p>
-      <button class="hero-cta">Explore Collection</button>
     </div>
   </section>
 
-  <section class="store-products">
-    <div class="products-header">
-      <h3>Fresh from the oven</h3>
-      <span class="view-all">View All</span>
+  <div class="category-bar-wrapper">
+    <div class="category-scroll">
+        {categories.map((cat, index) => (
+            <button class={`category-pill ${index === 0 ? 'active' : ''}`}>{cat}</button>
+        ))}
     </div>
-    
+  </div>
+
+  <section class="store-products">
     <div class="products-grid">
       {displayProducts.map((product) => (
-        <div class="product-card">
+        <div 
+          class="product-card group" 
+          data-product={JSON.stringify(product)}
+          data-id={product.id} 
+        >
           <div class="product-image">
             <img src={product.image} alt={product.name} loading="lazy" />
+            <div class="card-badges">
+                {product.accepts_custom_note && <span class="badge icon-badge" title="Customizable">✎</span>}
+                {product.product_notice && <span class="badge icon-badge" title="Has Notice">!</span>}
+            </div>
           </div>
-          <h4 class="product-name">{product.name}</h4>
-          <div class="product-footer">
-            <span class="product-price">${Number(product.price).toFixed(2)}</span>
-            <button class="product-add-btn" aria-label="Add to cart">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            </button>
+
+          <div class="product-content">
+              <h4 class="product-name">{product.name}</h4>
+              <p class="product-short-desc">{product.description}</p>
+              <div class="product-footer">
+                <span class="product-price">${Number(product.price).toFixed(2)}</span>
+              </div>
+
+              <div class="add-action-wrapper" onclick="event.stopPropagation()">
+                  <button class="big-add-btn">ADD TO CART</button>
+                  <div class="stepper-controls" style="display: none;">
+                    <button class="step-btn minus"><span class="material-symbols-rounded">remove</span></button>
+                    <span class="qty-display">1</span>
+                    <button class="step-btn plus"><span class="material-symbols-rounded">add</span></button>
+                  </div>
+              </div>
           </div>
         </div>
       ))}
@@ -123,60 +157,344 @@ const displayProducts = products.length > 0 ? products : [
 
   <footer class="store-footer">
     <div class="footer-container">
-      
       <div class="footer-col brand-col">
         <div class="footer-logo-container">
              {safeStore.logo ? (
               <img src={safeStore.logo} class="store-template-logo footer-logo-img" alt={safeStore.name} />
             ) : (
-               /* Hidden by default, JS reveals when logo uploaded */
                <img class="store-template-logo footer-logo-img" style="display:none" alt="Logo" />
             )}
         </div>
         <h4 class="store-template-name footer-brand-name">{safeStore.name}</h4>
       </div>
 
-      <div class="footer-col links-col">
-        <h5>SHOP</h5>
-        <a href="#" class="nav-link">All Products</a>
-        <a href="#" class="nav-link">Best Sellers</a>
-        <a href="#" class="nav-link">New Arrivals</a>
+      <div class="footer-col contact-col">
+        <h5>CONTACT ME</h5>
+        <a href={`mailto:${safeStore.email}`} class="contact-link footer-email-link" style={safeStore.email ? 'display: flex' : 'display: none'}>
+            <span class="material-symbols-rounded text-sm">mail</span> <span class="footer-email-text">{safeStore.email}</span>
+        </a>
+        <a href="#" class="contact-link footer-whatsapp-link" target="_blank" style={safeStore.whatsapp ? 'display: flex' : 'display: none'}>
+            <span class="material-symbols-rounded text-sm">call</span> <span class="footer-whatsapp-text">{safeStore.whatsapp}</span>
+        </a>
       </div>
 
-      <div class="footer-col contact-col">
-        <h5>CONTACT</h5>
-        
-        <a href={`mailto:${safeStore.email}`} 
-           class="contact-link footer-email-link" 
-           style={safeStore.email ? 'display: flex' : 'display: none'}
-        >
-            <span>✉</span> <span class="footer-email-text">{safeStore.email}</span>
-        </a>
-
-        <a href="#" 
-           class="contact-link footer-whatsapp-link" 
-           target="_blank" 
-           style={safeStore.whatsapp ? 'display: flex' : 'display: none'}
-        >
-            <span>📞</span> <span class="footer-whatsapp-text">{safeStore.whatsapp}</span>
-        </a>
-
+      <div class="footer-col social-col">
+        <h5>FOLLOW US</h5>
         <div class="social-icons">
             <a href="#" class="social-link footer-insta-link" target="_blank" style="display: flex">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
-                <span>Instagram</span>
+                <span class="material-symbols-rounded text-sm">photo_camera</span> <span>Instagram</span>
             </a>
-            
             <a href="#" class="social-link footer-fb-link" target="_blank" style="display: flex">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
-                <span>Facebook</span>
+                <span class="material-symbols-rounded text-sm">public</span> <span>Facebook</span>
             </a>
         </div>
       </div>
     </div>
-
     <div class="footer-bottom">
       © {new Date().getFullYear()} <span class="store-template-name">{safeStore.name}</span>. Powered by Panchasara.
     </div>
   </footer>
+
+  <dialog id="product-modal" class="product-modal">
+    <div class="modal-wrapper">
+        <button class="modal-close-btn" aria-label="Close">
+            <span class="material-symbols-rounded">close</span>
+        </button>
+        
+        <div class="modal-content">
+            <div class="modal-image-col">
+                <img id="modal-img" src="" alt="" />
+            </div>
+            <div class="modal-info-col">
+                <h2 id="modal-title" class="modal-title"></h2>
+                <span id="modal-price" class="modal-price"></span>
+                <p id="modal-desc" class="modal-desc"></p>
+                <div id="modal-notice-box" class="modal-notice-box" style="display:none">
+                    <span class="material-symbols-rounded icon">info</span>
+                    <span id="modal-notice-text"></span>
+                </div>
+                <div id="modal-custom-input" class="modal-custom-input" style="display:none">
+                    <label>Special Instructions / Note</label>
+                    <textarea placeholder="e.g. Happy Birthday Anna!"></textarea>
+                </div>
+                
+                <div class="modal-actions">
+                    <div id="modal-add-wrapper" class="add-action-wrapper modal-action-wrapper">
+                        <button class="big-add-btn">ADD TO CART</button>
+                        <div class="stepper-controls" style="display: none;">
+                            <button class="step-btn minus"><span class="material-symbols-rounded">remove</span></button>
+                            <span class="qty-display">1</span>
+                            <button class="step-btn plus"><span class="material-symbols-rounded">add</span></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+  </dialog>
+
 </div>
+
+<style>
+/* =========================================
+   CORE VARIABLES & RESET
+========================================= */
+.store-template-wrapper {
+  --spacing-container: 92%;
+  --max-width: 1200px;
+  
+  --theme-brand: #5b3a1e;
+  --theme-accent: #c46a2b;
+  --theme-page: #fffaf0;
+  --theme-ink: #1f1f1f;
+  
+  --font-display: 'Playfair Display', serif;
+  --font-heading: 'Playfair Display', serif;
+  --font-body: 'Inter', sans-serif;
+  
+  background-color: var(--theme-page);
+  color: var(--theme-ink);
+  font-family: var(--font-body);
+  width: 100%;
+  min-height: 100%;
+  position: relative;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* FONT PRESETS */
+.store-template-wrapper[data-font-preset="editorial"] { --font-display: 'Playfair Display', serif; --font-heading: 'Playfair Display', serif; --font-body: 'Inter', sans-serif; }
+.store-template-wrapper[data-font-preset="editorial"] .store-name { font-style: italic; }
+
+.store-template-wrapper[data-font-preset="modernist"] { --font-display: 'Lexend', sans-serif; --font-heading: 'Lexend', sans-serif; --font-body: 'Inter', sans-serif; }
+.store-template-wrapper[data-font-preset="modernist"] .store-name { text-transform: uppercase; letter-spacing: -0.02em; }
+
+.store-template-wrapper[data-font-preset="maker"] { --font-display: 'Dosis', sans-serif; --font-heading: 'Dosis', sans-serif; --font-body: 'Quicksand', sans-serif; }
+
+/* HEADER & HERO */
+.store-header { background-color: var(--theme-header-bg, var(--theme-page)); border-bottom: 1px solid rgba(0,0,0,0.08); padding-top: 1.5rem; }
+.store-header-inner { display: flex; flex-direction: column; align-items: center; width: var(--spacing-container); max-width: var(--max-width); margin: 0 auto; }
+.header-brand-row { display: flex; flex-direction: column; align-items: center; margin-bottom: 1.5rem; text-align: center; }
+.store-logo-img { height: 60px; width: auto; max-width: 200px; object-fit: contain; margin-bottom: 0.5rem; display: block; }
+.store-logo-initial { width: 48px; height: 48px; background-color: var(--theme-brand); color: var(--theme-page); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+.store-name { font-family: var(--font-display); font-size: 2.25rem; line-height: 1.1; color: var(--theme-brand); margin: 0; }
+.header-nav-row { width: 100%; border-top: 1px solid rgba(0,0,0,0.06); padding: 0.8rem 0; display: flex; justify-content: space-between; align-items: center; }
+.header-actions { display: flex; gap: 1.25rem; align-items: center; margin-left: auto; }
+.icon-btn { background: none; border: none; padding: 0; color: var(--theme-ink); cursor: pointer; display: flex; position: relative; }
+.icon-btn:hover { color: var(--theme-accent); }
+.cart-count { position: absolute; top: -6px; right: -8px; background-color: var(--theme-accent); color: #fff; font-size: 0.65rem; font-weight: 700; height: 16px; width: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+
+.store-hero { padding: 4rem 1rem 2rem; text-align: center; max-width: 800px; margin: 0 auto; }
+.store-tagline { font-family: var(--font-display); font-size: 2.5rem; line-height: 1.2; margin-bottom: 1.5rem; color: var(--theme-ink); }
+.store-about-preview p { font-size: 1.05rem; line-height: 1.7; opacity: 0.85; color: var(--theme-ink); margin-bottom: 2rem; white-space: pre-wrap; }
+
+/* CATEGORY BAR */
+.category-bar-wrapper { width: var(--spacing-container); max-width: var(--max-width); margin: 0 auto 3rem; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 10px; }
+.category-scroll { display: flex; gap: 0.8rem; justify-content: center; }
+.category-pill { padding: 0.6rem 1.5rem; border-radius: 50px; border: 1px solid rgba(0,0,0,0.1); background: transparent; color: var(--theme-ink); font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+.category-pill:hover { border-color: var(--theme-accent); color: var(--theme-accent); }
+.category-pill.active { background: var(--theme-brand); color: white; border-color: var(--theme-brand); }
+
+/* PRODUCTS */
+.store-products { padding: 0 0 4rem; width: var(--spacing-container); max-width: var(--max-width); margin: 0 auto; }
+.products-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.5rem; }
+.product-card { display: flex; flex-direction: column; cursor: pointer; position: relative; transition: transform 0.3s ease; }
+.product-image { position: relative; aspect-ratio: 1; overflow: hidden; background: rgba(0,0,0,0.03); margin-bottom: 1rem; }
+.product-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+.product-content { display: flex; flex-direction: column; flex: 1; }
+.product-name { font-family: var(--font-heading); font-size: 1.15rem; margin: 0 0 0.25rem; color: var(--theme-ink); }
+.product-short-desc { font-size: 0.85rem; opacity: 0.6; margin-bottom: 1rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; min-height: 2.8em; }
+.product-footer { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+.product-price { font-weight: 600; color: var(--theme-accent); font-size: 1.1rem; }
+
+/* MORPHING BUTTON (Smaller Size) */
+.add-action-wrapper { height: 40px; margin-top: auto; } /* Reduced from 44px */
+.big-add-btn { width: 100%; height: 100%; background-color: var(--theme-accent); color: white; border: none; border-radius: 4px; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+.big-add-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+.stepper-controls { display: flex; width: 100%; height: 100%; background-color: white; border: 1px solid var(--theme-ink); border-radius: 4px; align-items: center; justify-content: space-between; padding: 0 4px; animation: fadeIn 0.2s; }
+.step-btn { width: 32px; height: 100%; border: none; background: transparent; color: var(--theme-ink); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.step-btn:hover { color: var(--theme-accent); background: rgba(0,0,0,0.05); }
+.qty-display { font-weight: 700; color: var(--theme-ink); font-size: 0.9rem; }
+
+.card-badges { position: absolute; top: 10px; left: 10px; z-index: 5; display: flex; gap: 5px; }
+.icon-badge { background: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); color: var(--theme-ink); }
+
+/* LAYOUT VARIATIONS */
+.store-template-wrapper[data-layout="natural"] .product-image { border-radius: 12px; }
+.store-template-wrapper[data-layout="natural"] .big-add-btn { border-radius: 50px; }
+.store-template-wrapper[data-layout="natural"] .stepper-controls { border-radius: 50px; }
+.store-template-wrapper[data-layout="natural"] .product-card:hover .product-image img { transform: scale(1.05); }
+
+.store-template-wrapper[data-layout="gallery"] .product-image { border-radius: 2px; border: 1px solid rgba(0,0,0,0.08); }
+.store-template-wrapper[data-layout="gallery"] .big-add-btn { border-radius: 0; background: var(--theme-ink); }
+.store-template-wrapper[data-layout="gallery"] .stepper-controls { border-radius: 0; }
+.store-template-wrapper[data-layout="gallery"] .product-card:hover .product-image img { opacity: 0.9; }
+
+.store-template-wrapper[data-layout="pop"] .product-card { background-color: #fff; padding: 12px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
+.store-template-wrapper[data-layout="pop"] .product-image { border-radius: 14px; }
+.store-template-wrapper[data-layout="pop"] .big-add-btn { border-radius: 12px; font-weight: 800; border: 2px solid var(--theme-ink); color: var(--theme-ink); background: white; }
+.store-template-wrapper[data-layout="pop"] .big-add-btn:hover { background: var(--theme-accent); color: white; border-color: var(--theme-accent); }
+.store-template-wrapper[data-layout="pop"] .stepper-controls { border-radius: 12px; border: 2px solid var(--theme-ink); }
+.store-template-wrapper[data-layout="pop"] .product-card:hover { transform: translateY(-5px); }
+
+/* MODAL STYLES */
+dialog.product-modal { border: none; border-radius: 16px; padding: 0; max-width: 800px; width: 90%; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); background: var(--theme-page); color: var(--theme-ink); }
+dialog::backdrop { background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); }
+.modal-wrapper { position: relative; }
+.modal-close-btn { position: absolute; top: 1rem; right: 1rem; z-index: 10; background: rgba(255,255,255,0.8); border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.modal-content { display: grid; grid-template-columns: 1fr 1fr; }
+.modal-image-col img { width: 100%; height: 100%; object-fit: cover; min-height: 300px; }
+.modal-info-col { padding: 2.5rem; display: flex; flex-direction: column; gap: 1rem; }
+.modal-title { font-family: var(--font-heading); font-size: 1.8rem; margin: 0; line-height: 1.1; color: var(--theme-brand); }
+.modal-price { font-size: 1.25rem; font-weight: 600; color: var(--theme-accent); }
+.modal-desc { opacity: 0.8; line-height: 1.6; margin-bottom: 1rem; }
+.modal-notice-box { background: #FFF8E1; color: #795548; padding: 0.75rem; border-radius: 8px; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem; border: 1px solid #FFE082; }
+.modal-custom-input textarea { width: 100%; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; padding: 0.5rem; font-family: inherit; font-size: 0.9rem; background: rgba(255,255,255,0.5); resize: none; height: 60px; }
+.store-template-wrapper[data-layout="gallery"] dialog.product-modal { border-radius: 0; }
+
+/* FOOTER */
+.store-footer { margin-top: auto; padding: 4rem 0 2rem; border-top: 1px solid rgba(0,0,0,0.05); background-color: var(--theme-header-bg, var(--theme-page)); color: var(--theme-ink); }
+.footer-container { width: var(--spacing-container); max-width: var(--max-width); margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 3rem; margin-bottom: 3rem; }
+.footer-brand-name { font-family: var(--font-display); font-size: 1.75rem; margin-top: 0.5rem; color: var(--theme-brand); line-height: 1.1; }
+.footer-logo-img { height: 40px; width: auto; object-fit: contain; margin-bottom: 0.5rem; display: block; }
+.footer-col h5 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1.25rem; opacity: 0.5; font-weight: 700; color: var(--theme-ink); }
+.contact-col, .social-col { display: flex; flex-direction: column; gap: 0.75rem; }
+.contact-link, .social-link { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; text-decoration: none; color: var(--theme-ink); transition: color 0.2s; }
+.contact-link:hover, .social-link:hover { color: var(--theme-accent); }
+.footer-bottom { border-top: 1px solid rgba(0,0,0,0.05); padding-top: 1.5rem; text-align: center; font-size: 0.8rem; opacity: 0.4; }
+
+@media (max-width: 768px) {
+  .store-header { padding-top: 1rem; }
+  .header-nav { display: none; }
+  .products-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .category-scroll { justify-content: flex-start; padding-left: 1rem; }
+  .footer-container { grid-template-columns: 1fr; gap: 2rem; text-align: center; }
+  .footer-col { align-items: center; }
+  .modal-content { grid-template-columns: 1fr; }
+  .modal-image-col { height: 250px; }
+  .modal-info-col { padding: 1.5rem; }
+}
+</style>
+
+<script>
+  // A Global "Cart" State (Mock)
+  // In a real app, this would be a Signal or Store
+  const cartState = {}; // { productId: quantity }
+
+  // 1. Helper to sync UI based on ID
+  function syncUI(id, qty) {
+    // Find all stepper containers for this product ID (Card + Modal)
+    // Note: Modal wrapper needs dynamic ID to work perfectly, handled below
+    const wrappers = document.querySelectorAll(`[data-id="${id}"] .add-action-wrapper, #modal-add-wrapper[data-id="${id}"]`);
+    
+    wrappers.forEach(wrapper => {
+        const bigBtn = wrapper.querySelector('.big-add-btn');
+        const stepper = wrapper.querySelector('.stepper-controls');
+        const display = wrapper.querySelector('.qty-display');
+
+        if (qty > 0) {
+            bigBtn.style.display = 'none';
+            stepper.style.display = 'flex';
+            display.textContent = qty;
+        } else {
+            stepper.style.display = 'none';
+            bigBtn.style.display = 'block';
+        }
+    });
+
+    // Update global cart Badge
+    const totalItems = Object.values(cartState).reduce((a, b) => a + b, 0);
+    document.querySelectorAll('.cart-count').forEach(el => el.textContent = totalItems);
+  }
+
+  // 2. Attach listeners to a wrapper (Card or Modal)
+  function attachStepperLogic(wrapper, productId) {
+    const bigBtn = wrapper.querySelector('.big-add-btn');
+    const plus = wrapper.querySelector('.plus');
+    const minus = wrapper.querySelector('.minus');
+
+    // Remove old listeners to avoid duplicates (naive approach)
+    const newBig = bigBtn.cloneNode(true);
+    const newPlus = plus.cloneNode(true);
+    const newMinus = minus.cloneNode(true);
+    
+    bigBtn.parentNode.replaceChild(newBig, bigBtn);
+    plus.parentNode.replaceChild(newPlus, plus);
+    minus.parentNode.replaceChild(newMinus, minus);
+
+    newBig.addEventListener('click', (e) => {
+        e.stopPropagation();
+        cartState[productId] = 1;
+        syncUI(productId, 1);
+    });
+
+    newPlus.addEventListener('click', (e) => {
+        e.stopPropagation();
+        cartState[productId] = (cartState[productId] || 0) + 1;
+        syncUI(productId, cartState[productId]);
+    });
+
+    newMinus.addEventListener('click', (e) => {
+        e.stopPropagation();
+        cartState[productId] = Math.max(0, (cartState[productId] || 0) - 1);
+        syncUI(productId, cartState[productId]);
+    });
+  }
+
+  // 3. Initialize Cards
+  document.querySelectorAll('.product-card').forEach(card => {
+    const pid = card.dataset.id; // Ensure data-id is set in HTML
+    const wrapper = card.querySelector('.add-action-wrapper');
+    attachStepperLogic(wrapper, pid);
+  });
+
+  // 4. Modal Logic
+  const modal = document.getElementById('product-modal');
+  const closeBtn = document.querySelector('.modal-close-btn');
+  const cards = document.querySelectorAll('.product-card');
+  const modalWrapper = document.getElementById('modal-add-wrapper');
+
+  const mImg = document.getElementById('modal-img');
+  const mTitle = document.getElementById('modal-title');
+  const mPrice = document.getElementById('modal-price');
+  const mDesc = document.getElementById('modal-desc');
+  const mNotice = document.getElementById('modal-notice-box');
+  const mNoticeText = document.getElementById('modal-notice-text');
+  const mCustom = document.getElementById('modal-custom-input');
+
+  cards.forEach(card => {
+    card.addEventListener('click', (e) => {
+        if(e.target.closest('.add-action-wrapper')) return;
+
+        const data = JSON.parse(card.dataset.product);
+        const pid = card.dataset.id; // Get ID
+
+        mImg.src = data.image;
+        mTitle.textContent = data.name;
+        mPrice.textContent = `$${data.price.toFixed(2)}`;
+        mDesc.textContent = data.full_details || data.description; 
+
+        if (data.product_notice) {
+            mNotice.style.display = 'flex';
+            mNoticeText.textContent = data.product_notice;
+        } else { mNotice.style.display = 'none'; }
+
+        if (data.accepts_custom_note) {
+            mCustom.style.display = 'block';
+        } else { mCustom.style.display = 'none'; }
+
+        // SYNC MODAL BUTTON
+        modalWrapper.dataset.id = pid; // Tag modal with current product ID
+        attachStepperLogic(modalWrapper, pid); // Re-attach listeners for this ID
+        syncUI(pid, cartState[pid] || 0); // Set initial state from memory
+
+        modal.showModal();
+    });
+  });
+
+  closeBtn.addEventListener('click', () => modal.close());
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.close();
+  });
+</script>
