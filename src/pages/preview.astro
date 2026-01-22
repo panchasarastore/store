@@ -13,39 +13,142 @@ import StoreTemplate from '../components/store/StoreTemplate.astro';
     
     <link href="https://fonts.googleapis.com" rel="preconnect" />
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;600&family=Oswald:wght@400;500;700&family=Dosis:wght@400;600;800&family=Quicksand:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;600&family=Oswald:wght@400;500;700&family=Quicksand:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+    
+    <link rel="stylesheet" href="/styles/store-template.css" />
   </head>
   <body style="margin: 0; background: #fff;">
+    
     <StoreTemplate isPreview={true} />
 
     <script>
-      // Load data from session storage
-      const data = JSON.parse(sessionStorage.getItem('panchasara_preview_data') || '{}');
       const container = document.querySelector('.store-template-wrapper');
+      const broadcast = new BroadcastChannel('panchasara_preview_sync');
 
-      if (data && container) {
-        if(data.storeName) document.querySelectorAll('.store-template-name, .store-template-name-footer').forEach(el => el.textContent = data.storeName);
+      // --- MAPPINGS (Must match create-store.astro) ---
+      const textMappings = {
+        'store_name': ['.store-template-name', '.store-template-name-footer'], 
+        'store_tagline': '.store-template-tagline',
+        'about_us': '.store-template-about',
+        'contact_email': '.footer-email-text',
+        'whatsapp_number': '.footer-whatsapp-text'
+      };
+
+      const cssVarMappings = {
+        'color_primary': '--theme-brand',   
+        'color_secondary': '--theme-accent', 
+        'color_background': '--theme-page',  
+        'color_text': '--theme-ink',
+        'color_header': '--theme-header-bg'
+      };
+
+      // --- HELPER FUNCTIONS ---
+      const toggleVisibility = (selector, isVisible) => {
+        const el = document.querySelector(selector);
+        if (el) el.style.display = isVisible ? 'flex' : 'none';
+      };
+
+      const setLink = (selector, href) => {
+        const el = document.querySelector(selector);
+        if (el && href) el.href = href;
+      };
+
+      // --- CORE UPDATE FUNCTION ---
+      // Handles data coming from Live Broadcast (Raw Inputs)
+      const applyLiveUpdate = (data) => {
+        if (!container) return;
+
+        // 1. Update Text
+        for (const [name, selectorList] of Object.entries(textMappings)) {
+            if (data[name]) {
+                const selectors = Array.isArray(selectorList) ? selectorList : [selectorList];
+                selectors.forEach(s => {
+                    document.querySelectorAll(s).forEach(el => el.textContent = data[name]);
+                });
+            }
+        }
+
+        // 2. Update Links (Email/Whatsapp/Socials)
+        if (data.contact_email) setLink('.footer-email-link', `mailto:${data.contact_email}`);
+        if (data.whatsapp_number) setLink('.footer-whatsapp-link', `https://wa.me/${data.whatsapp_number.replace(/[^0-9]/g, '')}`);
+        if (data.instagram_url) setLink('.footer-insta-link', data.instagram_url);
+        if (data.facebook_url) setLink('.footer-fb-link', data.facebook_url);
+
+        // 3. Update CSS Variables (Colors)
+        for (const [key, cssVar] of Object.entries(cssVarMappings)) {
+            if (data[key]) container.style.setProperty(cssVar, data[key]);
+        }
+
+        // 4. Update Attributes (Font & Vibe)
+        if (data.font_preset) container.setAttribute('data-font-preset', data.font_preset);
+        if (data.vibe_preset) container.setAttribute('data-layout', data.vibe_preset);
+
+        // 5. Update Visibility Toggles
+        // Note: Checkbox values come as strings/booleans depending on transmission, checking existence or 'on'
+        toggleVisibility('.footer-email-link', data.show_email === 'on' || data.show_email === true);
+        toggleVisibility('.footer-whatsapp-link', data.show_whatsapp === 'on' || data.show_whatsapp === true);
+        toggleVisibility('.footer-insta-link', data.show_instagram === 'on' || data.show_instagram === true);
+        toggleVisibility('.footer-fb-link', data.show_facebook === 'on' || data.show_facebook === true);
+      };
+
+      // --- INITIAL LOAD (From Session Storage) ---
+      // We manually hydrate once on load because Storage format differs slightly from Broadcast format
+      const initFromStorage = () => {
+        const raw = sessionStorage.getItem('panchasara_preview_data');
+        if (!raw) return;
+        const data = JSON.parse(raw);
+
+        // Map Storage Data to DOM
+        if(data.storeName) {
+            document.querySelectorAll('.store-template-name, .store-template-name-footer').forEach(el => el.textContent = data.storeName);
+        }
         if(data.tagline) document.querySelectorAll('.store-template-tagline').forEach(el => el.textContent = data.tagline);
         if(data.about) document.querySelectorAll('.store-template-about').forEach(el => el.textContent = data.about);
         
+        // CSS Vars
         if (data.cssVars) {
           Object.entries(data.cssVars).forEach(([key, val]) => {
             container.style.setProperty(key, val);
           });
         }
 
+        // Attributes
         if (data.fontPreset) container.setAttribute('data-font-preset', data.fontPreset);
+        // Note: create-store saves 'fontPreset' (camelCase) to storage, but broadcasts 'font_preset' (snake_case)
+        // We handle the initial load here.
         
+        // Logo
         if (data.logoSrc) {
-           document.querySelectorAll('.store-template-logo').forEach(img => {
-             img.src = data.logoSrc;
-             img.style.display = 'block';
-           });
-           document.querySelectorAll('.store-logo-initial').forEach(el => el.style.display = 'none');
+           updateLogo(data.logoSrc);
         }
-      }
+      };
+
+      const updateLogo = (src) => {
+        document.querySelectorAll('.store-template-logo').forEach(img => {
+            img.src = src;
+            img.style.display = 'block';
+        });
+        document.querySelectorAll('.store-logo-initial').forEach(el => el.style.display = 'none');
+      };
+
+      // --- EVENT LISTENERS ---
+
+      // 1. Run Initial Load
+      initFromStorage();
+
+      // 2. Listen for Live Updates
+      broadcast.onmessage = (event) => {
+        const { type, payload } = event.data;
+        if (type === 'UPDATE_STORE') {
+            applyLiveUpdate(payload);
+        }
+        if (type === 'UPDATE_LOGO') {
+            updateLogo(payload);
+        }
+      };
     </script>
   </body>
 </html>

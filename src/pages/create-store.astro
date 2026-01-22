@@ -81,7 +81,6 @@ const previewProducts = [];
       
       .mobile-view-editor .editor-panel { display: flex; }
       .mobile-view-editor .preview-panel { display: none; }
-      
       .mobile-view-preview .editor-panel { display: none; }
       .mobile-view-preview .preview-panel { display: flex; }
 
@@ -321,7 +320,7 @@ const previewProducts = [];
                   <div class="flex justify-between items-center mb-2">
                     <span class="text-xs font-bold text-slate-500 uppercase">Facebook</span>
                     <label class="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" name="show_facebook" class="sr-only peer">
+                      <input type="checkbox" name="show_facebook" checked class="sr-only peer">
                       <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
                     </label>
                   </div>
@@ -359,7 +358,7 @@ const previewProducts = [];
             </button>
           </div>
 
-          <div class="flex-1 overflow-y-auto bg-white store-template-wrapper">
+          <div class="flex-1 overflow-y-auto bg-white preview-scroll-container">
             <StoreTemplate
               store={previewStore}
               theme={previewTheme}
@@ -373,11 +372,15 @@ const previewProducts = [];
 
     <script>
       const form = document.querySelector('.store-form');
-      const previewContainer = document.querySelector('.store-template-wrapper');
+      // FIXED: Select the actual component root inside our new container
+      // Note: We use .querySelector inside the event listener to be safe, 
+      // or define it here if we trust DOM order. Let's make it robust.
+      let previewContainer = document.querySelector('.store-template-wrapper');
+      
       const browserUrl = document.querySelector('.browser-url');
       const broadcast = new BroadcastChannel('panchasara_preview_sync');
 
-      // UPDATED POP THEME: Strawberry & Cream (Much nicer than Neon)
+      // Vibe Presets
       const vibes = {
         'natural': { primary: '#5D4037', secondary: '#8D6E63', bg: '#EFEBE9', text: '#3E2723', header: '#EFEBE9' },
         'gallery': { primary: '#000000', secondary: '#616161', bg: '#FFFFFF', text: '#212121', header: '#FFFFFF' },
@@ -415,44 +418,49 @@ const previewProducts = [];
         applyChanges(); // Trigger sync
       };
 
-      // MAIN UPDATE FUNCTION (Handles both local preview & broadcast)
+      // MAIN UPDATE FUNCTION
       const applyChanges = () => {
+        // Ensure we have the container
+        if (!previewContainer) previewContainer = document.querySelector('.store-template-wrapper');
+        if (!previewContainer) return;
+
         const formData = new FormData(form);
-        const data = {};
+        const data = Object.fromEntries(formData.entries());
         
-        // 1. Collect Values
-        for (const [key, val] of formData.entries()) {
-            data[key] = val;
+        // 1. URL Sync (FIXED)
+        if (data.store_url_slug !== undefined) {
+            const slug = data.store_url_slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-');
+            browserUrl.textContent = slug ? `panchasara.com/${slug}` : 'panchasara.com/your-store';
         }
 
-        // 2. Update CSS Vars Locally
-        if (cssVarMappings['color_primary']) previewContainer.style.setProperty('--theme-brand', data.color_primary);
-        if (cssVarMappings['color_secondary']) previewContainer.style.setProperty('--theme-accent', data.color_secondary);
-        if (cssVarMappings['color_background']) previewContainer.style.setProperty('--theme-page', data.color_background);
-        if (cssVarMappings['color_text']) previewContainer.style.setProperty('--theme-ink', data.color_text);
-        if (cssVarMappings['color_header']) previewContainer.style.setProperty('--theme-header-bg', data.color_header);
+        // 2. CSS Variables Sync (FIXED)
+        for (const [key, cssVar] of Object.entries(cssVarMappings)) {
+            if (data[key]) {
+                previewContainer.style.setProperty(cssVar, data[key]);
+            }
+        }
 
-        // 3. Update Fonts Locally
+        // 3. Fonts & Layout Sync (FIXED)
         if (data.font_preset) previewContainer.setAttribute('data-font-preset', data.font_preset);
-        if (data.vibe_preset) previewContainer.setAttribute('data-layout', data.vibe_preset); // MAP VIBE TO LAYOUT!
+        if (data.vibe_preset) previewContainer.setAttribute('data-layout', data.vibe_preset);
 
-        // 4. Update Text Locally
-        for (const [name, selector] of Object.entries(textMappings)) {
+        // 4. Text Sync
+        for (const [name, selectorList] of Object.entries(textMappings)) {
             if (data[name]) {
-                const targets = Array.isArray(selector) ? selector : [selector];
-                targets.forEach(s => {
+                const selectors = Array.isArray(selectorList) ? selectorList : [selectorList];
+                selectors.forEach(s => {
                     document.querySelectorAll(s).forEach(el => el.textContent = data[name]);
                 });
             }
         }
 
-        // 5. Update Visibility
+        // 5. Visibility Sync
         toggleVisibility('.footer-email-link', form.querySelector('[name="show_email"]').checked);
         toggleVisibility('.footer-whatsapp-link', form.querySelector('[name="show_whatsapp"]').checked);
         toggleVisibility('.footer-insta-link', form.querySelector('[name="show_instagram"]').checked);
         toggleVisibility('.footer-fb-link', form.querySelector('[name="show_facebook"]').checked);
 
-        // 6. Broadcast to Other Tabs
+        // 6. Broadcast
         broadcast.postMessage({ type: 'UPDATE_STORE', payload: data });
       };
 
@@ -479,27 +487,27 @@ const previewProducts = [];
             });
             document.querySelectorAll('.store-logo-initial').forEach(el => el.style.display = 'none');
             
-            // Broadcast Image
             broadcast.postMessage({ type: 'UPDATE_LOGO', payload: result });
           };
           reader.readAsDataURL(file);
         }
       });
 
-      // --- OPEN NEW TAB LOGIC ---
+      // --- OPEN NEW TAB ---
       const openPreviewBtn = document.getElementById('open-preview-btn');
       openPreviewBtn.addEventListener('click', () => {
-        // Save initial state to storage so new tab has data on load
+        if (!previewContainer) previewContainer = document.querySelector('.store-template-wrapper');
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
         
-        // Add current computed CSS vars to ensure colors match exactly
+        // Add Computed Styles for perfect match
+        const computed = getComputedStyle(previewContainer);
         data.cssVars = {
-            '--theme-brand': getComputedStyle(previewContainer).getPropertyValue('--theme-brand'),
-            '--theme-accent': getComputedStyle(previewContainer).getPropertyValue('--theme-accent'),
-            '--theme-page': getComputedStyle(previewContainer).getPropertyValue('--theme-page'),
-            '--theme-ink': getComputedStyle(previewContainer).getPropertyValue('--theme-ink'),
-            '--theme-header-bg': getComputedStyle(previewContainer).getPropertyValue('--theme-header-bg'),
+            '--theme-brand': computed.getPropertyValue('--theme-brand'),
+            '--theme-accent': computed.getPropertyValue('--theme-accent'),
+            '--theme-page': computed.getPropertyValue('--theme-page'),
+            '--theme-ink': computed.getPropertyValue('--theme-ink'),
+            '--theme-header-bg': computed.getPropertyValue('--theme-header-bg'),
         };
 
         const logoImg = document.querySelector('.store-template-logo');
@@ -511,7 +519,7 @@ const previewProducts = [];
         window.open('/preview', '_blank');
       });
 
-      // --- UI TOGGLES ---
+      // --- TOGGLES ---
       const advToggle = document.getElementById('toggle-advanced');
       advToggle.addEventListener('click', () => document.getElementById('advanced-options').classList.toggle('open'));
 
@@ -522,11 +530,19 @@ const previewProducts = [];
       btnEdit.addEventListener('click', () => {
         body.classList.remove('mobile-view-preview');
         body.classList.add('mobile-view-editor');
+        btnEdit.classList.add('bg-white', 'shadow-sm', 'text-primary');
+        btnEdit.classList.remove('text-slate-500');
+        btnPreview.classList.remove('bg-white', 'shadow-sm', 'text-primary');
+        btnPreview.classList.add('text-slate-500');
       });
 
       btnPreview.addEventListener('click', () => {
         body.classList.remove('mobile-view-editor');
         body.classList.add('mobile-view-preview');
+        btnPreview.classList.add('bg-white', 'shadow-sm', 'text-primary');
+        btnPreview.classList.remove('text-slate-500');
+        btnEdit.classList.remove('bg-white', 'shadow-sm', 'text-primary');
+        btnEdit.classList.add('text-slate-500');
       });
     </script>
   </body>
