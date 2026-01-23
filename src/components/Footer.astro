@@ -1,0 +1,48 @@
+---
+// src/components/Footer.astro
+---
+<section class="py-24 md:py-32 px-6">
+    <div class="max-w-5xl mx-auto bg-primary rounded-[2.5rem] p-12 md:p-24 text-center relative overflow-hidden">
+        <div class="absolute -top-24 -right-24 w-64 h-64 bg-white/10 rounded-full"></div>
+        <div class="absolute -bottom-12 -left-12 w-48 h-48 bg-black/5 rounded-full"></div>
+        <div class="relative z-10">
+            <h2 class="text-white text-4xl md:text-7xl font-extrabold tracking-tighter mb-8 leading-tight">
+                Your Craft Deserves <br class="hidden md:block"/> More Than DMs.
+            </h2>
+            <p class="text-white/90 text-xl md:text-2xl mb-12 max-w-2xl mx-auto">
+                Join hundreds of creators who have upgraded their business with Panchasara.
+            </p>
+            <div class="flex flex-col md:flex-row items-center justify-center gap-6">
+                <a href="/login" class="w-full md:w-auto px-12 py-5 bg-white text-primary font-bold text-xl rounded-full hover:shadow-xl hover:-translate-y-1 transition-all duration-300 inline-block">
+                    Start Selling Now
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer class="py-16 px-6 border-t border-slate-100 dark:border-neutral-900">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-12">
+        <div class="flex flex-col items-center md:items-start gap-4">
+            <div class="flex items-center gap-2">
+                <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
+                    <span class="text-white font-display font-bold text-xl">P</span>
+                </div>
+                <span class="text-2xl font-black tracking-tighter">Panchasara</span>
+            </div>
+            <p class="text-slate-500 dark:text-slate-400 font-medium">Built for the makers.</p>
+        </div>
+        <nav class="flex flex-wrap justify-center gap-8 md:gap-12">
+            <a class="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" href="#">Pricing</a>
+            <a class="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" href="#">Features</a>
+            <a class="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" href="#">Showcase</a>
+        </nav>
+        <div class="flex gap-6">
+            <a href="#" class="text-slate-400 hover:text-primary transition-colors">Instagram</a>
+            <a href="#" class="text-slate-400 hover:text-primary transition-colors">Twitter</a>
+        </div>
+    </div>
+    <div class="max-w-7xl mx-auto mt-12 pt-8 border-t border-slate-100 dark:border-neutral-900 text-center text-sm text-slate-400">
+        © 2024 Panchasara Inc. All rights reserved.
+    </div>
+</footer>

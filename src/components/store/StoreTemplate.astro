@@ -14,6 +14,7 @@ const safeStore = {
   tagline: store.tagline || 'A short soulful tagline',
   about: store.about || 'Tell customers about your craft, your journey, and what makes you special.',
   logo: store.logo || null,
+  address: store.address || null,
   email: store.contact_email,
   whatsapp: store.whatsapp_number,
 };
@@ -158,15 +159,19 @@ const displayProducts = products.length > 0 ? products : [
   <footer class="store-footer">
     <div class="footer-container">
       <div class="footer-col brand-col">
-        <div class="footer-logo-container">
-             {safeStore.logo ? (
-              <img src={safeStore.logo} class="store-template-logo footer-logo-img" alt={safeStore.name} />
-            ) : (
-               <img class="store-template-logo footer-logo-img" style="display:none" alt="Logo" />
-            )}
+      <div class="footer-logo-container">
         </div>
-        <h4 class="store-template-name footer-brand-name">{safeStore.name}</h4>
+      <h4 class="store-template-name footer-brand-name">{safeStore.name}</h4>
+      
+      <div 
+        class="contact-link footer-address-link" 
+        style={safeStore.address ? 'display: flex; margin-top: 1rem;' : 'display: none'}
+      >
+        <span class="material-symbols-rounded text-sm">location_on</span>
+        <span class="footer-address-text">{safeStore.address}</span>
       </div>
+
+    </div>
 
       <div class="footer-col contact-col">
         <h5>CONTACT ME</h5>
@@ -363,6 +368,32 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); }
 .contact-link, .social-link { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; text-decoration: none; color: var(--theme-ink); transition: color 0.2s; }
 .contact-link:hover, .social-link:hover { color: var(--theme-accent); }
 .footer-bottom { border-top: 1px solid rgba(0,0,0,0.05); padding-top: 1.5rem; text-align: center; font-size: 0.8rem; opacity: 0.4; }
+/* [NEW] Address Truncation Logic */
+/* [UPDATED] Multi-line Address Logic */
+.footer-address-text {
+  white-space: normal; 
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.5;
+  max-width: 90%; /* Stops it from hitting the next column too hard */
+  opacity: 0.8;   /* Optional: matches your other text style */
+}
+
+/* Ensure the parent column doesn't expand to fit the long text */
+.footer-col {
+  min-width: 0; 
+}
+
+/* Add inside <style> */
+.footer-email-text {
+  /* This forces long emails to wrap to the next line if needed */
+  overflow-wrap: anywhere; 
+  
+  /* Optional: Ensures it doesn't touch the icon next to it */
+  display: block; 
+}
 
 @media (max-width: 768px) {
   .store-header { padding-top: 1rem; }

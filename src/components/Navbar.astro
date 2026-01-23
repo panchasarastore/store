@@ -1,0 +1,105 @@
+---
+// src/components/Navbar.astro
+---
+<nav class="fixed top-4 md:top-6 left-0 right-0 z-50 px-4 md:px-6">
+    <div class="max-w-7xl mx-auto bg-white/70 dark:bg-neutral-900/60 backdrop-blur-xl rounded-pill px-4 md:px-8 py-3 flex items-center justify-between shadow-sm border border-white/50 dark:border-neutral-800 transition-all duration-300 hover:bg-white/90 dark:hover:bg-neutral-900/80">
+        
+        <a href="/" class="flex items-center gap-2 group">
+            <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform duration-300">
+                <span class="text-white font-display font-bold text-lg">P</span>
+            </div>
+            <span class="font-display font-extrabold text-xl tracking-tight text-slate-900 dark:text-white group-hover:opacity-80 transition-opacity">Panchasara.</span>
+        </a>
+
+        <div class="hidden md:flex items-center gap-10">
+            {['About', 'How it Works', 'Stories'].map((item) => (
+                <a 
+                    href={`#${item.toLowerCase().replace(/\s+/g, '-')}`} 
+                    class="relative font-display font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors text-[15px] group py-2"
+                >
+                    {item}
+                    <span class="absolute bottom-0 left-1/2 w-0 h-1 bg-primary rounded-full -translate-x-1/2 transition-all duration-300 group-hover:w-full opacity-0 group-hover:opacity-100"></span>
+                </a>
+            ))}
+        </div>
+
+        <div class="flex items-center gap-3 md:gap-4">
+            <button id="theme-toggle" class="w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-neutral-800 text-slate-500 dark:text-slate-400 hover:text-primary transition-all flex items-center justify-center">
+                <span class="material-symbols-rounded text-[20px] block dark:hidden">dark_mode</span>
+                <span class="material-symbols-rounded text-[20px] hidden dark:block">light_mode</span>
+            </button>
+
+            <a href="/login" class="hidden sm:block bg-primary text-white font-display font-bold py-2.5 px-6 rounded-pill hover:shadow-lg hover:shadow-orange-500/30 hover:-translate-y-0.5 transition-all duration-300 text-sm tracking-wide">
+                Login / Sign Up
+            </a>
+
+            <button id="menu-btn" class="md:hidden w-10 h-10 rounded-full bg-slate-50 dark:bg-neutral-800/50 flex items-center justify-center text-slate-900 dark:text-white hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer">
+                <span class="material-symbols-rounded">menu</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="mobile-menu" class="fixed inset-0 z-[60] opacity-0 pointer-events-none transition-opacity duration-300 cursor-pointer">
+        <div class="absolute inset-0 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl"></div>
+        <div class="absolute inset-0 bg-gradient-to-br from-orange-50/50 to-transparent dark:from-orange-900/10"></div>
+
+        <div class="relative h-full flex flex-col p-6 cursor-auto" id="menu-content">
+            <div class="flex justify-end">
+                <button id="close-menu-btn" class="w-12 h-12 rounded-full bg-slate-100 dark:bg-neutral-800 flex items-center justify-center text-slate-900 dark:text-white hover:bg-red-50 hover:text-red-500 hover:rotate-90 transition-all duration-300 shadow-sm z-50 cursor-pointer">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
+
+            <div class="flex-1 flex flex-col items-center justify-center gap-8 -mt-10">
+                {['About', 'How it Works', 'Stories'].map((item) => (
+                    <a 
+                        href={`#${item.toLowerCase().replace(/\s+/g, '-')}`} 
+                        class="mobile-link text-4xl font-display font-bold text-slate-800 dark:text-slate-100 hover:text-primary transition-colors tracking-tight"
+                    >
+                        {item}
+                    </a>
+                ))}
+                
+                <div class="w-12 h-1 bg-slate-100 dark:bg-neutral-800 rounded-full my-4"></div>
+
+                <a href="/login" class="bg-primary text-white font-display font-bold py-4 px-12 rounded-pill shadow-xl shadow-orange-500/20 text-xl active:scale-95 transition-all">
+                    Login / Sign Up
+                </a>
+            </div>
+
+            <div class="absolute bottom-8 left-0 right-0 text-center pointer-events-none">
+                 <span class="text-primary/20 font-display font-black text-6xl opacity-50 select-none">Sweet.</span>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<script is:inline>
+    /* Same script as before */
+    const menuBtn = document.getElementById('menu-btn');
+    const closeBtn = document.getElementById('close-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const menuContent = document.getElementById('menu-content');
+    const mobileLinks = document.querySelectorAll('.mobile-link');
+
+    function openMenu() {
+        if (!mobileMenu) return;
+        mobileMenu.classList.remove('opacity-0', 'pointer-events-none');
+        document.body.style.overflow = 'hidden'; 
+    }
+
+    function closeMenu() {
+        if (!mobileMenu) return;
+        mobileMenu.classList.add('opacity-0', 'pointer-events-none');
+        document.body.style.overflow = ''; 
+    }
+
+    if (menuBtn && closeBtn && mobileMenu) {
+        menuBtn.addEventListener('click', (e) => { e.stopPropagation(); openMenu(); });
+        closeBtn.addEventListener('click', (e) => { e.stopPropagation(); closeMenu(); });
+        mobileLinks.forEach(link => { link.addEventListener('click', closeMenu); });
+        mobileMenu.addEventListener('click', (e) => {
+            if (!menuContent.contains(e.target)) { closeMenu(); }
+        });
+    }
+</script>

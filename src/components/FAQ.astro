@@ -1,0 +1,41 @@
+---
+// src/components/FAQ.astro
+---
+<section class="py-24 px-6 bg-white/50 dark:bg-black/20" id="faq">
+    <div class="max-w-4xl mx-auto">
+        <h2 class="text-4xl md:text-5xl font-extrabold mb-16 tracking-tight">Common Questions</h2>
+        <div class="space-y-6">
+            
+            <details class="group bg-white dark:bg-neutral-900 rounded-2xl border border-slate-100 dark:border-neutral-800 open:shadow-lg transition-shadow duration-300">
+                <summary class="flex justify-between items-center w-full p-8 cursor-pointer list-none">
+                    <span class="text-xl md:text-2xl font-medium group-hover:text-primary transition-colors">How much does it cost?</span>
+                    <span class="material-symbols-rounded text-slate-400 group-open:rotate-45 transition-transform duration-300 text-3xl">add</span>
+                </summary>
+                <div class="px-8 pb-8 text-lg text-slate-600 dark:text-slate-400 max-w-3xl leading-relaxed">
+                    We offer a simple transparent pricing model. It's free to setup your store. We only take a small 3% commission on successful sales to cover platform costs.
+                </div>
+            </details>
+
+            <details class="group bg-white dark:bg-neutral-900 rounded-2xl border border-slate-100 dark:border-neutral-800 open:shadow-lg transition-shadow duration-300">
+                <summary class="flex justify-between items-center w-full p-8 cursor-pointer list-none">
+                    <span class="text-xl md:text-2xl font-medium group-hover:text-primary transition-colors">Do I need technical skills?</span>
+                    <span class="material-symbols-rounded text-slate-400 group-open:rotate-45 transition-transform duration-300 text-3xl">add</span>
+                </summary>
+                <div class="px-8 pb-8 text-lg text-slate-600 dark:text-slate-400 max-w-3xl leading-relaxed">
+                    Not at all. If you can upload a photo to Instagram, you can build a Panchasara store. It takes about 5 minutes to go live.
+                </div>
+            </details>
+
+            <details class="group bg-white dark:bg-neutral-900 rounded-2xl border border-slate-100 dark:border-neutral-800 open:shadow-lg transition-shadow duration-300">
+                <summary class="flex justify-between items-center w-full p-8 cursor-pointer list-none">
+                    <span class="text-xl md:text-2xl font-medium group-hover:text-primary transition-colors">Can I handle shipping?</span>
+                    <span class="material-symbols-rounded text-slate-400 group-open:rotate-45 transition-transform duration-300 text-3xl">add</span>
+                </summary>
+                <div class="px-8 pb-8 text-lg text-slate-600 dark:text-slate-400 max-w-3xl leading-relaxed">
+                    Yes! You can set up local delivery zones (great for bakers) or nationwide shipping rates (great for jewelry/art). You are in full control.
+                </div>
+            </details>
+
+        </div>
+    </div>
+</section>
