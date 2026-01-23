@@ -69,7 +69,7 @@ export interface CreateStoreInput {
   instagram_url?: string | null;
   facebook_url?: string | null;
 
-  logo_url?: string | null;
+  logo?: File | null;
 
   theme?: {
     colors?: {
@@ -77,6 +77,10 @@ export interface CreateStoreInput {
       secondary?: string;
       background?: string;
       text?: string;
+    };
+    fonts?: {
+      heading?: string;
+      body?: string;
     };
   };
 }
@@ -94,12 +98,12 @@ export async function createStore(input: CreateStoreInput) {
     whatsapp_number = null,
     instagram_url = null,
     facebook_url = null,
-    logo_url = null,
+    logo = null,
     theme = undefined,
   } = input;
 
   // ---------------------------------------------------------------------------
-  // Validation
+  // Validation & Normalization
   // ---------------------------------------------------------------------------
 
   if (!name?.trim()) {
@@ -119,16 +123,20 @@ export async function createStore(input: CreateStoreInput) {
     );
   }
 
-  if (normalizedSlug.length < 3 || normalizedSlug.length > 50) {
-    throw new Error('Store URL must be between 3 and 50 characters');
+  // Normalize WhatsApp Number (Strip everything except + and digits)
+  let normalizedWhatsapp = whatsapp_number?.replace(/[^\d+]/g, '') || null;
+  if (normalizedWhatsapp && !normalizedWhatsapp.startsWith('+')) {
+    normalizedWhatsapp = `+${normalizedWhatsapp}`;
   }
 
-  if (about_us && about_us.length > 1000) {
-    throw new Error('About section cannot exceed 1000 characters');
+  if (normalizedWhatsapp && !/^\+[1-9]\d{7,14}$/.test(normalizedWhatsapp)) {
+    throw new Error(
+      'Invalid WhatsApp number format. Please include country code (e.g., +91...)'
+    );
   }
 
   // ---------------------------------------------------------------------------
-  // Auth check (defense in depth)
+  // Auth check
   // ---------------------------------------------------------------------------
 
   const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -138,46 +146,73 @@ export async function createStore(input: CreateStoreInput) {
   }
 
   // ---------------------------------------------------------------------------
-  // Insert store
-  // owner_id is enforced via RLS (auth.uid())
+  // 1. Initial Insert (Record-First)
   // ---------------------------------------------------------------------------
 
-  const { data, error } = await supabase
+  const { data: store, error: insertError } = await supabase
     .from('stores')
     .insert({
       store_name: normalizedName,
       store_url_slug: normalizedSlug,
       store_tagline: tagline,
       about_us,
-      whatsapp_number,
+      whatsapp_number: normalizedWhatsapp,
       instagram_url,
       facebook_url,
-      logo_url,
       theme,
       status: 'draft',
+      owner_id: user.id
     })
     .select()
     .single();
 
-  if (error) {
-    // Unique constraint violations
-    if (error.code === '23505') {
-      const detail = error.details || error.message || '';
-
-      if (detail.includes('owner_id') || detail.includes('one_per_user')) {
-        throw new Error('You already have a store');
-      }
-
-      if (detail.includes('store_url_slug') || detail.includes('slug')) {
-        throw new Error('This store URL is already taken');
-      }
-
+  if (insertError) {
+    if (insertError.code === '23505') {
+      const detail = insertError.details || insertError.message || '';
+      if (detail.includes('owner_id')) throw new Error('You already have a store');
+      if (detail.includes('store_url_slug')) throw new Error('This store URL is already taken');
       throw new Error('A store with these details already exists');
     }
-
-    console.error('Error creating store:', error);
-    throw new Error('Failed to create store. Please try again.');
+    console.error('Error creating store:', insertError);
+    throw new Error('Failed to create store record');
   }
 
-  return data;
+  // ---------------------------------------------------------------------------
+  // 2. Logo Upload (If provided)
+  // ---------------------------------------------------------------------------
+
+  let finalLogoUrl: string | null = null;
+
+  if (logo && logo.size > 0) {
+    const fileExt = logo.name.split('.').pop() || 'png';
+    const filePath = `stores/${store.id}/logo/logo.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('store-assets')
+      .upload(filePath, logo, {
+        upsert: true,
+        cacheControl: '3600'
+      });
+
+    if (uploadError) {
+      console.error('Logo upload failed:', uploadError);
+      // We don't throw here to avoid losing the store record, but we log it.
+    } else {
+      const { data: { publicUrl } } = supabase.storage
+        .from('store-assets')
+        .getPublicUrl(filePath);
+
+      finalLogoUrl = publicUrl;
+
+      // Update the record with the logo URL
+      await supabase
+        .from('stores')
+        .update({ logo_url: finalLogoUrl })
+        .eq('id', store.id);
+
+      store.logo_url = finalLogoUrl;
+    }
+  }
+
+  return store;
 }
