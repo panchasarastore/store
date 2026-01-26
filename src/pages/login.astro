@@ -5,18 +5,27 @@ export const prerender = false;
 import { supabase } from '../lib/supabase';
 import { getSession } from '../lib/auth';
 import { hasStore } from '../lib/stores';
-import Layout from '../layouts/Layout.astro';
 
-// 🔁 Redirect logged-in users
+// --------------------------------------------------
+// 1️⃣ If user is ALREADY logged in → route them
+// --------------------------------------------------
 const session = await getSession();
-if (await hasStore()) {
-  return Astro.redirect('/dashboard');
-} else {
-  return Astro.redirect('/create-store');
+
+if (session) {
+  if (await hasStore()) {
+    // Existing store owner → dashboard (React app)
+    return Astro.redirect('http://localhost:8080');
+  } else {
+    // Logged in but no store yet
+    return Astro.redirect('/create-store');
+  }
 }
 
 let error = '';
 
+// --------------------------------------------------
+// 2️⃣ Handle LOGIN submit
+// --------------------------------------------------
 if (Astro.request.method === 'POST') {
   try {
     const formData = await Astro.request.formData();
@@ -32,7 +41,12 @@ if (Astro.request.method === 'POST') {
       if (signInError) {
         error = signInError.message;
       } else {
-        return Astro.redirect('/dashboard');
+        // ✅ NOW user is authenticated → decide route
+        if (await hasStore()) {
+          return Astro.redirect('http://localhost:8080');
+        } else {
+          return Astro.redirect('/create-store');
+        }
       }
     }
   } catch {

@@ -5,15 +5,20 @@ export const prerender = false;
 import { supabase } from '../lib/supabase';
 import { getSession } from '../lib/auth';
 
-// 🔁 Redirect logged-in users
+// --------------------------------------------------
+// 1️⃣ If already logged in → send to create-store
+// --------------------------------------------------
 const session = await getSession();
 if (session) {
-  return Astro.redirect('/dashboard');
+  return Astro.redirect('/create-store');
 }
 
 let error = '';
 let success = '';
 
+// --------------------------------------------------
+// 2️⃣ Handle SIGNUP submit
+// --------------------------------------------------
 if (Astro.request.method === 'POST') {
   try {
     const formData = await Astro.request.formData();
@@ -35,8 +40,11 @@ if (Astro.request.method === 'POST') {
       } else if (signUpError) {
         error = signUpError.message;
       } else {
+        // --------------------------------------------------
+        // ✅ NEW USER → ALWAYS go to create-store
+        // --------------------------------------------------
         if (data?.session) {
-          return Astro.redirect('/dashboard');
+          return Astro.redirect('/create-store');
         } else {
           success = 'Signup successful! Please log in to continue.';
         }
