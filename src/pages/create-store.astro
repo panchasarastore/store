@@ -6,19 +6,28 @@ import StoreTemplate from "../components/store/StoreTemplate.astro";
 import { requireAuth } from "../lib/auth";
 import { hasStore, createStore } from "../lib/stores";
 
+// -----------------------------------------------------------------------------
+// Auth Guard
+// -----------------------------------------------------------------------------
 await requireAuth(Astro);
 
+// If user already has a store → go straight to dashboard
 if (await hasStore()) {
-  return Astro.redirect("/dashboard");
+  return Astro.redirect("http://localhost:8080");
 }
 
 let error = "";
 
+// -----------------------------------------------------------------------------
+// Handle form submit
+// -----------------------------------------------------------------------------
 if (Astro.request.method === "POST") {
   try {
     const formData = await Astro.request.formData();
 
-    // Parse Colors & Fonts into Theme object
+    // -----------------------------
+    // Theme construction
+    // -----------------------------
     const theme = {
       colors: {
         primary: formData.get("color_primary")?.toString(),
@@ -37,6 +46,9 @@ if (Astro.request.method === "POST") {
       },
     };
 
+    // -----------------------------
+    // Store payload
+    // -----------------------------
     const storeData = {
       name: formData.get("store_name")?.toString() || "",
       slug: formData.get("store_url_slug")?.toString() || "",
@@ -50,26 +62,30 @@ if (Astro.request.method === "POST") {
       theme,
     };
 
+    // -----------------------------
+    // Create store in Supabase
+    // -----------------------------
     await createStore(storeData);
 
-    return Astro.redirect("/dashboard");
+    // ✅ FINAL STEP: redirect to React dashboard
+    return Astro.redirect("http://localhost:8080");
+
   } catch (e) {
     error = e instanceof Error ? e.message : "Something went wrong";
   }
 }
 
-// ----------------------------------
-// Preview-only placeholder data
-// ----------------------------------
+// -----------------------------------------------------------------------------
+// Preview-only placeholder data (UI preview)
+// -----------------------------------------------------------------------------
 const previewStore = {
   name: "The Sourdough Studio",
   tagline: "Slow-fermented love from my heart to yours",
   about:
     "Every loaf I bake is a 48-hour labor of love. I began my journey in a small kitchen in Tuscany, learning the ancient art of wild yeast fermentation.",
   logo: "",
-  contact_email: "hello@panchasara.com",
   whatsapp_number: "+91 98765 43210",
-  address: "123 Baker Street, Fort Kochi",
+  address: "Fort Kochi, Kerala",
 };
 
 const previewTheme = {
