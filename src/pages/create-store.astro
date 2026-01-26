@@ -43,7 +43,7 @@ if (Astro.request.method === "POST") {
       tagline: formData.get("store_tagline")?.toString(),
       about_us: formData.get("about_us")?.toString(),
       whatsapp_number: formData.get("whatsapp_number")?.toString(),
-      address: formData.get("store_address")?.toString(),
+      store_address: formData.get("store_address")?.toString(),
       instagram_url: formData.get("instagram_url")?.toString(),
       facebook_url: formData.get("facebook_url")?.toString(),
       logo: formData.get("logo") as File,

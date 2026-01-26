@@ -4,11 +4,15 @@ export const prerender = false;
 
 import { supabase } from '../lib/supabase';
 import { getSession } from '../lib/auth';
+import { hasStore } from '../lib/stores';
+import Layout from '../layouts/Layout.astro';
 
 // 🔁 Redirect logged-in users
 const session = await getSession();
-if (session) {
+if (await hasStore()) {
   return Astro.redirect('/dashboard');
+} else {
+  return Astro.redirect('/create-store');
 }
 
 let error = '';
@@ -16,7 +20,6 @@ let error = '';
 if (Astro.request.method === 'POST') {
   try {
     const formData = await Astro.request.formData();
-
     const email = formData.get('email')?.toString().trim();
     const password = formData.get('password')?.toString();
 
@@ -48,32 +51,6 @@ if (Astro.request.method === 'POST') {
   <link href="https://fonts.googleapis.com" rel="preconnect" />
   <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
   <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-  
-  <script is:inline src="https://cdn.tailwindcss.com?plugins=forms"></script>
-  
-  <script is:inline>
-    tailwind.config = {
-      darkMode: "class",
-      theme: {
-        extend: {
-          colors: {
-            primary: "#FF9D42",
-            "primary-hover": "#e88b32",
-          },
-          fontFamily: {
-            display: ["Lexend", "sans-serif"],
-            sans: ["Plus Jakarta Sans", "sans-serif"],
-          },
-          borderRadius: {
-            DEFAULT: "1rem",
-            pill: "9999px",
-            '2xl': '2rem',
-            '3xl': '3rem',
-          },
-        },
-      },
-    };
-  </script>
 </head>
 <body class="h-full font-sans text-slate-900 bg-white">
 
@@ -117,7 +94,7 @@ if (Astro.request.method === 'POST') {
                     type="email" 
                     autocomplete="email" 
                     required 
-                    placeholder="baker@example.com"
+                    placeholder="maker@example.com"
                     class="appearance-none block w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-slate-50/50"
                   >
                 </div>
@@ -140,14 +117,14 @@ if (Astro.request.method === 'POST') {
 
               <div class="flex items-center justify-end">
                 <div class="text-sm">
-                  <a href="#" class="font-medium text-primary hover:text-primary-hover transition-colors">
+                  <a href="#" class="font-medium text-primary hover:text-orange-600 transition-colors">
                     Forgot your password?
                   </a>
                 </div>
               </div>
 
               <div>
-                <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-display font-bold text-white bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors cursor-pointer shadow-orange-100">
+                <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-display font-bold text-white bg-primary hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors cursor-pointer shadow-orange-100">
                   Log in
                 </button>
               </div>
@@ -167,7 +144,7 @@ if (Astro.request.method === 'POST') {
           </div>
           <div class="relative flex justify-center text-sm">
             <span class="px-2 bg-white text-slate-500">
-              Don't have an account? <a href="/signup" class="font-bold text-primary hover:text-primary-hover transition-colors">Create one</a>
+              Don't have an account? <a href="/signup" class="font-bold text-primary hover:text-orange-600 transition-colors">Create one</a>
             </span>
           </div>
         </div>

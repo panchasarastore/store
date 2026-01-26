@@ -72,6 +72,7 @@ const displayProducts = products.length > 0 ? products : [
   style={colorStyles}
   data-font-preset={font} 
   data-layout={layout}
+  data-products={JSON.stringify(displayProducts)}
 >
   <header class="store-header">
     <div class="store-header-inner">
@@ -222,45 +223,262 @@ const displayProducts = products.length > 0 ? products : [
   </footer>
 
   <dialog id="product-modal" class="product-modal">
-    <div class="modal-wrapper">
-        <button class="modal-close-btn" aria-label="Close">
-            <span class="material-symbols-rounded">close</span>
-        </button>
+  <div class="modal-content">
+    <button class="modal-close-btn"><span class="material-symbols-rounded">close</span></button>
+    
+    <div class="modal-body">
+      <div class="modal-img-wrapper">
+        <img id="modal-img" src="" alt="">
+      </div>
+      <div class="modal-info">
+        <h3 id="modal-title">Product Name</h3>
+        <p id="modal-price">₹0.00</p>
+        <p id="modal-desc">Description...</p>
+
+        <div id="modal-notice-box" class="notice-box" style="display: none;">
+          <span class="material-symbols-rounded">info</span>
+          <span id="modal-notice-text"></span>
+        </div>
+
+        <div id="modal-custom-input" style="display: none; margin-top: 1rem;">
+           <label style="font-size: 0.8rem; font-weight: bold; display: block; margin-bottom: 0.5rem;">Special Request / Note:</label>
+           <textarea id="custom-note-text" class="theme-input" rows="2" placeholder="e.g. Write 'Happy Birthday' on cake"></textarea>
+        </div>
+
+        <div class="modal-actions" id="modal-add-wrapper">
+           <div class="add-action-wrapper">
+             <button class="big-add-btn">ADD TO CART</button>
+             <div class="stepper-controls" style="display: none;">
+                <button class="minus">-</button>
+                <span class="qty-display">1</span>
+                <button class="plus">+</button>
+             </div>
+           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+  <div class="cart-overlay"></div>
+
+<div class="cart-drawer">
+  <div class="cart-header">
+    <h3>Your Bag (<span class="cart-count-num">0</span>)</h3>
+    <button class="cart-close-btn">
+      <span class="material-symbols-rounded">close</span>
+    </button>
+  </div>
+
+  <div class="cart-items-container">
+    <div class="cart-empty-state">Your bag is empty</div>
+  </div>
+
+  <div class="cart-footer">
+    <div class="cart-total-row">
+      <span>Subtotal</span>
+      <span class="cart-total-price">$0.00</span>
+    </div>
+    <button class="checkout-btn">CHECKOUT</button>
+  </div>
+
+  <div class="success-toast" id="success-toast">
+    <span class="material-symbols-rounded success-icon">check_circle</span>
+    <span>Order placed successfully!</span>
+  </div>
+</div>
+
+<div class="checkout-page" id="checkout-page">
+    
+    <div class="checkout-header">
+      <button class="checkout-back-btn" id="close-checkout-btn">
+        <span class="material-symbols-rounded">arrow_back</span>
+        Back to Cart
+      </button>
+      <div class="checkout-brand-title">Checkout</div>
+      <div style="width: 24px;"></div>
+    </div>
+
+    <div class="checkout-container">
+      
+      <div class="progress-container">
+        <div class="progress-steps">
+          <div class="progress-line"></div>
+          <div class="p-step active" id="p-step-1">1<span class="p-label">Details</span></div>
+          <div class="p-step locked" id="p-step-2">2<span class="p-label">Schedule</span></div>
+          <div class="p-step locked" id="p-step-3">3<span class="p-label">Payment</span></div>
+        </div>
+      </div>
+
+      <div class="checkout-grid">
         
-        <div class="modal-content">
-            <div class="modal-image-col">
-                <img id="modal-img" src="" alt="" />
+        <div class="checkout-form-col">
+          
+          <div class="checkout-step active" id="step-1">
+            <div class="step-header" onclick="attemptGoToStep(1)">
+              <div class="step-title-row">
+                <span class="step-number">1</span>
+                <h4 class="step-title">Who & Where</h4>
+              </div>
+              <span class="step-summary" id="summary-1"></span>
+              <button class="edit-link">Edit</button>
             </div>
-            <div class="modal-info-col">
-                <h2 id="modal-title" class="modal-title"></h2>
-                <span id="modal-price" class="modal-price"></span>
-                <p id="modal-desc" class="modal-desc"></p>
-                <div id="modal-notice-box" class="modal-notice-box" style="display:none">
-                    <span class="material-symbols-rounded icon">info</span>
-                    <span id="modal-notice-text"></span>
+            
+            <div class="step-content">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Name</label>
+                  <input type="text" class="theme-input req-1" id="input-name" placeholder="Alen George">
                 </div>
-                <div id="modal-custom-input" class="modal-custom-input" style="display:none">
-                    <label>Special Instructions / Note</label>
-                    <textarea placeholder="e.g. Happy Birthday Anna!"></textarea>
+                <div class="form-group">
+                  <label>Email</label>
+                  <input type="email" class="theme-input req-1" id="input-email" placeholder="alen@example.com">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Phone Number</label>
+                <input type="tel" class="theme-input req-1" id="input-phone" placeholder="+91 999...">
+              </div>
+
+              <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(0,0,0,0.05);">
+                <label style="display:block; margin-bottom: 0.8rem; font-weight: bold;">Delivery Method</label>
+                
+                <div class="delivery-container">
+                  <label class="delivery-option">
+                    <input type="radio" name="delivery-mode" value="pickup" checked onchange="toggleDeliveryFields()">
+                    <span class="material-symbols-rounded">storefront</span> Pickup
+                  </label>
+                  <label class="delivery-option">
+                    <input type="radio" name="delivery-mode" value="delivery" onchange="toggleDeliveryFields()">
+                    <span class="material-symbols-rounded">local_shipping</span> Delivery
+                  </label>
+                </div>
+
+                <div id="address-fields" style="display: none;">
+                  <div class="form-group">
+                    <label>Full Address</label>
+                    <textarea class="theme-input req-1-delivery" id="input-address" rows="2" placeholder="Flat No, Street, City..."></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label>Pincode</label>
+                    <input type="text" class="theme-input req-1-delivery" id="input-pincode" placeholder="682...">
+                  </div>
                 </div>
                 
-                <div class="modal-actions">
-                    <div id="modal-add-wrapper" class="add-action-wrapper modal-action-wrapper">
-                        <button class="big-add-btn">ADD TO CART</button>
-                        <div class="stepper-controls" style="display: none;">
-                            <button class="step-btn minus"><span class="material-symbols-rounded">remove</span></button>
-                            <span class="qty-display">1</span>
-                            <button class="step-btn plus"><span class="material-symbols-rounded">add</span></button>
-                        </div>
-                    </div>
+                <div id="pickup-note" class="info-box" style="background:rgba(196,106,43,0.08); color: var(--theme-brand); border:1px solid rgba(196,106,43,0.1); padding:1rem; border-radius:8px; display:flex; align-items:center; gap:10px;">
+                   <span class="material-symbols-rounded">info</span>
+                   <span>Pickup at <strong>Sourdough Studio, Panampilly Nagar</strong></span>
                 </div>
-            </div>
-        </div>
-    </div>
-  </dialog>
+              </div>
 
-</div>
-<style>
+              <button class="continue-btn" onclick="validateAndNext(1)">
+                Next: Schedule <span class="material-symbols-rounded">arrow_downward</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="checkout-step collapsed locked" id="step-2">
+            <div class="step-header" onclick="attemptGoToStep(2)">
+               <div class="step-title-row">
+                <span class="step-number">2</span>
+                <h4 class="step-title">When</h4>
+              </div>
+              <span class="step-summary" id="summary-2"></span>
+              <button class="edit-link">Edit</button>
+            </div>
+            
+            <div class="step-content">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Date</label>
+                  <input type="date" class="theme-input req-2" id="input-date">
+                </div>
+                <div class="form-group">
+                  <label>Time Slot</label>
+                  <div class="select-wrapper">
+                    <select class="theme-input" id="input-time">
+                      <option>10:00 AM - 12:00 PM</option>
+                      <option>12:00 PM - 03:00 PM</option>
+                      <option>03:00 PM - 06:00 PM</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Note (Optional)</label>
+                <textarea class="theme-input" id="input-note" rows="2" placeholder="Message on cake, allergies..."></textarea>
+              </div>
+              <button class="continue-btn" onclick="validateAndNext(2)">
+                Next: Payment <span class="material-symbols-rounded">arrow_downward</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="checkout-step collapsed locked" id="step-3">
+            <div class="step-header" onclick="attemptGoToStep(3)">
+               <div class="step-title-row">
+                <span class="step-number">3</span>
+                <h4 class="step-title">Payment</h4>
+              </div>
+              <button class="edit-link">Edit</button>
+            </div>
+            
+            <div class="step-content">
+              <div class="payment-options">
+                <label class="payment-card">
+                  <input type="radio" name="payment" checked>
+                  <span class="custom-radio"></span>
+                  <div class="payment-info">
+                    <span class="payment-title">UPI / Online</span>
+                    <span class="payment-desc">GPay, PhonePe, Cards</span>
+                  </div>
+                </label>
+                
+                <label class="payment-card">
+                  <input type="radio" name="payment">
+                  <span class="custom-radio"></span>
+                  <div class="payment-info">
+                    <span class="payment-title">Pay on Pickup</span>
+                    <span class="payment-desc">Cash or QR at store</span>
+                  </div>
+                </label>
+              </div>
+
+               <button class="pay-btn" id="final-pay-btn">
+                PAY <span id="pay-btn-amount">₹0.00</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="checkout-summary-col">
+          <div class="summary-card">
+            <h4 class="summary-title">Order Summary</h4>
+            <div class="summary-items-list" id="checkout-items-list"></div>
+            <div class="summary-divider"></div>
+            <div class="summary-row">
+              <span>Subtotal</span>
+              <span id="checkout-subtotal">₹0.00</span>
+            </div>
+            <div class="summary-row">
+              <span>Delivery Fee</span>
+              <span id="checkout-delivery-fee">₹0.00</span>
+            </div>
+            <div class="summary-row total">
+              <span>Total</span>
+              <span id="checkout-total">₹0.00</span>
+            </div>
+            <p class="secure-note"><span class="material-symbols-rounded">lock</span> Secure SSL Checkout</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+<style is:inline>
 /* =========================================
    CORE VARIABLES & RESET
 ========================================= */
@@ -284,6 +502,7 @@ const displayProducts = products.length > 0 ? products : [
   min-height: 100%;
   position: relative;
   overflow-x: hidden;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -359,13 +578,94 @@ const displayProducts = products.length > 0 ? products : [
 .product-price { font-weight: 600; color: var(--theme-accent); font-size: 1.1rem; }
 
 /* MORPHING BUTTON */
-.add-action-wrapper { height: 40px; margin-top: auto; }
-.big-add-btn { width: 100%; height: 100%; background-color: var(--theme-accent); color: white; border: none; border-radius: 4px; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+/* BASE BUTTON STYLES */
+.add-action-wrapper { 
+  min-height: 40px; /* Allow it to grow if stepper is taller */
+  height: auto;     /* Fixes the cutoff bug */
+  margin-top: auto; 
+  width: 100%; 
+  display: flex; 
+  justify-content: flex-start; 
+}
+.big-add-btn {
+  height: 100%; 
+  background-color: var(--theme-accent); 
+  color: white; border: none; border-radius: 4px; 
+  font-weight: 700; font-size: 0.8rem; letter-spacing: 0.05em; text-transform: uppercase; 
+  cursor: pointer; transition: all 0.2s; 
+  
+  /* ✅ FIX: We removed '!important' from display so it can be hidden! */
+  display: flex; 
+  justify-content: center !important; 
+  align-items: center !important;
+  text-align: center !important;
+}
+
 .big-add-btn:hover { opacity: 0.9; transform: translateY(-1px); }
-.stepper-controls { display: flex; width: 100%; height: 100%; background-color: white; border: 1px solid var(--theme-ink); border-radius: 4px; align-items: center; justify-content: space-between; padding: 0 4px; animation: fadeIn 0.2s; }
-.step-btn { width: 32px; height: 100%; border: none; background: transparent; color: var(--theme-ink); cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.step-btn:hover { color: var(--theme-accent); background: rgba(0,0,0,0.05); }
-.qty-display { font-weight: 700; color: var(--theme-ink); font-size: 0.9rem; }
+/* --- PREMIUM STEPPER (COMPACT & BOLD) --- */
+.stepper-controls {
+  /* 1. Compact & Solid Dimensions */
+  width: 120px !important;  /* Shorter width (was 140px) */
+  height: 44px !important;  /* Nice touch target height */
+  
+  /* 2. Stronger Visuals */
+  border: 1.5px solid var(--theme-ink); /* Thicker border looks premium */
+  border-radius: 50px;
+  background: transparent;
+  
+  /* 3. Layout */
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between;
+  padding: 0 4px; /* Tiny padding for the buttons */
+  margin: 0;
+}
+
+#product-modal .stepper-controls {
+  width: 100% !important;  /* Stretch to fill modal width */
+  padding: 0 1rem;         /* Add breathing room for +/- */
+  justify-content: space-between; /* Push - and + to edges */
+}
+
+/* The Plus/Minus Buttons */
+.stepper-controls button {
+  width: 36px; 
+  height: 36px; /* Perfect circle touch target */
+  border-radius: 50%;
+  
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  
+  border: none; 
+  background: transparent;
+  color: var(--theme-ink);
+  
+  font-size: 1.6rem !important; /* Big, bold symbols */
+  font-weight: 400;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  
+  /* Fix vertical alignment of symbols */
+  padding-bottom: 4px; 
+}
+
+/* Hover Effect (The "Tactile" Feel) */
+.stepper-controls button:hover {
+  background: rgba(0,0,0,0.08); /* Subtle grey circle on hover */
+}
+.stepper-controls button:active {
+  transform: scale(0.9); /* Tiny press animation */
+}
+
+/* The Number in the middle */
+.qty-display {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--theme-ink);
+  min-width: 20px; text-align: center;
+}
 
 .card-badges { position: absolute; top: 10px; left: 10px; z-index: 5; display: flex; gap: 5px; }
 .icon-badge { background: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); color: var(--theme-ink); }
@@ -549,84 +849,585 @@ section[id] { scroll-margin-top: 100px; }
   .modal-image-col { height: 250px; }
   .modal-info-col { padding: 1.5rem; }
 }
-</style>
+/* --- CART DRAWER (THE STICKY SANDWICH LAYOUT) --- */
+.cart-overlay {
+  position: fixed; /* Locks to screen, not page */
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.4); z-index: 100;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  backdrop-filter: blur(2px);
+}
+.cart-overlay.open { opacity: 1; pointer-events: all; }
 
+.cart-drawer {
+  position: fixed; /* CRITICAL: Locks drawer to the Window Viewport */
+  top: 0; right: 0; 
+  width: 100%; max-width: 480px; 
+  height: 100%; /* Forces it to be exactly screen height */
+  
+  background: var(--theme-page); z-index: 101;
+  box-shadow: -10px 0 40px rgba(0,0,0,0.1);
+  transform: translateX(100%); 
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  
+  /* THE SANDWICH MAGIC */
+  display: flex; 
+  flex-direction: column; 
+}
+.cart-drawer.open { transform: translateX(0); }
+
+/* ZONE A: TOP BREAD (Header) */
+.cart-header {
+  flex-shrink: 0; /* Never squash */
+  padding: 1.5rem 2rem; 
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.cart-header h3 { font-family: var(--font-heading); margin: 0; font-size: 1.5rem; color: var(--theme-brand); }
+.cart-close-btn { background: none; border: none; cursor: pointer; color: var(--theme-ink); transition: transform 0.2s; }
+.cart-close-btn:hover { transform: scale(1.1); }
+
+/* ZONE B: FILLING (Scrollable Middle) */
+.cart-items-container { 
+  flex-grow: 1;           /* Take up ALL available space */
+  overflow-y: auto;       /* Scroll internally if list is long */
+  padding: 0 2rem;
+  display: flex; flex-direction: column; 
+  
+  /* Pretty Scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: var(--theme-accent) transparent;
+}
+/* Scrollbar polish */
+.cart-items-container::-webkit-scrollbar { width: 6px; }
+.cart-items-container::-webkit-scrollbar-track { background: transparent; }
+.cart-items-container::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,0.1); border-radius: 20px; }
+
+.cart-empty-state { text-align: center; opacity: 0.5; padding: 3rem 0; font-family: var(--font-heading); font-size: 1.2rem; }
+
+/* Item Styling */
+.cart-item { display: flex; gap: 1.5rem; position: relative; padding: 2rem 0; border-bottom: 1px solid rgba(0,0,0,0.05); flex-shrink: 0; }
+.cart-item:last-child { border-bottom: none; }
+.cart-item-img { width: 90px; height: 90px; border-radius: 12px; object-fit: cover; background: #f0f0f0; flex-shrink: 0; }
+.cart-item-details { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+.cart-item-top { padding-right: 20px; }
+.cart-item-title { font-family: var(--font-heading); font-size: 1.1rem; margin: 0 0 4px 0; line-height: 1.3; color: var(--theme-ink); }
+.cart-item-variant { font-size: 0.8rem; opacity: 0.6; font-family: var(--font-body); }
+.cart-remove-btn { position: absolute; top: 2rem; right: 0; background: none; border: none; cursor: pointer; color: var(--theme-ink); opacity: 0.4; padding: 5px; transition: all 0.2s; }
+.cart-remove-btn:hover { opacity: 1; color: #e53935; background: rgba(0,0,0,0.03); border-radius: 50%; }
+.cart-item-bottom { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 1rem; }
+.cart-item-price { font-weight: 700; font-size: 1.1rem; color: var(--theme-ink); }
+
+/* ZONE C: BOTTOM BREAD (Sticky Footer) */
+.cart-footer { 
+  flex-shrink: 0; /* Never squash */
+  padding: 2rem; 
+  border-top: 1px solid rgba(0,0,0,0.05); 
+  background: var(--theme-page); 
+  z-index: 10;
+  margin-top: auto; /* Pushes to bottom if list is short */
+}
+.cart-total-row { display: flex; justify-content: space-between; font-family: var(--font-heading); font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--theme-brand); }
+.checkout-btn { width: 100%; padding: 1.2rem; background: var(--theme-accent); color: #fff; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 0.9rem; letter-spacing: 0.05em; text-transform: uppercase; transition: opacity 0.2s, transform 0.2s; }
+.checkout-btn:hover { opacity: 0.9; transform: translateY(-2px); }
+
+/* --- [NEW] SUCCESS TOAST NOTIFICATION --- */
+.success-toast {
+  position: absolute;
+  top: 2rem; left: 50%;
+  transform: translateX(-50%) translateY(-100px); /* Start hidden above */
+  background: #1e1e1e; /* Dark styling */
+  color: #fff;
+  padding: 1rem 2rem;
+  border-radius: 50px;
+  display: flex; align-items: center; gap: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  z-index: 200;
+  opacity: 0;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: var(--font-body);
+  font-weight: 600;
+  pointer-events: none;
+}
+.success-toast.show {
+  transform: translateX(-50%) translateY(0); /* Slide down */
+  opacity: 1;
+}
+.success-icon { color: #4CAF50; font-size: 1.2rem; }
+
+@media (max-width: 600px) {
+  .cart-drawer { max-width: 100%; }
+  .cart-item-img { width: 70px; height: 70px; }
+}
+
+/* --- CHECKOUT PAGE (ACCORDION WIZARD) --- */
+.checkout-page {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-color: var(--theme-page);
+  z-index: 200; 
+  display: flex; flex-direction: column;
+  transform: translateY(100%); visibility: hidden; 
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.4s;
+  overflow-y: auto; 
+}
+.checkout-page.open { transform: translateY(0); visibility: visible; }
+
+.checkout-header {
+  padding: 1rem 2rem;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  background: var(--theme-page);
+  position: sticky; top: 0; z-index: 10;
+}
+.checkout-back-btn { background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-body); font-weight: 600; color: var(--theme-ink); opacity: 0.7; }
+.checkout-brand-title { font-family: var(--font-heading); font-size: 1.5rem; color: var(--theme-brand); }
+
+.checkout-container { max-width: 1100px; margin: 0 auto; width: 100%; padding: 2rem; }
+.checkout-grid { display: grid; grid-template-columns: 1.8fr 1fr; gap: 4rem; }
+
+/* --- PROGRESS BAR --- */
+.progress-container { grid-column: 1 / -1; display: flex; justify-content: center; margin-bottom: 3rem; }
+.progress-steps { display: flex; align-items: center; gap: 1rem; position: relative; }
+.progress-line {
+  position: absolute; top: 50%; left: 0; width: 100%; height: 2px;
+  background: rgba(0,0,0,0.1); z-index: 0; transform: translateY(-50%);
+}
+.p-step {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--theme-page); border: 2px solid rgba(0,0,0,0.1);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.9rem; color: rgba(0,0,0,0.4);
+  z-index: 1; position: relative; transition: all 0.3s;
+}
+.p-step.active {
+  border-color: var(--theme-accent); color: var(--theme-accent);
+  box-shadow: 0 0 0 4px rgba(196, 106, 43, 0.1);
+}
+.p-step.completed { background: var(--theme-accent); border-color: var(--theme-accent); color: white; }
+.p-label {
+  position: absolute; top: 40px; white-space: nowrap; font-size: 0.75rem;
+  font-weight: 600; opacity: 0; transition: opacity 0.2s;
+}
+.p-step.active .p-label { opacity: 1; color: var(--theme-accent); }
+
+/* --- ACCORDION STEPS --- */
+.checkout-step {
+  background: white; border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.08);
+  margin-bottom: 1.5rem; overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+/* LOCKING LOGIC */
+.checkout-step.locked {
+  opacity: 0.5; 
+  pointer-events: none; /* Prevents clicking */
+  filter: grayscale(100%);
+}
+
+.checkout-step.collapsed .step-content { display: none; }
+.checkout-step.active {
+  border-color: var(--theme-accent);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.05); opacity: 1;
+}
+
+.step-header {
+  padding: 1.5rem; display: flex; justify-content: space-between; align-items: center;
+  background: rgba(0,0,0,0.01); cursor: pointer;
+}
+.step-title-row { display: flex; align-items: center; gap: 1rem; }
+.step-number { 
+  font-weight: 700; color: white; background: var(--theme-accent); 
+  width: 28px; height: 28px; border-radius: 50%; 
+  display: flex; align-items: center; justify-content: center; font-size: 0.9rem;
+}
+.step-title { font-family: var(--font-heading); font-size: 1.2rem; margin: 0; }
+.step-summary {
+  font-size: 0.9rem; opacity: 0.6; margin-right: auto; padding-left: 1.5rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px;
+}
+.edit-link {
+  font-size: 0.85rem; text-decoration: underline; color: var(--theme-accent);
+  background: none; border: none; cursor: pointer; display: none;
+}
+.checkout-step.collapsed .edit-link { display: block; }
+.checkout-step.collapsed .step-summary { display: block; }
+.checkout-step.active .step-summary { display: none; }
+
+.step-content { padding: 2rem; border-top: 1px solid rgba(0,0,0,0.05); }
+
+/* Form Elements */
+.form-group { margin-bottom: 1.2rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.theme-input { padding: 0.9rem; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; font-family: inherit; width: 100%; font-size: 1rem; transition: all 0.2s; }
+.theme-input:focus { outline: none; border-color: var(--theme-accent); background: white; box-shadow: 0 0 0 3px rgba(196, 106, 43, 0.1); }
+.continue-btn {
+  width: 100%; padding: 1.2rem; background: var(--theme-ink); color: white;
+  border: none; border-radius: 50px; font-weight: bold; cursor: pointer; margin-top: 1.5rem;
+  display: flex; justify-content: center; align-items: center; gap: 8px; font-size: 1rem;
+}
+.continue-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+/* --- [NEW] PREMIUM DELIVERY TOGGLE --- */
+.delivery-container {
+  background: rgba(0,0,0,0.03); padding: 5px; border-radius: 12px;
+  display: flex; margin-bottom: 1.5rem; border: 1px solid rgba(0,0,0,0.05);
+}
+.delivery-container input { display: none; }
+.delivery-option {
+  flex: 1; text-align: center; padding: 12px; cursor: pointer;
+  border-radius: 8px; font-weight: 600; color: #666; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.delivery-container input:checked + .delivery-option {
+  background: white; color: var(--theme-accent);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* --- [NEW] PREMIUM PAYMENT CARDS --- */
+.payment-options { display: flex; flex-direction: column; gap: 1rem; }
+.payment-card {
+  border: 1px solid rgba(0,0,0,0.1); padding: 1.2rem; border-radius: 12px;
+  display: flex; align-items: center; gap: 1rem; cursor: pointer; 
+  transition: all 0.2s; background: white;
+}
+.payment-card:hover { border-color: var(--theme-accent); }
+/* Custom Radio Circle */
+.custom-radio {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 2px solid #ddd; position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.custom-radio::after {
+  content: ''; width: 10px; height: 10px; background: var(--theme-accent);
+  border-radius: 50%; opacity: 0; transition: opacity 0.2s;
+}
+/* Selected State */
+.payment-card input:checked ~ .custom-radio { border-color: var(--theme-accent); }
+.payment-card input:checked ~ .custom-radio::after { opacity: 1; }
+.payment-card:has(input:checked) { 
+  border-color: var(--theme-accent); 
+  background: rgba(196, 106, 43, 0.03); 
+}
+.payment-card input { display: none; } /* Hide default ugly radio */
+
+.pay-btn {
+  width: 100%; padding: 1.2rem; margin-top: 1.5rem; background: var(--theme-accent); color: white;
+  border: none; border-radius: 12px; font-weight: 800; font-size: 1.1rem; cursor: pointer;
+  transition: transform 0.2s, opacity 0.2s; letter-spacing: 0.05em; text-transform: uppercase;
+}
+.pay-btn:hover { transform: translateY(-2px); opacity: 0.9; }
+
+/* SUMMARY (Keep professional look) */
+.summary-card {
+  background: #fff; border: 1px solid rgba(0,0,0,0.08); 
+  border-radius: 16px; padding: 2rem; position: sticky; top: 100px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+}
+.summary-title { font-family: var(--font-heading); font-size: 1.4rem; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 1rem; }
+.summary-items-list { display: flex; flex-direction: column; gap: 1.2rem; margin-bottom: 2rem; max-height: 350px; overflow-y: auto; padding-right: 5px; }
+.summary-item { display: flex; gap: 1rem; align-items: flex-start; }
+.s-item-img { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; border: 1px solid rgba(0,0,0,0.05); flex-shrink: 0; }
+.s-item-info { flex: 1; display: flex; flex-direction: column; justify-content: center; min-height: 64px; }
+.s-item-name { font-weight: 700; font-size: 1rem; color: var(--theme-ink); line-height: 1.3; }
+.s-item-meta { font-size: 0.85rem; color: #888; margin-top: 4px; }
+.s-item-price { font-weight: 700; font-size: 1rem; margin-left: auto; align-self: center; }
+.summary-divider { height: 1px; background: rgba(0,0,0,0.08); margin: 1.5rem 0; border-style: dashed; }
+.summary-row { display: flex; justify-content: space-between; margin-bottom: 0.8rem; font-size: 0.95rem; color: #555; }
+.summary-row.total { font-weight: 800; font-size: 1.4rem; color: var(--theme-brand); margin-top: 1rem; align-items: flex-end; }
+.secure-note { text-align: center; font-size: 0.8rem; opacity: 0.5; margin-top: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 6px; }
+
+@media (max-width: 900px) { .checkout-grid { grid-template-columns: 1fr; gap: 2rem; } .checkout-summary-col { order: -1; } }
+
+/* --- PRODUCT MODAL (FIXED: 2-COLUMN LAYOUT) --- */
+.product-modal {
+  border: none; padding: 0; 
+  border-radius: 20px;
+  background: transparent;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  max-width: 900px; width: 95%;
+  overflow: hidden; /* Clips the image corners */
+}
+
+.product-modal::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background: var(--theme-page); 
+  position: relative;
+  display: flex; flex-direction: column;
+}
+
+.modal-close-btn {
+  position: absolute; top: 1rem; right: 1rem;
+  background: rgba(255,255,255,0.8); 
+  border: none; border-radius: 50%;
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; z-index: 10;
+  transition: transform 0.2s;
+  color: var(--theme-ink);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.modal-close-btn:hover { transform: scale(1.1); }
+
+/* LAYOUT: SPLIT VIEW */
+.modal-body {
+  display: flex;
+  flex-direction: column; /* Mobile First: Stack */
+}
+
+/* DESKTOP: SIDE BY SIDE */
+@media (min-width: 768px) {
+  .modal-body { flex-direction: row; min-height: 500px; }
+  
+  .modal-img-wrapper { 
+    width: 50%; 
+    height: auto; /* Fill height */
+    position: relative;
+  }
+  
+  .modal-info { 
+    width: 50%; 
+    padding: 3rem; /* More breathing room */
+    display: flex; flex-direction: column;
+    justify-content: center; /* Center content vertically */
+  }
+}
+
+.modal-img-wrapper img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* INFO STYLING */
+.modal-info { padding: 1.5rem; }
+
+#modal-title {
+  font-family: var(--font-heading);
+  font-size: 2rem; margin: 0 0 0.5rem 0;
+  color: var(--theme-brand);
+  line-height: 1.2;
+}
+
+#modal-price {
+  font-size: 1.25rem; font-weight: 700;
+  color: var(--theme-accent);
+  margin-bottom: 1.5rem;
+}
+
+#modal-desc {
+  font-family: var(--font-body);
+  line-height: 1.6; opacity: 0.8;
+  margin-bottom: 1.5rem; font-size: 0.95rem;
+}
+
+/* NOTICE BOX (The Yellow Pill) */
+.notice-box {
+  background: #fff9c4; /* Pastel Yellow */
+  color: #856404; /* Dark Yellow/Brown text */
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem; font-weight: 500;
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 1.5rem; border: 1px solid rgba(0,0,0,0.05);
+}
+
+/* CUSTOM NOTE INPUT */
+#modal-custom-input label {
+  font-family: var(--font-heading);
+  color: var(--theme-ink);
+}
+#modal-custom-input textarea {
+  background: rgba(0,0,0,0.03);
+  border: 1px solid rgba(0,0,0,0.1);
+  resize: none;
+}
+#modal-custom-input textarea:focus {
+  background: #fff;
+  border-color: var(--theme-accent);
+}
+
+/* ACTION BUTTONS */
+.modal-actions { margin-top: 2rem; }
+.add-action-wrapper { 
+  min-height: 40px; 
+  height: auto; 
+  margin-top: auto; 
+  width: 100%; 
+  display: flex; 
+  justify-content: flex-start; 
+}
+.big-add-btn {
+  padding: 0.9rem 2rem;
+  background: var(--theme-accent);
+  color: #fff;
+  border: none;
+  border-radius: 50px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: background 0.2s, transform 0.2s;
+}
+</style>
 <script>
   // ==========================================
-  // 1. CART & STEPPER LOGIC
+  // 1. DATA & STATE
   // ==========================================
+  const wrapper = document.querySelector('.store-template-wrapper');
+  const productsData = wrapper.dataset.products ? JSON.parse(wrapper.dataset.products) : [];
+  
   const cartState = {}; // { productId: quantity }
+  const cartNotes = {}; // { productId: "Custom Note Text" }
 
+  // ==========================================
+  // 2. MAIN SYNC FUNCTION (UI UPDATES)
+  // ==========================================
   function syncUI(id, qty) {
+    // Target both Card Buttons and Modal Buttons
     const wrappers = document.querySelectorAll(`[data-id="${id}"] .add-action-wrapper, #modal-add-wrapper[data-id="${id}"]`);
+    
     wrappers.forEach(wrapper => {
         const bigBtn = wrapper.querySelector('.big-add-btn');
         const stepper = wrapper.querySelector('.stepper-controls');
         const display = wrapper.querySelector('.qty-display');
 
         if (qty > 0) {
-            bigBtn.style.display = 'none';
-            stepper.style.display = 'flex';
-            display.textContent = qty;
+            if(bigBtn) bigBtn.style.display = 'none';
+            if(stepper) stepper.style.display = 'flex';
+            if(display) display.textContent = qty;
         } else {
-            stepper.style.display = 'none';
-            bigBtn.style.display = 'block';
+            if(stepper) stepper.style.display = 'none';
+            if(bigBtn) bigBtn.style.display = 'flex';
         }
     });
 
-    // Update global cart Badge
+    // Update Header Badge
     const totalItems = Object.values(cartState).reduce((a, b) => a + b, 0);
     document.querySelectorAll('.cart-count').forEach(el => el.textContent = totalItems);
+    
+    const cartCountNum = document.querySelector('.cart-count-num');
+    if(cartCountNum) cartCountNum.textContent = totalItems;
+
+    renderCart(); // Keep drawer updated
   }
 
+  // ==========================================
+  // 3. RENDER CART DRAWER
+  // ==========================================
+  function renderCart() {
+    const container = document.querySelector('.cart-items-container');
+    const totalPriceEl = document.querySelector('.cart-total-price');
+    if(!container) return; 
+
+    container.innerHTML = '';
+    let total = 0;
+    let hasItems = false;
+
+    Object.entries(cartState).forEach(([pid, qty]) => {
+        if(qty > 0) {
+            hasItems = true;
+            const product = productsData.find(p => p.id == pid);
+            if(!product) return;
+            total += product.price * qty;
+
+            const itemHTML = `
+                <div class="cart-item">
+                    <img src="${product.image}" class="cart-item-img" alt="${product.name}">
+                    <div class="cart-item-details">
+                        <div class="cart-item-top">
+                            <h4 class="cart-item-title">${product.name}</h4>
+                            <div class="cart-item-variant">Standard</div>
+                        </div>
+                        <button class="cart-remove-btn" onclick="updateCartItem('${pid}', 0)" title="Remove">
+                            <span class="material-symbols-rounded">close</span>
+                        </button>
+                        <div class="cart-item-bottom">
+                            <span class="cart-item-price">₹${(product.price * qty).toFixed(2)}</span>
+                            <div class="mini-stepper">
+                                <button class="mini-step-btn" onclick="updateCartItem('${pid}', ${qty - 1})">-</button>
+                                <span class="mini-step-qty">${qty}</span>
+                                <button class="mini-step-btn" onclick="updateCartItem('${pid}', ${qty + 1})">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', itemHTML);
+        }
+    });
+
+    if(!hasItems) container.innerHTML = '<div class="cart-empty-state">Your bag is empty</div>';
+    if(totalPriceEl) totalPriceEl.textContent = `₹${total.toFixed(2)}`;
+  }
+
+  window.updateCartItem = function(pid, newQty) {
+    if(newQty < 0) newQty = 0;
+    cartState[pid] = newQty;
+    syncUI(pid, newQty);
+  };
+
+  // ==========================================
+  // 4. ADD TO CART LOGIC (CARDS & MODAL)
+  // ==========================================
   function attachStepperLogic(wrapper, productId) {
     const bigBtn = wrapper.querySelector('.big-add-btn');
     const plus = wrapper.querySelector('.plus');
     const minus = wrapper.querySelector('.minus');
+    if(!bigBtn) return;
 
+    // Clone to strip old listeners
     const newBig = bigBtn.cloneNode(true);
     const newPlus = plus.cloneNode(true);
     const newMinus = minus.cloneNode(true);
-    
     bigBtn.parentNode.replaceChild(newBig, bigBtn);
     plus.parentNode.replaceChild(newPlus, plus);
     minus.parentNode.replaceChild(newMinus, minus);
 
+    // ADD BUTTON CLICK
     newBig.addEventListener('click', (e) => {
         e.stopPropagation();
+        
+        // Capture Note if inside Modal
+        const noteInput = document.getElementById('custom-note-text');
+        const modalWrapper = document.getElementById('modal-add-wrapper');
+        if(wrapper === modalWrapper && noteInput && noteInput.value.trim() !== "") {
+             cartNotes[productId] = noteInput.value.trim();
+             noteInput.value = "";
+        }
+
         cartState[productId] = 1;
         syncUI(productId, 1);
+        toggleCart(true); 
+        
+        // Close modal if open
+        const modal = document.getElementById('product-modal');
+        if(modal && modal.open) modal.close();
     });
 
-    newPlus.addEventListener('click', (e) => {
-        e.stopPropagation();
-        cartState[productId] = (cartState[productId] || 0) + 1;
-        syncUI(productId, cartState[productId]);
-    });
-
-    newMinus.addEventListener('click', (e) => {
-        e.stopPropagation();
-        cartState[productId] = Math.max(0, (cartState[productId] || 0) - 1);
-        syncUI(productId, cartState[productId]);
-    });
+    newPlus.addEventListener('click', (e) => { e.stopPropagation(); cartState[productId] = (cartState[productId] || 0) + 1; syncUI(productId, cartState[productId]); });
+    newMinus.addEventListener('click', (e) => { e.stopPropagation(); cartState[productId] = Math.max(0, (cartState[productId] || 0) - 1); syncUI(productId, cartState[productId]); });
   }
 
-  // Initialize Cards
+  // Initialize Product Cards
   document.querySelectorAll('.product-card').forEach(card => {
     const pid = card.dataset.id;
     const wrapper = card.querySelector('.add-action-wrapper');
-    attachStepperLogic(wrapper, pid);
+    if(wrapper) attachStepperLogic(wrapper, pid);
   });
-
+  
   // ==========================================
-  // 2. PRODUCT MODAL LOGIC (Variables Renamed)
+  // 5. MODAL LOGIC
   // ==========================================
   const modal = document.getElementById('product-modal');
-  // RENAMED: from closeBtn to productModalClose
-  const productModalClose = document.querySelector('.modal-close-btn'); 
-  const cards = document.querySelectorAll('.product-card');
   const modalWrapper = document.getElementById('modal-add-wrapper');
-
+  
   const mImg = document.getElementById('modal-img');
   const mTitle = document.getElementById('modal-title');
   const mPrice = document.getElementById('modal-price');
@@ -634,93 +1435,255 @@ section[id] { scroll-margin-top: 100px; }
   const mNotice = document.getElementById('modal-notice-box');
   const mNoticeText = document.getElementById('modal-notice-text');
   const mCustom = document.getElementById('modal-custom-input');
+  const mCustomText = document.getElementById('custom-note-text');
 
-  cards.forEach(card => {
-    card.addEventListener('click', (e) => {
-        if(e.target.closest('.add-action-wrapper')) return;
+  document.querySelectorAll('.product-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+          if(e.target.closest('.add-action-wrapper')) return; // Ignore clicks on button
+          
+          const data = JSON.parse(card.dataset.product);
+          const pid = card.dataset.id;
 
-        const data = JSON.parse(card.dataset.product);
-        const pid = card.dataset.id;
-
-        mImg.src = data.image;
-        mTitle.textContent = data.name;
-        mPrice.textContent = `$${data.price.toFixed(2)}`;
-        mDesc.textContent = data.full_details || data.description; 
-
-        if (data.product_notice) {
+          // Fill Data
+          mImg.src = data.image;
+          mTitle.textContent = data.name;
+          mPrice.textContent = `₹${data.price.toFixed(2)}`;
+          mDesc.textContent = data.full_details || data.description; 
+          
+          if (data.product_notice) {
             mNotice.style.display = 'flex';
             mNoticeText.textContent = data.product_notice;
-        } else { mNotice.style.display = 'none'; }
+          } else { mNotice.style.display = 'none'; }
+          
+          // Show Note Field?
+          if (data.accepts_custom_note) {
+              mCustom.style.display = 'block';
+              mCustomText.value = cartNotes[pid] || "";
+          } else { 
+              mCustom.style.display = 'none'; 
+              mCustomText.value = "";
+          }
 
-        if (data.accepts_custom_note) {
-            mCustom.style.display = 'block';
-        } else { mCustom.style.display = 'none'; }
-
-        modalWrapper.dataset.id = pid;
-        attachStepperLogic(modalWrapper, pid);
-        syncUI(pid, cartState[pid] || 0);
-
-        modal.showModal();
-    });
+          if(modalWrapper) {
+            modalWrapper.dataset.id = pid;
+            attachStepperLogic(modalWrapper, pid);
+            syncUI(pid, cartState[pid] || 0); // Update button state
+          }
+          if(modal) modal.showModal();
+      });
   });
+  
+  const productModalClose = document.querySelector('.modal-close-btn'); 
+  if(productModalClose) productModalClose.addEventListener('click', () => modal.close());
+  if(modal) modal.addEventListener('click', (e) => { if(e.target === modal) modal.close(); });
 
-  if (productModalClose) productModalClose.addEventListener('click', () => modal.close());
-  if (modal) modal.addEventListener('click', (e) => {
-    if (e.target === modal) modal.close();
-  });
 
   // ==========================================
-  // 3. MOBILE MENU LOGIC (Variables Renamed)
+  // 6. NAVIGATION & DRAWERS
   // ==========================================
-  const mobileBtn = document.querySelector('.mobile-menu-btn');
-  // RENAMED: from closeBtn to menuCloseBtn
-  const menuCloseBtn = document.querySelector('.mobile-close-btn'); 
-  const overlay = document.querySelector('.mobile-menu-overlay');
-  const mobileLinks = document.querySelectorAll('.mobile-link');
-
-  function toggleMenu(show) {
-    if (show) {
-      overlay.classList.add('open');
+  const cartDrawer = document.querySelector('.cart-drawer');
+  const cartOverlay = document.querySelector('.cart-overlay');
+  
+  function toggleCart(open) {
+    if(open) {
+        cartDrawer.classList.add('open');
+        cartOverlay.classList.add('open');
     } else {
-      overlay.classList.remove('open');
+        cartDrawer.classList.remove('open');
+        cartOverlay.classList.remove('open');
     }
   }
 
-  if (mobileBtn) mobileBtn.addEventListener('click', () => toggleMenu(true));
-  if (menuCloseBtn) menuCloseBtn.addEventListener('click', () => toggleMenu(false));
+  const cartBtn = document.querySelector('.cart-btn');
+  const cartCloseBtn = document.querySelector('.cart-close-btn');
+  if(cartBtn) cartBtn.addEventListener('click', () => toggleCart(true));
+  if(cartCloseBtn) cartCloseBtn.addEventListener('click', () => toggleCart(false));
+  if(cartOverlay) cartOverlay.addEventListener('click', () => toggleCart(false));
 
-  mobileLinks.forEach(link => {
-    link.addEventListener('click', () => toggleMenu(false));
-  });
+ // ==========================================
+  // CHECKOUT LOGIC (LOCKED WIZARD)
+  // ==========================================
+  const checkoutTriggerBtn = document.querySelector('.checkout-btn');
+  const checkoutPage = document.getElementById('checkout-page');
+  const checkoutBackBtn = document.getElementById('close-checkout-btn');
+  
+  // TRACKING STEP PROGRESS
+  let maxStepReached = 1;
 
-  if (overlay) {
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) toggleMenu(false);
+  if(checkoutTriggerBtn) {
+    checkoutTriggerBtn.addEventListener('click', () => {
+        const totalQty = Object.values(cartState).reduce((a,b)=>a+b,0);
+        if(totalQty === 0) { alert("Your bag is empty!"); return; }
+        toggleCart(false); 
+        checkoutPage.classList.add('open'); 
+        renderCheckoutSummary(); 
+        
+        // Reset state on open
+        maxStepReached = 1;
+        document.getElementById('step-2').classList.add('locked');
+        document.getElementById('step-3').classList.add('locked');
+        document.getElementById('p-step-2').classList.add('locked');
+        document.getElementById('p-step-3').classList.add('locked');
+        forceGoToStep(1); 
+    });
+  }
+  if(checkoutBackBtn) {
+    checkoutBackBtn.addEventListener('click', () => {
+        checkoutPage.classList.remove('open');
+        toggleCart(true); 
     });
   }
 
-  // ==========================================
-  // 4. NO-JUMP SCROLL LOGIC
-  // ==========================================
-  // Select both desktop (.nav-link) and mobile (.mobile-link)
-  document.querySelectorAll('.nav-link, .mobile-link').forEach(link => {
-    link.addEventListener('click', (e) => {
-      // e.preventDefault(); // Commented out to let mobile menu close first
-      // Actually, we need preventDefault to stop the jump, but we need to handle the menu closing manually (which we did above)
-      e.preventDefault(); 
+  // Called when clicking header. Only allows if step is unlocked.
+  window.attemptGoToStep = function(step) {
+      if(step > maxStepReached) return; // BLOCKED!
+      forceGoToStep(step);
+  };
 
-      const targetId = link.getAttribute('href'); 
-      const targetSection = document.querySelector(targetId);
-
-      if (targetSection) {
-        const scrollContainer = targetSection.closest('.preview-scroll-container') || window;
-        const top = targetSection.offsetTop - 50; 
-        
-        scrollContainer.scrollTo({
-          top: top,
-          behavior: 'smooth'
-        });
+  // Internal function to actually move
+  function forceGoToStep(step) {
+      document.querySelectorAll('.checkout-step').forEach(el => {
+          el.classList.add('collapsed'); el.classList.remove('active');
+      });
+      const activeStep = document.getElementById(`step-${step}`);
+      if(activeStep) { activeStep.classList.remove('collapsed'); activeStep.classList.add('active'); }
+      
+      // Update Progress Bar
+      for(let i=1; i<=3; i++) {
+          const pStep = document.getElementById(`p-step-${i}`);
+          pStep.classList.remove('active', 'completed');
+          if(i < step) pStep.classList.add('completed');
+          if(i === step) pStep.classList.add('active');
       }
-    });
-  });
+  }
+
+  window.validateAndNext = function(step) {
+      let isValid = true;
+      if(step === 1) {
+          const name = document.getElementById('input-name');
+          const email = document.getElementById('input-email');
+          const phone = document.getElementById('input-phone');
+          
+          if(!name.value.trim()) { isValid=false; name.classList.add('input-error'); }
+          if(!email.value.trim()) { isValid=false; email.classList.add('input-error'); }
+          if(!phone.value.trim()) { isValid=false; phone.classList.add('input-error'); }
+          
+          const mode = document.querySelector('input[name="delivery-mode"]:checked').value;
+          let locationText = "Pickup";
+          if(mode === 'delivery') {
+              const addr = document.getElementById('input-address');
+              if(!addr.value.trim()) { isValid=false; addr.classList.add('input-error'); }
+              else locationText = "Delivery";
+          }
+          if(isValid) {
+              document.getElementById('summary-1').textContent = `${name.value}, ${locationText}`;
+              // UNLOCK STEP 2
+              maxStepReached = Math.max(maxStepReached, 2);
+              document.getElementById('step-2').classList.remove('locked');
+              document.getElementById('p-step-2').classList.remove('locked');
+              forceGoToStep(2);
+          }
+      }
+      if(step === 2) {
+          const date = document.getElementById('input-date');
+          const time = document.getElementById('input-time');
+          if(!date.value) { isValid=false; date.classList.add('input-error'); }
+          if(isValid) {
+              document.getElementById('summary-2').textContent = `${date.value} @ ${time.value}`;
+              // UNLOCK STEP 3
+              maxStepReached = Math.max(maxStepReached, 3);
+              document.getElementById('step-3').classList.remove('locked');
+              document.getElementById('p-step-3').classList.remove('locked');
+              forceGoToStep(3);
+          }
+      }
+      setTimeout(() => document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error')), 500);
+  };
+
+  window.toggleDeliveryFields = function() {
+      const mode = document.querySelector('input[name="delivery-mode"]:checked').value;
+      const addrFields = document.getElementById('address-fields');
+      const pickupNote = document.getElementById('pickup-note');
+      if(mode === 'delivery') {
+          addrFields.style.display = 'block'; pickupNote.style.display = 'none';
+          updateTotal(50);
+      } else {
+          addrFields.style.display = 'none'; pickupNote.style.display = 'flex';
+          updateTotal(0);
+      }
+  };
+
+  function renderCheckoutSummary() {
+      const list = document.getElementById('checkout-items-list');
+      list.innerHTML = '';
+      let subtotal = 0;
+      Object.entries(cartState).forEach(([pid, qty]) => {
+          if(qty > 0) {
+              const product = productsData.find(p => p.id == pid);
+              if(!product) return;
+              subtotal += product.price * qty;
+              const note = cartNotes[pid];
+              const noteHTML = note ? `<div style="font-size: 0.8rem; color: #888; margin-top:4px; font-style:italic; font-weight:normal;">"${note}"</div>` : '';
+
+              list.insertAdjacentHTML('beforeend', `
+                  <div class="summary-item">
+                      <img src="${product.image}" class="s-item-img">
+                      <div class="s-item-info">
+                          <span class="s-item-name">${product.name}</span>
+                          <span class="s-item-meta">Qty: ${qty}</span>
+                          ${noteHTML}
+                      </div>
+                      <span class="s-item-price">₹${(product.price*qty).toFixed(2)}</span>
+                  </div>
+              `);
+          }
+      });
+      document.getElementById('checkout-total').textContent = `₹${subtotal.toFixed(2)}`;
+      document.getElementById('pay-btn-amount').textContent = `₹${subtotal.toFixed(2)}`;
+      toggleDeliveryFields(); 
+  }
+
+  function updateTotal(fee) {
+      let sub = 0;
+      Object.entries(cartState).forEach(([pid, qty]) => {
+          const p = productsData.find(pd => pd.id == pid);
+          if(p) sub += p.price * qty;
+      });
+      const total = sub + fee;
+      document.getElementById('checkout-total').textContent = `₹${total.toFixed(2)}`;
+      document.getElementById('checkout-delivery-fee').textContent = `₹${fee.toFixed(2)}`;
+      document.getElementById('pay-btn-amount').textContent = `₹${total.toFixed(2)}`;
+  }
+
+  const finalPayBtn = document.getElementById('final-pay-btn');
+  const successPage = document.getElementById('success-page');
+  const continueBtn = document.getElementById('continue-shopping-btn');
+
+  if(finalPayBtn) {
+      finalPayBtn.addEventListener('click', () => {
+          finalPayBtn.textContent = 'Processing...';
+          setTimeout(() => {
+              document.getElementById('checkout-page').classList.remove('open');
+              if(successPage) successPage.classList.add('open');
+              
+              const nameVal = document.getElementById('input-name').value || 'Guest';
+              const amtVal = document.getElementById('pay-btn-amount').textContent;
+              document.getElementById('success-customer-name').textContent = nameVal;
+              document.getElementById('success-amount').textContent = amtVal;
+              document.getElementById('success-order-id').textContent = Math.floor(1000 + Math.random()*9000);
+              
+              finalPayBtn.innerHTML = `PAY <span id="pay-btn-amount">₹0.00</span>`;
+              for(let k in cartState) delete cartState[k];
+              for(let k in cartNotes) delete cartNotes[k];
+              syncUI('reset', 0);
+              document.querySelectorAll('input').forEach(i => i.value = '');
+          }, 1500);
+      });
+  }
+  if(continueBtn) {
+      continueBtn.addEventListener('click', () => {
+          successPage.classList.remove('open');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+  }
 </script>

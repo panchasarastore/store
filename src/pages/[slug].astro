@@ -1,0 +1,73 @@
+---
+export const prerender = false;
+
+import { supabase } from "../lib/supabase";
+import StoreTemplate from "../components/store/StoreTemplate.astro";
+
+const { slug } = Astro.params;
+
+// Fetch store by slug
+const { data: store, error } = await supabase
+  .from("stores")
+  .select("*")
+  .eq("store_url_slug", slug)
+  .eq("status", "active")
+  .single();
+
+// Handle not found
+if (error || !store) {
+  return new Response("Store not found", { status: 404 });
+}
+
+// Theme mapping (adapt if needed)
+const theme = store.theme || {};
+const products = []; // We'll wire this later
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>{store.store_name} – Panchasara</title>
+    <meta name="description" content={store.store_tagline || store.store_name} />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <StoreTemplate
+      store={{
+        name: store.store_name,
+        tagline: store.store_tagline,
+        about: store.about_us,
+
+        logo: store.logo_url,
+
+        address: store.store_address,
+        contact_email: store.contact_email,
+
+        whatsapp_number: store.whatsapp_number,
+        instagram_url: store.instagram_url,
+        facebook_url: store.facebook_url,
+
+        show_email: store.show_email,
+        show_whatsapp: store.show_whatsapp,
+        show_instagram: store.show_instagram,
+        show_facebook: store.show_facebook,
+      }}
+      theme={store.theme}
+      products={[]}
+      isPreview={false}
+  />
+  </body>
+</html>

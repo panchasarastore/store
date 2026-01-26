@@ -11,8 +11,10 @@ import { supabase } from './supabase';
  * Note: This only returns stores with status != 'deleted'.
  */
 export async function getUserStore() {
-  // Verify user is authenticated
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
 
   if (authError || !user) {
     throw new Error('Not authenticated');
@@ -25,7 +27,6 @@ export async function getUserStore() {
     .neq('status', 'deleted')
     .single();
 
-  // No store found is NOT an error
   if (error) {
     if (error.code === 'PGRST116') {
       return null;
@@ -40,7 +41,6 @@ export async function getUserStore() {
 
 /**
  * Check if the current user already has a store.
- * Returns true or false.
  */
 export async function hasStore() {
   try {
@@ -66,6 +66,8 @@ export interface CreateStoreInput {
   about_us?: string | null;
 
   whatsapp_number?: string | null;
+  store_address?: string | null;
+
   instagram_url?: string | null;
   facebook_url?: string | null;
 
@@ -87,7 +89,6 @@ export interface CreateStoreInput {
 
 /**
  * Create a store for the current user.
- * Throws readable errors if validation or creation fails.
  */
 export async function createStore(input: CreateStoreInput) {
   const {
@@ -96,15 +97,16 @@ export async function createStore(input: CreateStoreInput) {
     tagline = null,
     about_us = null,
     whatsapp_number = null,
+    store_address = null,
     instagram_url = null,
     facebook_url = null,
     logo = null,
     theme = undefined,
   } = input;
 
-  // ---------------------------------------------------------------------------
-  // Validation & Normalization
-  // ---------------------------------------------------------------------------
+  // ----------------------------
+  // Validation
+  // ----------------------------
 
   if (!name?.trim()) {
     throw new Error('Store name is required');
@@ -115,7 +117,11 @@ export async function createStore(input: CreateStoreInput) {
   }
 
   const normalizedName = name.trim();
-  const normalizedSlug = slug.trim().toLowerCase();
+  const normalizedSlug = slug
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, '-')
+    .replace(/(^-|-$)/g, '');
 
   if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(normalizedSlug)) {
     throw new Error(
@@ -123,45 +129,58 @@ export async function createStore(input: CreateStoreInput) {
     );
   }
 
-  // Normalize WhatsApp Number (Strip everything except + and digits)
-  let normalizedWhatsapp = whatsapp_number?.replace(/[^\d+]/g, '') || null;
+  // Normalize WhatsApp number
+  let normalizedWhatsapp =
+    whatsapp_number?.replace(/[^\d+]/g, '') || null;
+
   if (normalizedWhatsapp && !normalizedWhatsapp.startsWith('+')) {
     normalizedWhatsapp = `+${normalizedWhatsapp}`;
   }
 
-  if (normalizedWhatsapp && !/^\+[1-9]\d{7,14}$/.test(normalizedWhatsapp)) {
+  if (
+    normalizedWhatsapp &&
+    !/^\+[1-9]\d{7,14}$/.test(normalizedWhatsapp)
+  ) {
     throw new Error(
-      'Invalid WhatsApp number format. Please include country code (e.g., +91...)'
+      'Invalid WhatsApp number format. Include country code (e.g. +91...)'
     );
   }
 
-  // ---------------------------------------------------------------------------
+  // ----------------------------
   // Auth check
-  // ---------------------------------------------------------------------------
+  // ----------------------------
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
 
   if (authError || !user) {
     throw new Error('Not authenticated');
   }
 
-  // ---------------------------------------------------------------------------
-  // 1. Initial Insert (Record-First)
-  // ---------------------------------------------------------------------------
+  // ----------------------------
+  // 1. Insert store record
+  // ----------------------------
 
   const { data: store, error: insertError } = await supabase
     .from('stores')
     .insert({
+      owner_id: user.id,
+
       store_name: normalizedName,
       store_url_slug: normalizedSlug,
       store_tagline: tagline,
       about_us,
+
       whatsapp_number: normalizedWhatsapp,
+      store_address,
+
       instagram_url,
       facebook_url,
+
       theme,
       status: 'draft',
-      owner_id: user.id
     })
     .select()
     .single();
@@ -169,19 +188,22 @@ export async function createStore(input: CreateStoreInput) {
   if (insertError) {
     if (insertError.code === '23505') {
       const detail = insertError.details || insertError.message || '';
-      if (detail.includes('owner_id')) throw new Error('You already have a store');
-      if (detail.includes('store_url_slug')) throw new Error('This store URL is already taken');
+      if (detail.includes('owner_id')) {
+        throw new Error('You already have a store');
+      }
+      if (detail.includes('store_url_slug')) {
+        throw new Error('This store URL is already taken');
+      }
       throw new Error('A store with these details already exists');
     }
+
     console.error('Error creating store:', insertError);
-    throw new Error('Failed to create store record');
+    throw new Error('Failed to create store');
   }
 
-  // ---------------------------------------------------------------------------
-  // 2. Logo Upload (If provided)
-  // ---------------------------------------------------------------------------
-
-  let finalLogoUrl: string | null = null;
+  // ----------------------------
+  // 2. Logo upload (optional)
+  // ----------------------------
 
   if (logo && logo.size > 0) {
     const fileExt = logo.name.split('.').pop() || 'png';
@@ -191,26 +213,24 @@ export async function createStore(input: CreateStoreInput) {
       .from('store-assets')
       .upload(filePath, logo, {
         upsert: true,
-        cacheControl: '3600'
+        cacheControl: '3600',
       });
 
-    if (uploadError) {
-      console.error('Logo upload failed:', uploadError);
-      // We don't throw here to avoid losing the store record, but we log it.
-    } else {
-      const { data: { publicUrl } } = supabase.storage
+    if (!uploadError) {
+      const {
+        data: { publicUrl },
+      } = supabase.storage
         .from('store-assets')
         .getPublicUrl(filePath);
 
-      finalLogoUrl = publicUrl;
-
-      // Update the record with the logo URL
       await supabase
         .from('stores')
-        .update({ logo_url: finalLogoUrl })
+        .update({ logo_url: publicUrl })
         .eq('id', store.id);
 
-      store.logo_url = finalLogoUrl;
+      store.logo_url = publicUrl;
+    } else {
+      console.error('Logo upload failed:', uploadError);
     }
   }
 
