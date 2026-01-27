@@ -1,0 +1,196 @@
+---
+
+---
+
+<div class="cart-overlay"></div>
+
+<div class="cart-drawer">
+    <div class="cart-header">
+        <h3>Your Bag (<span class="cart-count-num">0</span>)</h3>
+        <button class="cart-close-btn">
+            <span class="material-symbols-rounded">close</span>
+        </button>
+    </div>
+
+    <div class="cart-items-container">
+        <div class="cart-empty-state">Your bag is empty</div>
+    </div>
+
+    <div class="cart-footer">
+        <div class="cart-total-row">
+            <span>Subtotal</span>
+            <span class="cart-total-price">₹0.00</span>
+        </div>
+        <button class="checkout-btn">CHECKOUT</button>
+    </div>
+
+    <div class="success-toast" id="success-toast">
+        <span class="material-symbols-rounded success-icon">check_circle</span>
+        <span>Order placed successfully!</span>
+    </div>
+</div>
+
+<style is:inline>
+    /* --- CART DRAWER --- */
+    .cart-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 100;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+        backdrop-filter: blur(2px);
+    }
+    .cart-overlay.open {
+        opacity: 1;
+        pointer-events: all;
+    }
+
+    .cart-drawer {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 100%;
+        max-width: 480px;
+        height: 100%;
+        background: var(--theme-page);
+        z-index: 101;
+        box-shadow: -10px 0 40px rgba(0, 0, 0, 0.1);
+        transform: translateX(100%);
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        display: flex;
+        flex-direction: column;
+    }
+    .cart-drawer.open {
+        transform: translateX(0);
+    }
+
+    .cart-header {
+        flex-shrink: 0;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .cart-header h3 {
+        font-family: var(--font-heading);
+        margin: 0;
+        font-size: 1.5rem;
+        color: var(--theme-brand);
+    }
+    .cart-close-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--theme-ink);
+        transition: transform 0.2s;
+    }
+    .cart-close-btn:hover {
+        transform: scale(1.1);
+    }
+
+    .cart-items-container {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 0 2rem;
+        display: flex;
+        flex-direction: column;
+        scrollbar-width: thin;
+        scrollbar-color: var(--theme-accent) transparent;
+    }
+    .cart-items-container::-webkit-scrollbar {
+        width: 6px;
+    }
+    .cart-items-container::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .cart-items-container::-webkit-scrollbar-thumb {
+        background-color: rgba(0, 0, 0, 0.1);
+        border-radius: 20px;
+    }
+
+    .cart-empty-state {
+        text-align: center;
+        opacity: 0.5;
+        padding: 3rem 0;
+        font-family: var(--font-heading);
+        font-size: 1.2rem;
+    }
+
+    .cart-footer {
+        flex-shrink: 0;
+        padding: 2rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        background: var(--theme-page);
+        z-index: 10;
+        margin-top: auto;
+    }
+    .cart-total-row {
+        display: flex;
+        justify-content: space-between;
+        font-family: var(--font-heading);
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        color: var(--theme-brand);
+    }
+    .checkout-btn {
+        width: 100%;
+        padding: 1.2rem;
+        background: var(--theme-accent);
+        color: #fff;
+        border: none;
+        border-radius: 50px;
+        font-weight: bold;
+        cursor: pointer;
+        font-size: 0.9rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        transition:
+            opacity 0.2s,
+            transform 0.2s;
+    }
+    .checkout-btn:hover {
+        opacity: 0.9;
+        transform: translateY(-2px);
+    }
+
+    .success-toast {
+        position: absolute;
+        top: 2rem;
+        left: 50%;
+        transform: translateX(-50%) translateY(-100px);
+        background: #1e1e1e;
+        color: #fff;
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        z-index: 200;
+        opacity: 0;
+        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        font-family: var(--font-body);
+        font-weight: 600;
+        pointer-events: none;
+    }
+    .success-toast.show {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+    .success-icon {
+        color: #4caf50;
+        font-size: 1.2rem;
+    }
+
+    @media (max-width: 600px) {
+        .cart-drawer {
+            max-width: 100%;
+        }
+    }
+</style>

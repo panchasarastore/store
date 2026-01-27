@@ -1,0 +1,758 @@
+---
+const { safeStore } = Astro.props;
+---
+
+<div class="checkout-page" id="checkout-page">
+    <div class="checkout-header">
+        <button class="checkout-back-btn" id="close-checkout-btn">
+            <span class="material-symbols-rounded">arrow_back</span>
+            Back to Cart
+        </button>
+        <div class="checkout-brand-title">Checkout</div>
+        <div style="width: 24px;"></div>
+    </div>
+
+    <div class="checkout-container">
+        <div class="progress-container">
+            <div class="progress-steps">
+                <div class="progress-line"></div>
+                <div class="p-step active" id="p-step-1">
+                    1<span class="p-label">Details</span>
+                </div>
+                <div class="p-step locked" id="p-step-2">
+                    2<span class="p-label">Schedule</span>
+                </div>
+                <div class="p-step locked" id="p-step-3">
+                    3<span class="p-label">Payment</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="checkout-grid">
+            <div class="checkout-form-col">
+                <div class="checkout-step active" id="step-1">
+                    <div class="step-header" onclick="attemptGoToStep(1)">
+                        <div class="step-title-row">
+                            <span class="step-number">1</span>
+                            <h4 class="step-title">Who & Where</h4>
+                        </div>
+                        <span class="step-summary" id="summary-1"></span>
+                        <button class="edit-link">Edit</button>
+                    </div>
+
+                    <div class="step-content">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Name</label>
+                                <input
+                                    type="text"
+                                    class="theme-input req-1"
+                                    id="input-name"
+                                    placeholder="Alen George"
+                                />
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input
+                                    type="email"
+                                    class="theme-input req-1"
+                                    id="input-email"
+                                    placeholder="alen@example.com"
+                                />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input
+                                type="tel"
+                                class="theme-input req-1"
+                                id="input-phone"
+                                placeholder="+91 999..."
+                            />
+                        </div>
+
+                        <div
+                            style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(0,0,0,0.05);"
+                        >
+                            <label
+                                style="display:block; margin-bottom: 0.8rem; font-weight: bold;"
+                                >Delivery Method</label
+                            >
+
+                            <div class="delivery-container">
+                                <label class="delivery-option">
+                                    <input
+                                        type="radio"
+                                        name="delivery-mode"
+                                        value="pickup"
+                                        checked
+                                        onchange="toggleDeliveryFields()"
+                                    />
+                                    <span class="material-symbols-rounded"
+                                        >storefront</span
+                                    > Pickup
+                                </label>
+                                <label class="delivery-option">
+                                    <input
+                                        type="radio"
+                                        name="delivery-mode"
+                                        value="delivery"
+                                        onchange="toggleDeliveryFields()"
+                                    />
+                                    <span class="material-symbols-rounded"
+                                        >local_shipping</span
+                                    > Delivery
+                                </label>
+                            </div>
+
+                            <div id="address-fields" style="display: none;">
+                                <div class="form-group">
+                                    <label>Full Address</label>
+                                    <textarea
+                                        class="theme-input req-1-delivery"
+                                        id="input-address"
+                                        rows="2"
+                                        placeholder="Flat No, Street, City..."
+                                    ></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>Pincode</label>
+                                    <input
+                                        type="text"
+                                        class="theme-input req-1-delivery"
+                                        id="input-pincode"
+                                        placeholder="682..."
+                                    />
+                                </div>
+                            </div>
+
+                            <div
+                                id="pickup-note"
+                                class="info-box"
+                                style="background:rgba(196,106,43,0.08); color: var(--theme-brand); border:1px solid rgba(196,106,43,0.1); padding:1rem; border-radius:8px; display:flex; align-items:center; gap:10px;"
+                            >
+                                <span class="material-symbols-rounded"
+                                    >info</span
+                                >
+                                <span
+                                    >Pickup at <strong
+                                        >{
+                                            safeStore.address || "our store"
+                                        }</strong
+                                    ></span
+                                >
+                            </div>
+                        </div>
+
+                        <button
+                            class="continue-btn"
+                            onclick="validateAndNext(1)"
+                        >
+                            Next: Schedule <span
+                                class="material-symbols-rounded"
+                                >arrow_downward</span
+                            >
+                        </button>
+                    </div>
+                </div>
+
+                <div class="checkout-step collapsed locked" id="step-2">
+                    <div class="step-header" onclick="attemptGoToStep(2)">
+                        <div class="step-title-row">
+                            <span class="step-number">2</span>
+                            <h4 class="step-title">When</h4>
+                        </div>
+                        <span class="step-summary" id="summary-2"></span>
+                        <button class="edit-link">Edit</button>
+                    </div>
+
+                    <div class="step-content">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Date</label>
+                                <input
+                                    type="date"
+                                    class="theme-input req-2"
+                                    id="input-date"
+                                />
+                            </div>
+                            <div class="form-group">
+                                <label>Time Slot</label>
+                                <div class="select-wrapper">
+                                    <select class="theme-input" id="input-time">
+                                        <option>10:00 AM - 12:00 PM</option>
+                                        <option>12:00 PM - 03:00 PM</option>
+                                        <option>03:00 PM - 06:00 PM</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Note (Optional)</label>
+                            <textarea
+                                class="theme-input"
+                                id="input-note"
+                                rows="2"
+                                placeholder="Message on cake, allergies..."
+                            ></textarea>
+                        </div>
+                        <button
+                            class="continue-btn"
+                            onclick="validateAndNext(2)"
+                        >
+                            Next: Payment <span class="material-symbols-rounded"
+                                >arrow_downward</span
+                            >
+                        </button>
+                    </div>
+                </div>
+
+                <div class="checkout-step collapsed locked" id="step-3">
+                    <div class="step-header" onclick="attemptGoToStep(3)">
+                        <div class="step-title-row">
+                            <span class="step-number">3</span>
+                            <h4 class="step-title">Payment</h4>
+                        </div>
+                        <button class="edit-link">Edit</button>
+                    </div>
+
+                    <div class="step-content">
+                        <div class="payment-options">
+                            <label class="payment-card">
+                                <input
+                                    type="radio"
+                                    name="payment"
+                                    value="online"
+                                    checked
+                                />
+                                <span class="custom-radio"></span>
+                                <div class="payment-info">
+                                    <span class="payment-title"
+                                        >UPI / Online</span
+                                    >
+                                    <span class="payment-desc"
+                                        >GPay, PhonePe, Cards</span
+                                    >
+                                </div>
+                            </label>
+
+                            <label class="payment-card">
+                                <input
+                                    type="radio"
+                                    name="payment"
+                                    value="pickup"
+                                />
+                                <span class="custom-radio"></span>
+                                <div class="payment-info">
+                                    <span class="payment-title"
+                                        >Pay on Pickup</span
+                                    >
+                                    <span class="payment-desc"
+                                        >Cash or QR at store</span
+                                    >
+                                </div>
+                            </label>
+                        </div>
+
+                        <button class="pay-btn" id="final-pay-btn">
+                            PAY <span id="pay-btn-amount">₹0.00</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="checkout-summary-col">
+                <div class="summary-card">
+                    <h4 class="summary-title">Order Summary</h4>
+                    <div class="summary-items-list" id="checkout-items-list">
+                    </div>
+                    <div class="summary-divider"></div>
+                    <div class="summary-row">
+                        <span>Subtotal</span>
+                        <span id="checkout-subtotal">₹0.00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Delivery Fee</span>
+                        <span id="checkout-delivery-fee">₹0.00</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Total</span>
+                        <span id="checkout-total">₹0.00</span>
+                    </div>
+                    <p class="secure-note">
+                        <span class="material-symbols-rounded">lock</span> Secure
+                        SSL Checkout
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style is:inline>
+    /* --- CHECKOUT PAGE --- */
+    .checkout-page {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: var(--theme-page);
+        z-index: 200;
+        display: flex;
+        flex-direction: column;
+        transform: translateY(100%);
+        visibility: hidden;
+        transition:
+            transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+            visibility 0.4s;
+        overflow-y: auto;
+    }
+    .checkout-page.open {
+        transform: translateY(0);
+        visibility: visible;
+    }
+
+    .checkout-header {
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        background: var(--theme-page);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    .checkout-back-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: var(--font-body);
+        font-weight: 600;
+        color: var(--theme-ink);
+        opacity: 0.7;
+    }
+    .checkout-brand-title {
+        font-family: var(--font-heading);
+        font-size: 1.5rem;
+        color: var(--theme-brand);
+    }
+
+    .checkout-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        width: 100%;
+        padding: 2rem;
+    }
+    .checkout-grid {
+        display: grid;
+        grid-template-columns: 1.8fr 1fr;
+        gap: 4rem;
+    }
+
+    .progress-container {
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: center;
+        margin-bottom: 3rem;
+    }
+    .progress-steps {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        position: relative;
+    }
+    .progress-line {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: rgba(0, 0, 0, 0.1);
+        z-index: 0;
+        transform: translateY(-50%);
+    }
+    .p-step {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--theme-page);
+        border: 2px solid rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: rgba(0, 0, 0, 0.4);
+        z-index: 1;
+        position: relative;
+        transition: all 0.3s;
+    }
+    .p-step.active {
+        border-color: var(--theme-accent);
+        color: var(--theme-accent);
+        box-shadow: 0 0 0 4px rgba(196, 106, 43, 0.1);
+    }
+    .p-step.completed {
+        background: var(--theme-accent);
+        border-color: var(--theme-accent);
+        color: white;
+    }
+    .p-label {
+        position: absolute;
+        top: 40px;
+        white-space: nowrap;
+        font-size: 0.75rem;
+        font-weight: 600;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    .p-step.active .p-label {
+        opacity: 1;
+        color: var(--theme-accent);
+    }
+
+    .checkout-step {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    .checkout-step.locked {
+        opacity: 0.5;
+        pointer-events: none;
+        filter: grayscale(100%);
+    }
+    .checkout-step.collapsed .step-content {
+        display: none;
+    }
+    .checkout-step.active {
+        border-color: var(--theme-accent);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+        opacity: 1;
+    }
+
+    .step-header {
+        padding: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(0, 0, 0, 0.01);
+        cursor: pointer;
+    }
+    .step-title-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .step-number {
+        font-weight: 700;
+        color: white;
+        background: var(--theme-accent);
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+    }
+    .step-title {
+        font-family: var(--font-heading);
+        font-size: 1.2rem;
+        margin: 0;
+    }
+    .step-summary {
+        font-size: 0.9rem;
+        opacity: 0.6;
+        margin-right: auto;
+        padding-left: 1.5rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 250px;
+    }
+    .edit-link {
+        font-size: 0.85rem;
+        text-decoration: underline;
+        color: var(--theme-accent);
+        background: none;
+        border: none;
+        cursor: pointer;
+        display: none;
+    }
+    .checkout-step.collapsed .edit-link {
+        display: block;
+    }
+    .checkout-step.collapsed .step-summary {
+        display: block;
+    }
+    .checkout-step.active .step-summary {
+        display: none;
+    }
+
+    .step-content {
+        padding: 2rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    .form-group {
+        margin-bottom: 1.2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+    .theme-input {
+        padding: 0.9rem;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        font-family: inherit;
+        width: 100%;
+        font-size: 1rem;
+        transition: all 0.2s;
+    }
+    .theme-input:focus {
+        outline: none;
+        border-color: var(--theme-accent);
+        background: white;
+        box-shadow: 0 0 0 3px rgba(196, 106, 43, 0.1);
+    }
+    .continue-btn {
+        width: 100%;
+        padding: 1.2rem;
+        background: var(--theme-ink);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 1.5rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        font-size: 1rem;
+    }
+    .continue-btn:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+
+    .delivery-container {
+        background: rgba(0, 0, 0, 0.03);
+        padding: 5px;
+        border-radius: 12px;
+        display: flex;
+        margin-bottom: 1.5rem;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    .delivery-container input {
+        display: none;
+    }
+    .delivery-option {
+        flex: 1;
+        text-align: center;
+        padding: 12px;
+        cursor: pointer;
+        border-radius: 8px;
+        font-weight: 600;
+        color: #666;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    .delivery-container input:checked + .delivery-option {
+        background: white;
+        color: var(--theme-accent);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .payment-options {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .payment-card {
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        padding: 1.2rem;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: white;
+    }
+    .payment-card:hover {
+        border-color: var(--theme-accent);
+    }
+    .custom-radio {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid #ddd;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .custom-radio::after {
+        content: "";
+        width: 10px;
+        height: 10px;
+        background: var(--theme-accent);
+        border-radius: 50%;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    .payment-card input:checked ~ .custom-radio {
+        border-color: var(--theme-accent);
+    }
+    .payment-card input:checked ~ .custom-radio::after {
+        opacity: 1;
+    }
+    .payment-card:has(input:checked) {
+        border-color: var(--theme-accent);
+        background: rgba(196, 106, 43, 0.03);
+    }
+    .payment-card input {
+        display: none;
+    }
+
+    .pay-btn {
+        width: 100%;
+        padding: 1.2rem;
+        margin-top: 1.5rem;
+        background: var(--theme-accent);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-weight: 800;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition:
+            transform 0.2s,
+            opacity 0.2s;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+    .pay-btn:hover {
+        transform: translateY(-2px);
+        opacity: 0.9;
+    }
+
+    .summary-card {
+        background: #fff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 16px;
+        padding: 2rem;
+        position: sticky;
+        top: 100px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+    }
+    .summary-title {
+        font-family: var(--font-heading);
+        font-size: 1.4rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        padding-bottom: 1rem;
+    }
+    .summary-items-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1.2rem;
+        margin-bottom: 2rem;
+        max-height: 350px;
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+    .summary-item {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    .s-item-img {
+        width: 64px;
+        height: 64px;
+        border-radius: 8px;
+        object-fit: cover;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        flex-shrink: 0;
+    }
+    .s-item-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-height: 64px;
+    }
+    .s-item-name {
+        font-weight: 700;
+        font-size: 1rem;
+        color: var(--theme-ink);
+        line-height: 1.3;
+    }
+    .s-item-meta {
+        font-size: 0.85rem;
+        color: #888;
+        margin-top: 4px;
+    }
+    .s-item-price {
+        font-weight: 700;
+        font-size: 1rem;
+        margin-left: auto;
+        align-self: center;
+    }
+    .summary-divider {
+        height: 1px;
+        background: rgba(0, 0, 0, 0.08);
+        margin: 1.5rem 0;
+        border-style: dashed;
+    }
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.8rem;
+        font-size: 0.95rem;
+        color: #555;
+    }
+    .summary-row.total {
+        font-weight: 800;
+        font-size: 1.4rem;
+        color: var(--theme-brand);
+        margin-top: 1rem;
+        align-items: flex-end;
+    }
+    .secure-note {
+        text-align: center;
+        font-size: 0.8rem;
+        opacity: 0.5;
+        margin-top: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    @media (max-width: 900px) {
+        .checkout-grid {
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+        .checkout-summary-col {
+            order: -1;
+        }
+    }
+</style>

@@ -21,15 +21,39 @@ if (error || !store) {
 
 // Theme mapping (adapt if needed)
 const theme = store.theme || {};
-const products = []; // We'll wire this later
+
+// Fetch products for this store
+const { data: productsData, error: productsError } = await supabase
+  .from("products")
+  .select("*")
+  .eq("store_id", store.id)
+  .eq("is_in_stock", true)
+  .order("created_at", { ascending: false });
+
+const products = (productsData || []).map((p) => ({
+  id: p.id,
+  name: p.name,
+  price: p.price,
+  image:
+    p.images && p.images.length > 0
+      ? p.images[0]
+      : "https://placehold.co/600x400?text=No+Image",
+  description: p.description,
+  full_details: p.description, // Using description as full_details for now
+  product_notice: p.product_notice,
+  accepts_custom_note: p.accepts_custom_note,
+}));
 ---
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <title>{store.store_name} – Panchasara</title>
-    <meta name="description" content={store.store_tagline || store.store_name} />
+    <meta
+      name="description"
+      content={store.store_tagline || store.store_name}
+    />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" href="/favicon.ico" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -47,6 +71,7 @@ const products = []; // We'll wire this later
   <body>
     <StoreTemplate
       store={{
+        id: store.id,
         name: store.store_name,
         tagline: store.store_tagline,
         about: store.about_us,
@@ -66,8 +91,8 @@ const products = []; // We'll wire this later
         show_facebook: store.show_facebook,
       }}
       theme={store.theme}
-      products={[]}
+      products={products}
       isPreview={false}
-  />
+    />
   </body>
 </html>

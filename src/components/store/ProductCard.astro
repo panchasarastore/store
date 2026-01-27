@@ -1,0 +1,269 @@
+---
+const { product } = Astro.props;
+---
+
+<div
+    class="product-card group"
+    data-product={JSON.stringify(product)}
+    data-id={product.id}
+>
+    <div class="product-image">
+        <img src={product.image} alt={product.name} loading="lazy" />
+        <div class="card-badges">
+            {
+                product.accepts_custom_note && (
+                    <span class="badge icon-badge" title="Customizable">
+                        ✎
+                    </span>
+                )
+            }
+            {
+                product.product_notice && (
+                    <span class="badge icon-badge" title="Has Notice">
+                        !
+                    </span>
+                )
+            }
+        </div>
+    </div>
+
+    <div class="product-content">
+        <h4 class="product-name">{product.name}</h4>
+        <p class="product-short-desc">{product.description}</p>
+        <div class="product-footer">
+            <span class="product-price"
+                >₹{Number(product.price).toFixed(2)}</span
+            >
+        </div>
+
+        <div class="add-action-wrapper" onclick="event.stopPropagation()">
+            <button class="big-add-btn">ADD TO CART</button>
+            <div class="stepper-controls" style="display: none;">
+                <button class="step-btn minus"
+                    ><span class="material-symbols-rounded">remove</span
+                    ></button
+                >
+                <span class="qty-display">1</span>
+                <button class="step-btn plus"
+                    ><span class="material-symbols-rounded">add</span></button
+                >
+            </div>
+        </div>
+    </div>
+</div>
+
+<style is:inline>
+    .product-card {
+        display: flex;
+        flex-direction: column;
+        cursor: pointer;
+        position: relative;
+        transition: transform 0.3s ease;
+    }
+    .product-image {
+        position: relative;
+        aspect-ratio: 1;
+        overflow: hidden;
+        background: rgba(0, 0, 0, 0.03);
+        margin-bottom: 1rem;
+    }
+    .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+    .product-content {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+    }
+    .product-name {
+        font-family: var(--font-heading);
+        font-size: 1.15rem;
+        margin: 0 0 0.25rem;
+        color: var(--theme-ink);
+    }
+    .product-short-desc {
+        font-size: 0.85rem;
+        opacity: 0.6;
+        margin-bottom: 1rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        line-height: 1.4;
+        min-height: 2.8em;
+    }
+    .product-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    .product-price {
+        font-weight: 600;
+        color: var(--theme-accent);
+        font-size: 1.1rem;
+    }
+
+    .add-action-wrapper {
+        min-height: 40px;
+        height: auto;
+        margin-top: auto;
+        width: 100%;
+        display: flex;
+        justify-content: flex-start;
+    }
+    .big-add-btn {
+        height: 100%;
+        background-color: var(--theme-accent);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-weight: 700;
+        font-size: 0.8rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        justify-content: center !important;
+        align-items: center !important;
+        text-align: center !important;
+    }
+    .big-add-btn:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+
+    .stepper-controls {
+        width: 120px !important;
+        height: 44px !important;
+        border: 1.5px solid var(--theme-ink);
+        border-radius: 50px;
+        background: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 4px;
+        margin: 0;
+    }
+    .stepper-controls button {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        background: transparent;
+        color: var(--theme-ink);
+        font-size: 1.6rem !important;
+        font-weight: 400;
+        cursor: pointer;
+        transition:
+            background 0.2s,
+            transform 0.1s;
+        padding-bottom: 4px;
+    }
+    .stepper-controls button:hover {
+        background: rgba(0, 0, 0, 0.08);
+    }
+    .stepper-controls button:active {
+        transform: scale(0.9);
+    }
+    .qty-display {
+        font-family: var(--font-body);
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: var(--theme-ink);
+        min-width: 20px;
+        text-align: center;
+    }
+
+    .card-badges {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 5;
+        display: flex;
+        gap: 5px;
+    }
+    .icon-badge {
+        background: white;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: bold;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        color: var(--theme-ink);
+    }
+
+    .store-template-wrapper[data-layout="natural"] .product-image {
+        border-radius: 12px;
+    }
+    .store-template-wrapper[data-layout="natural"] .big-add-btn {
+        border-radius: 50px;
+    }
+    .store-template-wrapper[data-layout="natural"] .stepper-controls {
+        border-radius: 50px;
+    }
+    .store-template-wrapper[data-layout="natural"]
+        .product-card:hover
+        .product-image
+        img {
+        transform: scale(1.05);
+    }
+
+    .store-template-wrapper[data-layout="gallery"] .product-image {
+        border-radius: 2px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+    .store-template-wrapper[data-layout="gallery"] .big-add-btn {
+        border-radius: 0;
+        background: var(--theme-ink);
+    }
+    .store-template-wrapper[data-layout="gallery"] .stepper-controls {
+        border-radius: 0;
+    }
+    .store-template-wrapper[data-layout="gallery"]
+        .product-card:hover
+        .product-image
+        img {
+        opacity: 0.9;
+    }
+
+    .store-template-wrapper[data-layout="pop"] .product-card {
+        background-color: #fff;
+        padding: 12px;
+        border-radius: 20px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+    }
+    .store-template-wrapper[data-layout="pop"] .product-image {
+        border-radius: 14px;
+    }
+    .store-template-wrapper[data-layout="pop"] .big-add-btn {
+        border-radius: 12px;
+        font-weight: 800;
+        border: 2px solid var(--theme-ink);
+        color: var(--theme-ink);
+        background: white;
+    }
+    .store-template-wrapper[data-layout="pop"] .big-add-btn:hover {
+        background: var(--theme-accent);
+        color: white;
+        border-color: var(--theme-accent);
+    }
+    .store-template-wrapper[data-layout="pop"] .stepper-controls {
+        border-radius: 12px;
+        border: 2px solid var(--theme-ink);
+    }
+    .store-template-wrapper[data-layout="pop"] .product-card:hover {
+        transform: translateY(-5px);
+    }
+</style>

@@ -1,0 +1,59 @@
+---
+const { categories = [] } = Astro.props;
+---
+
+<div class="category-bar-wrapper">
+    <div class="category-scroll">
+        {
+            categories.map((cat, index) => (
+                <button class={`category-pill ${index === 0 ? "active" : ""}`}>
+                    {cat}
+                </button>
+            ))
+        }
+    </div>
+</div>
+
+<style is:inline>
+    .category-bar-wrapper {
+        width: var(--spacing-container);
+        max-width: var(--max-width);
+        margin: 0 auto 3rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 10px;
+    }
+    .category-scroll {
+        display: flex;
+        gap: 0.8rem;
+        justify-content: center;
+    }
+    .category-pill {
+        padding: 0.6rem 1.5rem;
+        border-radius: 50px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        background: transparent;
+        color: var(--theme-ink);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s;
+    }
+    .category-pill:hover {
+        border-color: var(--theme-accent);
+        color: var(--theme-accent);
+    }
+    .category-pill.active {
+        background: var(--theme-brand);
+        color: white;
+        border-color: var(--theme-brand);
+    }
+
+    @media (max-width: 768px) {
+        .category-scroll {
+            justify-content: flex-start;
+            padding-left: 1rem;
+        }
+    }
+</style>

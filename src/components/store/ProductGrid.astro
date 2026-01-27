@@ -1,0 +1,31 @@
+---
+import ProductCard from "./ProductCard.astro";
+const { displayProducts = [] } = Astro.props;
+---
+
+<section class="store-products" id="shop">
+    <div class="products-grid">
+        {displayProducts.map((product) => <ProductCard product={product} />)}
+    </div>
+</section>
+
+<style is:inline>
+    .store-products {
+        padding: 0 0 4rem;
+        width: var(--spacing-container);
+        max-width: var(--max-width);
+        margin: 0 auto;
+    }
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .products-grid {
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+    }
+</style>

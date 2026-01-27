@@ -1,0 +1,267 @@
+---
+const { safeStore } = Astro.props;
+---
+
+<header class="store-header">
+    <div class="store-header-inner">
+        <div class="header-brand-row">
+            <div class="brand-logo-container">
+                {
+                    safeStore.logo ? (
+                        <img
+                            src={safeStore.logo}
+                            class="store-template-logo store-logo-img"
+                            alt={safeStore.name}
+                        />
+                    ) : (
+                        <div class="store-logo-initial store-logo-img">
+                            {safeStore.name.charAt(0).toUpperCase()}
+                        </div>
+                    )
+                }
+                <img
+                    class="store-template-logo store-logo-img"
+                    style="display:none"
+                    alt="Logo"
+                />
+            </div>
+            <h1 class="store-name store-template-name">{safeStore.name}</h1>
+        </div>
+
+        <div class="header-nav-row">
+            <button class="mobile-menu-btn" aria-label="Menu">
+                <span class="material-symbols-rounded">menu</span>
+            </button>
+
+            <nav class="header-nav desktop-nav">
+                <a href="#about" class="nav-link">About Us</a>
+                <a href="#shop" class="nav-link">Shop</a>
+                <a href="#contact" class="nav-link">Contact</a>
+            </nav>
+
+            <div class="header-actions">
+                <button class="icon-btn search-btn" aria-label="Search">
+                    <span class="material-symbols-rounded">search</span>
+                </button>
+                <button class="icon-btn cart-btn" aria-label="Cart">
+                    <span class="material-symbols-rounded">shopping_bag</span>
+                    <span class="cart-count">0</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="mobile-menu-overlay">
+            <div class="mobile-menu-container">
+                <button class="mobile-close-btn">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+                <div class="mobile-links">
+                    <a href="#about" class="nav-link mobile-link">About Us</a>
+                    <a href="#shop" class="nav-link mobile-link">Shop</a>
+                    <a href="#contact" class="nav-link mobile-link">Contact</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style is:inline>
+        .store-header {
+            background-color: var(--theme-header-bg, var(--theme-page));
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            padding-top: 1.5rem;
+        }
+        .store-header-inner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: var(--spacing-container);
+            max-width: var(--max-width);
+            margin: 0 auto;
+        }
+        .header-brand-row {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        .store-logo-img {
+            height: 60px;
+            width: auto;
+            max-width: 200px;
+            object-fit: contain;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .store-logo-initial {
+            width: 48px;
+            height: 48px;
+            background-color: var(--theme-brand);
+            color: var(--theme-page);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .store-name {
+            font-family: var(--font-display);
+            font-size: 2.25rem;
+            line-height: 1.1;
+            color: var(--theme-brand);
+            margin: 0;
+        }
+
+        .header-nav-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0.8rem 0;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+            position: relative;
+        }
+
+        .desktop-nav {
+            display: flex;
+            gap: 3rem;
+            margin: 0;
+        }
+        .header-actions {
+            display: flex;
+            gap: 1.25rem;
+            align-items: center;
+            margin-left: 0;
+        }
+        .icon-btn {
+            background: none;
+            border: none;
+            padding: 0;
+            color: var(--theme-ink);
+            cursor: pointer;
+            display: flex;
+            position: relative;
+        }
+        .icon-btn:hover {
+            color: var(--theme-accent);
+        }
+        .cart-count {
+            position: absolute;
+            top: -6px;
+            right: -8px;
+            background-color: var(--theme-accent);
+            color: #fff;
+            font-size: 0.65rem;
+            font-weight: 700;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--theme-ink);
+            font-family: var(--font-body);
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            position: relative;
+            transition: color 0.2s ease;
+        }
+        .nav-link:hover {
+            color: var(--theme-accent);
+        }
+        .nav-link::after {
+            content: "";
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 0;
+            background-color: var(--theme-accent);
+            transition: width 0.2s ease;
+        }
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--theme-ink);
+            padding: 0;
+        }
+        .mobile-menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 100;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .mobile-menu-overlay.open {
+            display: flex;
+            opacity: 1;
+        }
+        .mobile-menu-container {
+            width: 80%;
+            max-width: 300px;
+            height: 100%;
+            background: var(--theme-page);
+            padding: 2rem;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        .mobile-menu-overlay.open .mobile-menu-container {
+            transform: translateX(0);
+        }
+        .mobile-close-btn {
+            align-self: flex-end;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--theme-ink);
+            margin-bottom: 2rem;
+        }
+        .mobile-links {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .mobile-link {
+            font-size: 1.25rem;
+            font-family: var(--font-heading);
+            text-decoration: none;
+            color: var(--theme-ink);
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .desktop-nav {
+                display: none !important;
+            }
+            .mobile-menu-btn {
+                display: block;
+            }
+            .header-nav-row {
+                justify-content: space-between;
+            }
+        }
+    </style>
+</header>
