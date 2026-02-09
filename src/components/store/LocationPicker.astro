@@ -1,0 +1,201 @@
+---
+/**
+ * LocationPicker.astro
+ * A reusable map component for ecommerce checkout to select delivery location.
+ */
+---
+
+<div class="location-picker-container space-y-4">
+    <button
+        id="get-location-btn"
+        class="flex items-center gap-2 px-6 py-3 bg-accent text-white font-bold rounded-full hover:opacity-90 transition-all shadow-md active:scale-95"
+    >
+        <span class="material-symbols-rounded">my_location</span>
+        Use my current location
+    </button>
+
+    <div class="relative group">
+        <div
+            id="map"
+            class="w-full h-[380px] rounded-xl border-2 border-slate-100 shadow-inner z-0"
+        >
+        </div>
+        <div
+            id="map-loader"
+            class="absolute inset-0 bg-white/60 backdrop-blur-sm hidden flex-col items-center justify-center rounded-xl z-10"
+        >
+            <div
+                class="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"
+            >
+            </div>
+            <p class="mt-2 text-sm font-semibold text-slate-700">
+                Detecting your location...
+            </p>
+        </div>
+    </div>
+
+    <div
+        id="location-info"
+        class="p-4 bg-slate-50 rounded-lg border border-slate-100 min-h-[60px] flex items-start gap-3"
+    >
+        <span class="material-symbols-rounded text-accent mt-0.5"
+            >location_on</span
+        >
+        <div class="flex-1">
+            <p
+                class="text-[0.65rem] uppercase font-bold tracking-wider text-slate-400 mb-1"
+            >
+                Detected Address
+            </p>
+            <p
+                id="addressText"
+                class="text-sm text-slate-700 leading-relaxed italic"
+            >
+                Move the pin or click "Current Location" to set your address.
+            </p>
+        </div>
+    </div>
+
+    <p
+        id="location-error"
+        class="hidden p-3 bg-red-50 text-red-600 text-xs rounded-lg border border-red-100 flex items-center gap-2"
+    >
+        <span class="material-symbols-rounded text-sm">warning</span>
+        Please allow location access or move the pin manually.
+    </p>
+</div>
+
+<style is:inline>
+    /* Access theme variables if available, otherwise fallback */
+    .bg-accent {
+        background-color: var(--theme-accent, #c46a2b);
+    }
+    .text-accent {
+        color: var(--theme-accent, #c46a2b);
+    }
+    .border-accent {
+        border-color: var(--theme-accent, #c46a2b);
+    }
+</style>
+
+<!-- Leaflet Assets -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script is:inline src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script is:inline>
+    let map;
+    let marker;
+    const mapEl = document.getElementById("map");
+    const addressText = document.getElementById("addressText");
+    const loader = document.getElementById("map-loader");
+    const errorMsg = document.getElementById("location-error");
+    const getBtn = document.getElementById("get-location-btn");
+
+    // Initialize Map
+    function initMap() {
+        if (!window.L) {
+            setTimeout(initMap, 100);
+            return;
+        }
+
+        // Default view: India
+        map = L.map("map").setView([20.5937, 78.9629], 5);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "© OpenStreetMap contributors",
+        }).addTo(map);
+
+        // Initial click listener to drop marker if none exists
+        map.on("click", function (e) {
+            const { lat, lng } = e.latlng;
+            setMarker(lat, lng);
+        });
+
+        // IMPORTANT FIX: Ensure map tiles render correctly if container size changed during init
+        setTimeout(() => {
+            map.invalidateSize();
+        }, 300);
+
+        // Expose global function to refresh map when its tab/step becomes visible
+        window.refreshMapLocationPicker = function () {
+            if (map) {
+                setTimeout(() => map.invalidateSize(), 100);
+            }
+        };
+    }
+
+    function setMarker(lat, lng) {
+        if (marker) {
+            marker.setLatLng([lat, lng]);
+        } else {
+            marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+            marker.on("dragend", function (e) {
+                const newLat = e.target.getLatLng().lat;
+                const newLng = e.target.getLatLng().lng;
+                updateAddress(newLat, newLng);
+            });
+        }
+        map.setView([lat, lng], 16);
+        updateAddress(lat, lng);
+    }
+
+    function updateAddress(lat, lng) {
+        addressText.innerText = "Fetching address...";
+        fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
+        )
+            .then((res) => res.json())
+            .then((data) => {
+                const address = data.display_name || "Unknown address selected";
+                addressText.innerText = address;
+
+                window.checkoutLocation = {
+                    lat,
+                    lng,
+                    address,
+                };
+            })
+            .catch((err) => {
+                console.error("Geocoding error:", err);
+                addressText.innerText =
+                    "Lat: " + lat.toFixed(5) + ", Lng: " + lng.toFixed(5);
+            });
+    }
+
+    function useCurrentLocation() {
+        loader.classList.remove("hidden");
+        loader.classList.add("flex");
+        errorMsg.classList.add("hidden");
+
+        if (!navigator.geolocation) {
+            errorMsg.innerText =
+                "Geolocation is not supported by your browser.";
+            errorMsg.classList.remove("hidden");
+            loader.classList.add("hidden");
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                setMarker(lat, lng);
+                loader.classList.add("hidden");
+                loader.classList.remove("flex");
+            },
+            (err) => {
+                console.error("GPS error:", err);
+                errorMsg.classList.remove("hidden");
+                loader.classList.add("hidden");
+                loader.classList.remove("flex");
+            },
+            { enableHighAccuracy: true, timeout: 5000 },
+        );
+    }
+
+    getBtn?.addEventListener("click", useCurrentLocation);
+
+    // Run on start
+    initMap();
+</script>

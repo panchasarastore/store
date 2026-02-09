@@ -1,8 +1,9 @@
 ---
 const { safeStore } = Astro.props;
+import LocationPicker from "./LocationPicker.astro";
 ---
 
-<div class="checkout-page" id="checkout-page">
+<div class="checkout-page" id="checkout-page" tabindex="-1">
     <div class="checkout-header">
         <button class="checkout-back-btn" id="close-checkout-btn">
             <span class="material-symbols-rounded">arrow_back</span>
@@ -15,7 +16,10 @@ const { safeStore } = Astro.props;
     <div class="checkout-container">
         <div class="progress-container">
             <div class="progress-steps">
-                <div class="progress-line"></div>
+                <div class="progress-line">
+                    <div class="progress-line-fill" id="progress-line-fill">
+                    </div>
+                </div>
                 <div class="p-step active" id="p-step-1">
                     1<span class="p-label">Details</span>
                 </div>
@@ -110,19 +114,45 @@ const { safeStore } = Astro.props;
                                     <label>Full Address</label>
                                     <textarea
                                         class="theme-input req-1-delivery"
-                                        id="input-address"
+                                        id="fullAddress"
                                         rows="2"
                                         placeholder="Flat No, Street, City..."
                                     ></textarea>
                                 </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Pincode</label>
+                                        <input
+                                            type="text"
+                                            class="theme-input req-1-delivery"
+                                            id="pincode"
+                                            placeholder="682..."
+                                        />
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Landmark</label>
+                                        <input
+                                            type="text"
+                                            class="theme-input"
+                                            id="landmark"
+                                            placeholder="Near MG Road..."
+                                        />
+                                    </div>
+                                </div>
+
                                 <div class="form-group">
-                                    <label>Pincode</label>
-                                    <input
-                                        type="text"
-                                        class="theme-input req-1-delivery"
-                                        id="input-pincode"
-                                        placeholder="682..."
-                                    />
+                                    <label>Delivery Instructions</label>
+                                    <textarea
+                                        class="theme-input"
+                                        id="deliveryNotes"
+                                        rows="1"
+                                        placeholder="Gate code, drop at door..."
+                                    ></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Pinpoint Delivery Location</label>
+                                    <LocationPicker />
                                 </div>
                             </div>
 
@@ -292,7 +322,7 @@ const { safeStore } = Astro.props;
 <style is:inline>
     /* --- CHECKOUT PAGE --- */
     .checkout-page {
-        position: absolute;
+        position: fixed;
         top: 0;
         left: 0;
         width: 100%;
@@ -307,10 +337,12 @@ const { safeStore } = Astro.props;
             transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
             visibility 0.4s;
         overflow-y: auto;
+        outline: none;
     }
     .checkout-page.open {
         transform: translateY(0);
         visibility: visible;
+        box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.15);
     }
 
     .checkout-header {
@@ -332,14 +364,26 @@ const { safeStore } = Astro.props;
         align-items: center;
         gap: 0.5rem;
         font-family: var(--font-body);
-        font-weight: 600;
+        font-weight: 700;
         color: var(--theme-ink);
-        opacity: 0.7;
+        opacity: 0.6;
+        transition: all 0.2s;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .checkout-back-btn:hover {
+        opacity: 1;
+        color: var(--theme-accent);
+        transform: translateX(-4px);
     }
     .checkout-brand-title {
         font-family: var(--font-heading);
         font-size: 1.5rem;
         color: var(--theme-brand);
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
     }
 
     .checkout-container {
@@ -372,9 +416,19 @@ const { safeStore } = Astro.props;
         left: 0;
         width: 100%;
         height: 2px;
-        background: rgba(0, 0, 0, 0.1);
+        background: rgba(0, 0, 0, 0.05);
         z-index: 0;
         transform: translateY(-50%);
+    }
+    .progress-line-fill {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        background: var(--theme-accent);
+        width: 0%;
+        transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        z-index: 1;
     }
     .p-step {
         width: 32px;
@@ -396,11 +450,13 @@ const { safeStore } = Astro.props;
         border-color: var(--theme-accent);
         color: var(--theme-accent);
         box-shadow: 0 0 0 4px rgba(196, 106, 43, 0.1);
+        transform: scale(1.1);
     }
     .p-step.completed {
         background: var(--theme-accent);
         border-color: var(--theme-accent);
         color: white;
+        transform: scale(1);
     }
     .p-label {
         position: absolute;
@@ -425,9 +481,10 @@ const { safeStore } = Astro.props;
         transition: all 0.3s ease;
     }
     .checkout-step.locked {
-        opacity: 0.5;
+        opacity: 0.4;
         pointer-events: none;
-        filter: grayscale(100%);
+        filter: grayscale(80%);
+        transform: scale(0.98);
     }
     .checkout-step.collapsed .step-content {
         display: none;
@@ -520,6 +577,7 @@ const { safeStore } = Astro.props;
         width: 100%;
         font-size: 1rem;
         transition: all 0.2s;
+        background: rgba(255, 255, 255, 0.5);
     }
     .theme-input:focus {
         outline: none;
@@ -530,11 +588,11 @@ const { safeStore } = Astro.props;
     .continue-btn {
         width: 100%;
         padding: 1.2rem;
-        background: var(--theme-ink);
+        background: var(--theme-accent);
         color: white;
         border: none;
         border-radius: 50px;
-        font-weight: bold;
+        font-weight: 800;
         cursor: pointer;
         margin-top: 1.5rem;
         display: flex;
@@ -542,10 +600,15 @@ const { safeStore } = Astro.props;
         align-items: center;
         gap: 8px;
         font-size: 1rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
     .continue-btn:hover {
-        opacity: 0.9;
-        transform: translateY(-1px);
+        opacity: 0.95;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
     }
 
     .delivery-container {
@@ -573,10 +636,13 @@ const { safeStore } = Astro.props;
         justify-content: center;
         gap: 8px;
     }
-    .delivery-container input:checked + .delivery-option {
-        background: white;
-        color: var(--theme-accent);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    .delivery-option.selected {
+        background: var(--theme-accent);
+        color: white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .delivery-option .material-symbols-rounded {
+        font-size: 1.2rem;
     }
 
     .payment-options {
@@ -597,6 +663,8 @@ const { safeStore } = Astro.props;
     }
     .payment-card:hover {
         border-color: var(--theme-accent);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
     }
     .custom-radio {
         width: 20px;
@@ -625,7 +693,9 @@ const { safeStore } = Astro.props;
     }
     .payment-card:has(input:checked) {
         border-color: var(--theme-accent);
-        background: rgba(196, 106, 43, 0.03);
+        background: rgba(196, 106, 43, 0.05);
+        box-shadow: 0 8px 20px rgba(196, 106, 43, 0.08);
+        transform: scale(1.02);
     }
     .payment-card input {
         display: none;
@@ -654,13 +724,14 @@ const { safeStore } = Astro.props;
     }
 
     .summary-card {
-        background: #fff;
-        border: 1px solid rgba(0, 0, 0, 0.08);
-        border-radius: 16px;
-        padding: 2rem;
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 20px;
+        padding: 2.5rem;
         position: sticky;
         top: 100px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.04);
     }
     .summary-title {
         font-family: var(--font-heading);

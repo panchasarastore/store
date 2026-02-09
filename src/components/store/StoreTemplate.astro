@@ -1,4 +1,5 @@
 ---
+import { supabase } from "../../lib/supabase";
 import StoreNavbar from "./StoreNavbar.astro";
 import StoreHero from "./StoreHero.astro";
 import CategoryBar from "./CategoryBar.astro";
@@ -6,6 +7,7 @@ import ProductGrid from "./ProductGrid.astro";
 import ProductModal from "./ProductModal.astro";
 import CartDrawer from "./CartDrawer.astro";
 import CheckoutWizard from "./CheckoutWizard.astro";
+import PaymentProcessor from "./PaymentProcessor.astro";
 import StoreFooter from "./StoreFooter.astro";
 
 const {
@@ -110,7 +112,14 @@ const displayProducts =
   <CartDrawer />
 
   <CheckoutWizard safeStore={safeStore} />
+
+  <PaymentProcessor />
 </div>
+
+<script>
+  import { supabase } from "../../lib/supabase";
+  window.supabase = supabase;
+</script>
 
 <style is:inline>
   /* =========================================
@@ -261,6 +270,52 @@ const displayProducts =
   const cartNotes = {}; // { productId: "Custom Note Text" }
 
   // ==========================================
+  // 1.5 UI POINTERS & TOGGLES
+  // ==========================================
+  const cartDrawer = document.querySelector(".cart-drawer");
+  const cartOverlay = document.querySelector(".cart-overlay");
+  const cartBtn = document.querySelector(".cart-btn");
+  const cartCloseBtn = document.querySelector(".cart-close-btn");
+  const mobileMenuBtn = document.querySelector(".mobile-menu-btn");
+  const mobileMenuOverlay = document.querySelector(".mobile-menu-overlay");
+  const mobileCloseBtn = document.querySelector(".mobile-close-btn");
+
+  function toggleCart(open) {
+    if (!cartDrawer || !cartOverlay) return;
+    if (open) {
+      cartDrawer.classList.add("open");
+      cartOverlay.classList.add("open");
+    } else {
+      cartDrawer.classList.remove("open");
+      cartOverlay.classList.remove("open");
+    }
+  }
+  window.toggleCart = toggleCart;
+
+  if (cartBtn) cartBtn.addEventListener("click", () => toggleCart(true));
+  if (cartCloseBtn)
+    cartCloseBtn.addEventListener("click", () => toggleCart(false));
+  if (cartOverlay)
+    cartOverlay.addEventListener("click", () => toggleCart(false));
+
+  if (mobileMenuBtn) {
+    mobileMenuBtn.addEventListener("click", () => {
+      if (mobileMenuOverlay) {
+        mobileMenuOverlay.style.display = "flex";
+        setTimeout(() => mobileMenuOverlay.classList.add("open"), 10);
+      }
+    });
+  }
+  if (mobileCloseBtn) {
+    mobileCloseBtn.addEventListener("click", () => {
+      if (mobileMenuOverlay) {
+        mobileMenuOverlay.classList.remove("open");
+        setTimeout(() => (mobileMenuOverlay.style.display = "none"), 300);
+      }
+    });
+  }
+
+  // ==========================================
   // 2. MAIN SYNC FUNCTION (UI UPDATES)
   // ==========================================
   function syncUI(id, qty) {
@@ -295,6 +350,7 @@ const displayProducts =
 
     renderCart(); // Keep drawer updated
   }
+  window.syncUI = syncUI; // Make it available for PaymentProcessor
 
   // ==========================================
   // 3. RENDER CART DRAWER
@@ -321,11 +377,8 @@ const displayProducts =
                     <div class="cart-item-details">
                         <div class="cart-item-top">
                             <h4 class="cart-item-title">${product.name}</h4>
-                            <div class="cart-item-variant">Standard</div>
                         </div>
-                        <button class="cart-remove-btn" onclick="updateCartItem('${pid}', 0)" title="Remove">
-                            <span class="material-symbols-rounded">close</span>
-                        </button>
+                        <div class="cart-item-variant">Standard</div>
                         <div class="cart-item-bottom">
                             <span class="cart-item-price">₹${(product.price * qty).toFixed(2)}</span>
                             <div class="mini-stepper">
@@ -335,6 +388,9 @@ const displayProducts =
                             </div>
                         </div>
                     </div>
+                    <button class="cart-remove-btn" onclick="updateCartItem('${pid}', 0)" title="Remove Product">
+                        <span class="material-symbols-rounded">close</span>
+                    </button>
                 </div>
             `;
         container.insertAdjacentHTML("beforeend", itemHTML);
@@ -475,45 +531,6 @@ const displayProducts =
       if (e.target === modal) modal.close();
     });
 
-  // ==========================================
-  // 6. NAVIGATION & DRAWERS
-  // ==========================================
-  const cartDrawer = document.querySelector(".cart-drawer");
-  const cartOverlay = document.querySelector(".cart-overlay");
-
-  function toggleCart(open) {
-    if (open) {
-      if (cartDrawer) cartDrawer.classList.add("open");
-      if (cartOverlay) cartOverlay.classList.add("open");
-    } else {
-      if (cartDrawer) cartDrawer.classList.remove("open");
-      if (cartOverlay) cartOverlay.classList.remove("open");
-    }
-  }
-
-  const cartBtn = document.querySelector(".cart-btn");
-  const cartCloseBtn = document.querySelector(".cart-close-btn");
-  if (cartBtn) cartBtn.addEventListener("click", () => toggleCart(true));
-  if (cartCloseBtn)
-    cartCloseBtn.addEventListener("click", () => toggleCart(false));
-  if (cartOverlay)
-    cartOverlay.addEventListener("click", () => toggleCart(false));
-
-  // Mobile Menu Logic
-  const mobileMenuBtn = document.querySelector(".mobile-menu-btn");
-  const mobileMenuCloseBtn = document.querySelector(".mobile-close-btn");
-  const mobileMenuOverlay = document.querySelector(".mobile-menu-overlay");
-
-  if (mobileMenuBtn)
-    mobileMenuBtn.addEventListener("click", () => {
-      mobileMenuOverlay.classList.add("open");
-    });
-
-  if (mobileMenuCloseBtn)
-    mobileMenuCloseBtn.addEventListener("click", () => {
-      mobileMenuOverlay.classList.remove("open");
-    });
-
   if (mobileMenuOverlay)
     mobileMenuOverlay.addEventListener("click", (e) => {
       if (e.target === mobileMenuOverlay)
@@ -521,7 +538,7 @@ const displayProducts =
     });
 
   // ==========================================
-  // CHECKOUT LOGIC (LOCKED WIZARD)
+  // 6. CHECKOUT UI & NAVIGATION
   // ==========================================
   const checkoutTriggerBtn = document.querySelector(".checkout-btn");
   const checkoutPage = document.getElementById("checkout-page");
@@ -539,6 +556,18 @@ const displayProducts =
       }
       toggleCart(false);
       checkoutPage.classList.add("open");
+      document.body.style.overflow = "hidden"; // Lock scroll
+
+      // Multi-reset scroll strategy
+      window.scrollTo(0, 0);
+      checkoutPage.scrollTop = 0;
+
+      toggleDeliveryFields(); // Initialize selected state for toggle
+
+      setTimeout(() => {
+        checkoutPage.scrollTop = 0;
+        window.scrollTo(0, 0);
+      }, 500);
       renderCheckoutSummary();
 
       // Reset state on open
@@ -553,6 +582,7 @@ const displayProducts =
   if (checkoutBackBtn) {
     checkoutBackBtn.addEventListener("click", () => {
       checkoutPage.classList.remove("open");
+      document.body.style.overflow = ""; // Unlock scroll
       toggleCart(true);
     });
   }
@@ -584,6 +614,13 @@ const displayProducts =
         if (i === step) pStep.classList.add("active");
       }
     }
+
+    // Update Progress Line Fill
+    const fill = document.getElementById("progress-line-fill");
+    if (fill) {
+      const percentage = ((step - 1) / 2) * 100;
+      fill.style.width = `${percentage}%`;
+    }
   }
 
   window.validateAndNext = function (step) {
@@ -610,13 +647,28 @@ const displayProducts =
         'input[name="delivery-mode"]:checked',
       ).value;
       let locationText = "Pickup";
+
       if (mode === "delivery") {
-        const addr = document.getElementById("input-address");
+        const addr = document.getElementById("fullAddress");
+        const pin = document.getElementById("pincode");
+
         if (!addr.value.trim()) {
           isValid = false;
           addr.classList.add("input-error");
-        } else locationText = "Delivery";
+        }
+        if (!pin.value.trim()) {
+          isValid = false;
+          pin.classList.add("input-error");
+        }
+
+        if (!window.checkoutLocation) {
+          isValid = false;
+          alert("Please select your delivery location on the map");
+        }
+
+        if (isValid) locationText = "Delivery";
       }
+
       if (isValid) {
         document.getElementById("summary-1").textContent =
           `${name.value}, ${locationText}`;
@@ -654,14 +706,26 @@ const displayProducts =
   };
 
   window.toggleDeliveryFields = function () {
-    const mode = document.querySelector(
-      'input[name="delivery-mode"]:checked',
-    ).value;
+    const inputs = document.querySelectorAll('input[name="delivery-mode"]');
+    let mode = "pickup";
+
+    inputs.forEach((input) => {
+      const label = input.closest(".delivery-option");
+      if (input.checked) {
+        mode = input.value;
+        if (label) label.classList.add("selected");
+      } else {
+        if (label) label.classList.remove("selected");
+      }
+    });
+
     const addrFields = document.getElementById("address-fields");
     const pickupNote = document.getElementById("pickup-note");
     if (mode === "delivery") {
       if (addrFields) addrFields.style.display = "block";
       if (pickupNote) pickupNote.style.display = "none";
+      // Refresh map logic for Leaflet size recalculation
+      if (window.refreshMapLocationPicker) window.refreshMapLocationPicker();
     } else {
       if (addrFields) addrFields.style.display = "none";
       if (pickupNote) pickupNote.style.display = "flex";
@@ -714,115 +778,7 @@ const displayProducts =
     if (payBtnAmt) payBtnAmt.textContent = `₹${total.toFixed(2)}`;
   }
 
-  // FINAL PAY ACTION
-  const finalPayBtn = document.getElementById("final-pay-btn");
-  if (finalPayBtn) {
-    finalPayBtn.addEventListener("click", async () => {
-      const paymentMethod = document.querySelector(
-        'input[name="payment"]:checked',
-      )?.value;
-
-      if (paymentMethod === "online") {
-        finalPayBtn.disabled = true;
-        const originalText = finalPayBtn.innerHTML;
-        finalPayBtn.textContent = "PROCESSING...";
-
-        try {
-          const storeId = wrapper.dataset.storeId;
-          const items = Object.entries(cartState)
-            .filter(([_, qty]) => qty > 0)
-            .map(([pid, qty]) => {
-              const p = productsData.find((x) => x.id == pid);
-              return {
-                product_id: pid,
-                quantity: qty,
-                variant: null,
-                custom_note: cartNotes[pid] || null,
-              };
-            });
-
-          const deliveryMode = document.querySelector(
-            'input[name="delivery-mode"]:checked',
-          )?.value;
-
-          const payload = {
-            store_id: storeId,
-            customer: {
-              name: document.getElementById("input-name")?.value,
-              phone: document.getElementById("input-phone")?.value,
-              email: document.getElementById("input-email")?.value,
-            },
-            delivery: {
-              method: deliveryMode,
-              address:
-                deliveryMode === "delivery"
-                  ? document.getElementById("input-address")?.value
-                  : null,
-              lat: null,
-              lng: null,
-              date: document.getElementById("input-date")?.value,
-              time_slot: document.getElementById("input-time")?.value,
-              pincode:
-                deliveryMode === "delivery"
-                  ? document.getElementById("input-pincode")?.value
-                  : null,
-            },
-            items: items,
-            notes: document.getElementById("input-note")?.value || null,
-          };
-
-          const res = await fetch(
-            "https://flltodzoonathwovcicj.supabase.co/functions/v1/Place-Order",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload),
-            },
-          );
-
-          const data = await res.json();
-
-          if (!res.ok) {
-            throw new Error(
-              data?.error || data?.message || "Order creation failed",
-            );
-          }
-
-          if (data.payment_link_url) {
-            window.location.href = data.payment_link_url;
-          } else {
-            // Fallback if no payment link (shouldn't happen for online)
-            alert("Order placed, but no payment link received.");
-          }
-        } catch (err) {
-          alert(
-            err.message || "Something went wrong while placing your order.",
-          );
-          finalPayBtn.disabled = false;
-          finalPayBtn.innerHTML = originalText;
-        }
-      } else {
-        // Pay on Pickup logic
-        finalPayBtn.disabled = true;
-        finalPayBtn.textContent = "PROCESSING...";
-
-        setTimeout(() => {
-          // Success!
-          const toast = document.getElementById("success-toast");
-          if (toast) toast.classList.add("show");
-
-          setTimeout(() => {
-            if (toast) toast.classList.remove("show");
-            if (checkoutPage) checkoutPage.classList.remove("open");
-            // Clear cart
-            Object.keys(cartState).forEach((k) => (cartState[k] = 0));
-            Object.keys(cartNotes).forEach((k) => delete cartNotes[k]);
-            syncUI(null, 0);
-            finalPayBtn.disabled = false;
-            finalPayBtn.innerHTML = `PAY <span id="pay-btn-amount">₹0.00</span>`;
-          }, 3000);
-        }, 2000);
-      }
-    });
-  }
+  // Set shared state for PaymentProcessor
+  window.cartState = cartState;
+  window.cartNotes = cartNotes;
 </script>

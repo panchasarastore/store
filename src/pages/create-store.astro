@@ -69,7 +69,6 @@ if (Astro.request.method === "POST") {
 
     // ✅ FINAL STEP: redirect to React dashboard
     return Astro.redirect("http://localhost:8080");
-
   } catch (e) {
     error = e instanceof Error ? e.message : "Something went wrong";
   }
@@ -628,9 +627,13 @@ const previewProducts = [];
                 <h2 class="font-display font-bold text-lg">Contact</h2>
               </div>
 
-              <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
+              <div
+                class="p-4 rounded-xl border border-slate-100 bg-slate-50/50"
+              >
                 <div class="flex justify-between items-center mb-2">
-                  <span class="text-xs font-bold text-slate-500 uppercase">Location</span>
+                  <span class="text-xs font-bold text-slate-500 uppercase"
+                    >Location</span
+                  >
                 </div>
                 <input
                   type="text"
@@ -1013,8 +1016,21 @@ const previewProducts = [];
       openPreviewBtn.addEventListener("click", () => {
         if (!previewContainer)
           previewContainer = document.querySelector(".store-template-wrapper");
+
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
+
+        // Capture visibility toggles (FormData only captures checked items if they have names, but it's cleaner to be explicit)
+        data.show_email = form.querySelector('[name="show_email"]').checked;
+        data.show_whatsapp = form.querySelector(
+          '[name="show_whatsapp"]',
+        ).checked;
+        data.show_instagram = form.querySelector(
+          '[name="show_instagram"]',
+        ).checked;
+        data.show_facebook = form.querySelector(
+          '[name="show_facebook"]',
+        ).checked;
 
         // Add Computed Styles for perfect match
         const computed = getComputedStyle(previewContainer);

@@ -1,0 +1,249 @@
+---
+// PaymentProcessor.astro
+// This component handles the final order placement logic, talking to Supabase Edge Functions or the Database.
+---
+
+<script>
+    import { supabase } from "../../lib/supabase";
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const finalPayBtn = document.getElementById("final-pay-btn");
+        const wrapper = document.querySelector(".store-template-wrapper");
+        const checkoutPage = document.getElementById("checkout-page");
+
+        if (!finalPayBtn || !wrapper) return;
+
+        // Helper to get delivery data from the DOM
+        function getDeliveryData() {
+            const deliveryMode = (
+                document.querySelector(
+                    'input[name="delivery-mode"]:checked',
+                ) as HTMLInputElement
+            )?.value;
+
+            if (deliveryMode === "pickup") {
+                return {
+                    delivery_address: null,
+                    delivery_pincode: null,
+                    delivery_landmark: null,
+                    delivery_notes: null,
+                    delivery_lat: null,
+                    delivery_lng: null,
+                };
+            }
+
+            return {
+                delivery_address:
+                    (
+                        document.getElementById(
+                            "fullAddress",
+                        ) as HTMLTextAreaElement
+                    )?.value || "",
+                delivery_pincode:
+                    (document.getElementById("pincode") as HTMLInputElement)
+                        ?.value || "",
+                delivery_landmark:
+                    (document.getElementById("landmark") as HTMLInputElement)
+                        ?.value || "",
+                delivery_notes:
+                    (
+                        document.getElementById(
+                            "deliveryNotes",
+                        ) as HTMLTextAreaElement
+                    )?.value || "",
+                delivery_lat: (window as any).checkoutLocation?.lat || null,
+                delivery_lng: (window as any).checkoutLocation?.lng || null,
+            };
+        }
+
+        finalPayBtn.addEventListener("click", async () => {
+            const paymentMethod = (
+                document.querySelector(
+                    'input[name="payment"]:checked',
+                ) as HTMLInputElement
+            )?.value;
+            const deliveryMode = (
+                document.querySelector(
+                    'input[name="delivery-mode"]:checked',
+                ) as HTMLInputElement
+            )?.value;
+            const deliveryData = getDeliveryData();
+
+            const subtotal = parseFloat(
+                document
+                    .getElementById("checkout-subtotal")
+                    ?.textContent?.replace("₹", "") || "0",
+            );
+            const total = parseFloat(
+                document
+                    .getElementById("checkout-total")
+                    ?.textContent?.replace("₹", "") || "0",
+            );
+
+            const storeId = (wrapper as HTMLElement).dataset.storeId;
+            const name = (
+                document.getElementById("input-name") as HTMLInputElement
+            )?.value;
+            const phone = (
+                document.getElementById("input-phone") as HTMLInputElement
+            )?.value;
+            const email = (
+                document.getElementById("input-email") as HTMLInputElement
+            )?.value;
+            const customerNotes =
+                (document.getElementById("input-note") as HTMLTextAreaElement)
+                    ?.value || null;
+            const orderDate = (
+                document.getElementById("input-date") as HTMLInputElement
+            )?.value;
+            const timeSlot = (
+                document.getElementById("input-time") as HTMLSelectElement
+            )?.value;
+
+            // Access global cart state from StoreTemplate (it remains there for UI syncing)
+            const cartState = (window as any).cartState || {};
+            const cartNotes = (window as any).cartNotes || {};
+
+            const items = Object.entries(cartState)
+                .filter(([_, qty]) => (qty as number) > 0)
+                .map(([pid, qty]) => {
+                    return {
+                        product_id: pid,
+                        quantity: qty,
+                        variant: null,
+                        custom_note: cartNotes[pid] || null,
+                    };
+                });
+
+            if (items.length === 0) {
+                alert("Your cart is empty!");
+                return;
+            }
+
+            finalPayBtn.setAttribute("disabled", "true");
+            const originalText = finalPayBtn.innerHTML;
+
+            if (paymentMethod === "online") {
+                finalPayBtn.textContent = "PROCESSING...";
+
+                try {
+                    const payload = {
+                        store_id: storeId,
+                        customer: { name, phone, email },
+                        delivery: {
+                            method: deliveryMode,
+                            address: deliveryData.delivery_address,
+                            lat: deliveryData.delivery_lat,
+                            lng: deliveryData.delivery_lng,
+                            date: orderDate,
+                            time_slot: timeSlot,
+                            pincode: deliveryData.delivery_pincode,
+                            landmark: deliveryData.delivery_landmark,
+                            notes: deliveryData.delivery_notes,
+                        },
+                        items: items,
+                        notes: customerNotes,
+                    };
+
+                    // Use the Supabase instance's URL to avoid hardcoding the project ID
+                    const functionsUrl = (supabase as any).supabaseUrl.replace(
+                        ".supabase.co",
+                        ".functions.supabase.co",
+                    );
+                    const res = await fetch(`${functionsUrl}/v1/Place-Order`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload),
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok) {
+                        throw new Error(
+                            data?.error ||
+                                data?.message ||
+                                "Order creation failed",
+                        );
+                    }
+
+                    if (data.payment_link_url) {
+                        window.location.href = data.payment_link_url;
+                    } else {
+                        alert("Order placed, but no payment link received.");
+                    }
+                } catch (err: any) {
+                    alert(
+                        err.message ||
+                            "Something went wrong while placing your order.",
+                    );
+                    finalPayBtn.removeAttribute("disabled");
+                    finalPayBtn.innerHTML = originalText;
+                }
+            } else {
+                // Pay on Pickup / COD logic
+                finalPayBtn.textContent = "PLACING ORDER...";
+
+                try {
+                    const orderNumber =
+                        "ORD-" +
+                        Math.random().toString(36).substr(2, 9).toUpperCase();
+
+                    const { data, error } = await supabase
+                        .from("orders")
+                        .insert([
+                            {
+                                store_id: storeId,
+                                order_number: orderNumber,
+                                customer_name: name,
+                                customer_phone: phone,
+                                customer_email: email,
+                                delivery_method: deliveryMode,
+                                ...deliveryData,
+                                subtotal: subtotal,
+                                total_amount: total,
+                                currency: "INR",
+                                payment_status: "pending",
+                                payment_method: "cod",
+                                order_date: orderDate,
+                                time_slot: timeSlot,
+                                customer_notes: customerNotes,
+                                items: items, // [FIX] Now including items in the direct insert
+                            },
+                        ]);
+
+                    if (error) throw error;
+
+                    // Success feedback
+                    const toast = document.getElementById("success-toast");
+                    if (toast) toast.classList.add("show");
+
+                    setTimeout(() => {
+                        if (toast) toast.classList.remove("show");
+                        if (checkoutPage) checkoutPage.classList.remove("open");
+                        document.body.style.overflow = ""; // Unlock scroll
+
+                        // Clear cart
+                        Object.keys(cartState).forEach(
+                            (k) => (cartState[k] = 0),
+                        );
+                        Object.keys(cartNotes).forEach(
+                            (k) => delete cartNotes[k],
+                        );
+
+                        // Call syncUI if available globally
+                        if (typeof (window as any).syncUI === "function") {
+                            (window as any).syncUI(null, 0);
+                        }
+
+                        finalPayBtn.removeAttribute("disabled");
+                        finalPayBtn.innerHTML = `PAY <span id="pay-btn-amount">₹0.00</span>`;
+                    }, 3000);
+                } catch (err: any) {
+                    console.error("Supabase Error:", err);
+                    alert("Order failed: " + (err.message || "Internal error"));
+                    finalPayBtn.removeAttribute("disabled");
+                    finalPayBtn.innerHTML = `PAY <span id="pay-btn-amount">₹${total.toFixed(2)}</span>`;
+                }
+            }
+        });
+    });
+</script>
