@@ -11,6 +11,10 @@
         const wrapper = document.querySelector(".store-template-wrapper");
         const checkoutPage = document.getElementById("checkout-page");
 
+        // 1️⃣ Generate a checkout_session_id (UUID) once per checkout session
+        // Using a variable that persists as long as the page/component is loaded.
+        let checkoutSessionId = crypto.randomUUID();
+
         if (!finalPayBtn || !wrapper) return;
 
         // Helper to get delivery data from the DOM
@@ -69,11 +73,6 @@
             )?.value;
             const deliveryData = getDeliveryData();
 
-            const subtotal = parseFloat(
-                document
-                    .getElementById("checkout-subtotal")
-                    ?.textContent?.replace("₹", "") || "0",
-            );
             const total = parseFloat(
                 document
                     .getElementById("checkout-total")
@@ -122,127 +121,77 @@
 
             finalPayBtn.setAttribute("disabled", "true");
             const originalText = finalPayBtn.innerHTML;
+            finalPayBtn.textContent =
+                paymentMethod === "online"
+                    ? "PROCESSING..."
+                    : "PLACING ORDER...";
 
-            if (paymentMethod === "online") {
-                finalPayBtn.textContent = "PROCESSING...";
+            try {
+                const payload = {
+                    checkout_session_id: checkoutSessionId,
+                    store_id: storeId,
+                    customer: { name, phone, email },
+                    delivery: {
+                        method: deliveryMode,
+                        address: deliveryData.delivery_address,
+                        lat: deliveryData.delivery_lat,
+                        lng: deliveryData.delivery_lng,
+                        date: orderDate,
+                        time_slot: timeSlot,
+                        pincode: deliveryData.delivery_pincode,
+                        landmark: deliveryData.delivery_landmark,
+                        notes: deliveryData.delivery_notes,
+                    },
+                    items: items,
+                    notes: customerNotes,
+                    payment_method: paymentMethod, // Include payment_method explicitly
+                };
 
-                try {
-                    const payload = {
-                        store_id: storeId,
-                        customer: { name, phone, email },
-                        delivery: {
-                            method: deliveryMode,
-                            address: deliveryData.delivery_address,
-                            lat: deliveryData.delivery_lat,
-                            lng: deliveryData.delivery_lng,
-                            date: orderDate,
-                            time_slot: timeSlot,
-                            pincode: deliveryData.delivery_pincode,
-                            landmark: deliveryData.delivery_landmark,
-                            notes: deliveryData.delivery_notes,
-                        },
-                        items: items,
-                        notes: customerNotes,
-                    };
+                // Use the Supabase instance's URL to avoid hardcoding the project ID
+                const functionsUrl = (supabase as any).supabaseUrl.replace(
+                    ".supabase.co",
+                    ".functions.supabase.co",
+                );
+                const res = await fetch(`${functionsUrl}/v1/Place-Order`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                });
 
-                    // Use the Supabase instance's URL to avoid hardcoding the project ID
-                    const functionsUrl = (supabase as any).supabaseUrl.replace(
-                        ".supabase.co",
-                        ".functions.supabase.co",
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(
+                        data?.error || data?.message || "Order creation failed",
                     );
-                    const res = await fetch(`${functionsUrl}/v1/Place-Order`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(payload),
-                    });
+                }
 
-                    const data = await res.json();
-                    if (!res.ok) {
-                        throw new Error(
-                            data?.error ||
-                                data?.message ||
-                                "Order creation failed",
-                        );
-                    }
-
+                // 4️⃣ Handle backend response correctly
+                if (paymentMethod === "online") {
                     if (data.payment_link_url) {
                         window.location.href = data.payment_link_url;
                     } else {
-                        alert("Order placed, but no payment link received.");
+                        throw new Error(
+                            "Order placed, but no payment link received.",
+                        );
                     }
-                } catch (err: any) {
-                    alert(
-                        err.message ||
-                            "Something went wrong while placing your order.",
-                    );
-                    finalPayBtn.removeAttribute("disabled");
-                    finalPayBtn.innerHTML = originalText;
-                }
-            } else {
-                // Pay on Pickup / COD logic
-                finalPayBtn.textContent = "PLACING ORDER...";
-
-                try {
-                    const orderNumber =
-                        "ORD-" +
-                        Math.random().toString(36).substr(2, 9).toUpperCase();
-
-                    const { data, error } = await supabase
-                        .from("orders")
-                        .insert([
-                            {
-                                store_id: storeId,
-                                order_number: orderNumber,
-                                customer_name: name,
-                                customer_phone: phone,
-                                customer_email: email,
-                                delivery_method: deliveryMode,
-                                ...deliveryData,
-                                subtotal: subtotal,
-                                total_amount: total,
-                                currency: "INR",
-                                payment_status: "pending",
-                                payment_method: "cod",
-                                order_date: orderDate,
-                                time_slot: timeSlot,
-                                customer_notes: customerNotes,
-                                items: items, // [FIX] Now including items in the direct insert
-                            },
-                        ]);
-
-                    if (error) throw error;
-
-                    // Success feedback
+                } else {
+                    // Success feedback for COD
                     const toast = document.getElementById("success-toast");
                     if (toast) toast.classList.add("show");
 
                     setTimeout(() => {
-                        if (toast) toast.classList.remove("show");
-                        if (checkoutPage) checkoutPage.classList.remove("open");
-                        document.body.style.overflow = ""; // Unlock scroll
-
-                        // Clear cart
-                        Object.keys(cartState).forEach(
-                            (k) => (cartState[k] = 0),
-                        );
-                        Object.keys(cartNotes).forEach(
-                            (k) => delete cartNotes[k],
-                        );
-
-                        // Call syncUI if available globally
-                        if (typeof (window as any).syncUI === "function") {
-                            (window as any).syncUI(null, 0);
-                        }
-
-                        finalPayBtn.removeAttribute("disabled");
-                        finalPayBtn.innerHTML = `PAY <span id="pay-btn-amount">₹0.00</span>`;
-                    }, 3000);
-                } catch (err: any) {
-                    console.error("Supabase Error:", err);
-                    alert("Order failed: " + (err.message || "Internal error"));
-                    finalPayBtn.removeAttribute("disabled");
-                    finalPayBtn.innerHTML = `PAY <span id="pay-btn-amount">₹${total.toFixed(2)}</span>`;
+                        // Redirect user to order success / thank-you page
+                        window.location.href = "/orders/success";
+                    }, 2000);
                 }
+            } catch (err: any) {
+                console.error("Payment Step Error:", err);
+                alert(
+                    err.message ||
+                        "Something went wrong while placing your order.",
+                );
+                finalPayBtn.removeAttribute("disabled");
+                finalPayBtn.innerHTML = originalText;
             }
         });
     });
