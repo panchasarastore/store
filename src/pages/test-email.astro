@@ -1,0 +1,566 @@
+---
+// src/pages/test-email.astro
+---
+
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Email Testing Tool</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+            rel="stylesheet"
+        />
+        <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0"
+        />
+    </head>
+    <body
+        class="bg-gray-50 font-sans text-gray-900 min-h-screen flex items-center justify-center p-6"
+    >
+        <div
+            class="max-w-md w-full bg-white rounded-3xl shadow-xl p-8 border border-gray-100"
+        >
+            <div class="flex items-center gap-4 mb-8">
+                <div
+                    class="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center"
+                >
+                    <span class="material-symbols-rounded">mail</span>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold">Email Tester</h1>
+                    <p class="text-sm text-gray-500">Resend Edge Function</p>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div
+                    class="bg-blue-50 p-4 rounded-2xl text-sm text-blue-800 leading-relaxed"
+                >
+                    This tool will send a <strong>test receipt email</strong> using
+                    the authenticated session's token. The email will be sent to your
+                    account email address.
+                </div>
+
+                <div class="space-y-4">
+                    <label
+                        class="block text-xs font-bold text-gray-500 uppercase tracking-wider"
+                        >Recipient Email</label
+                    >
+                    <input
+                        type="email"
+                        id="recipient-email"
+                        placeholder="your-email@example.com"
+                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm"
+                    />
+                </div>
+
+                <div class="flex flex-col gap-2 items-center">
+                    <div class="flex flex-col gap-2 items-center">
+                        <div
+                            id="auth-status"
+                            class="text-xs font-semibold text-center py-2 px-4 rounded-full bg-blue-50 text-blue-700 w-fit"
+                        >
+                            Auth session: checking...
+                        </div>
+                        <div class="flex flex-col gap-2 w-full">
+                            <div class="flex gap-2">
+                                <button
+                                    id="refresh-auth-btn"
+                                    class="flex-1 text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-xl transition-colors"
+                                >
+                                    REFRESH STATUS
+                                </button>
+                                <a
+                                    href="/login?redirect=/test-email"
+                                    class="flex-1 text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded-xl shadow-sm text-center transition-colors"
+                                >
+                                    LOGIN ON PORT 4321
+                                </a>
+                            </div>
+
+                            <div
+                                id="token-copy-helper"
+                                class="bg-amber-50 border border-amber-100 p-3 rounded-xl text-[10px] text-amber-800 hidden"
+                            >
+                                <strong>Tip:</strong> If you are logged in on <a
+                                    href="http://localhost:8080"
+                                    class="underline font-bold"
+                                    >localhost:8080</a
+                                > (Dashboard), you can copy your token from there
+                                and paste it below. Ports are isolated!
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        class="space-y-4 pt-4 border-t border-dashed border-gray-100"
+                    >
+                        <div class="flex justify-between items-center">
+                            <label
+                                class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest"
+                                >Manual JWT (Cross-Port Debug)</label
+                            >
+                            <button
+                                id="toggle-jwt"
+                                class="text-[10px] text-blue-500 hover:underline"
+                                >Show</button
+                            >
+                        </div>
+                        <textarea
+                            id="manual-token"
+                            placeholder="Paste access_token from Dashboard here..."
+                            class="w-full px-3 py-2 rounded-xl border border-gray-100 text-[10px] font-mono focus:border-blue-300 focus:ring-1 focus:ring-blue-100 outline-none transition-all hidden"
+                            rows="3"></textarea>
+                    </div>
+
+                    <button
+                        id="test-receipt-btn"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-3 active:scale-[0.98]"
+                    >
+                        <span class="material-symbols-rounded">send</span>
+                        SEND TEST RECEIPT
+                    </button>
+
+                    <div class="bg-gray-50 p-4 rounded-2xl">
+                        <h3
+                            class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2"
+                        >
+                            Why am I not logged in?
+                        </h3>
+                        <ul
+                            class="text-[11px] text-gray-500 space-y-1 list-disc pl-4"
+                        >
+                            <li>
+                                <strong class="text-gray-700"
+                                    >Port Isolation:</strong
+                                >
+                                Localhost:8080 (Dashboard) and Localhost:4321 (Store)
+                                are <strong class="text-blue-600"
+                                    >different origins</strong
+                                >.
+                            </li>
+                            <li>
+                                Auth on one port does <strong
+                                    class="text-red-500">NOT</strong
+                                > automatically log you in on the other.
+                            </li>
+                            <li>
+                                To fix: Log in at <code
+                                    class="bg-gray-100 p-0.5 rounded"
+                                    >localhost:4321/login</code
+                                >.
+                            </li>
+                        </ul>
+                    </div>
+
+                    <p class="text-center">
+                        <a
+                            href="/"
+                            class="text-sm font-semibold text-gray-400 hover:text-gray-600"
+                            >Back to Home</a
+                        >
+                    </p>
+                </div>
+            </div>
+
+            <script>
+                import { supabase } from "../lib/supabase";
+
+                const btn = document.getElementById(
+                    "test-receipt-btn",
+                ) as HTMLButtonElement;
+                const statusEl = document.getElementById("auth-status")!;
+
+                async function checkAuth() {
+                    console.log("Checking auth session...");
+                    const {
+                        data: { session },
+                    } = await supabase.auth.getSession();
+
+                    const helper =
+                        document.getElementById("token-copy-helper")!;
+
+                    if (session) {
+                        statusEl.textContent = `Session found: ${session.user.email}`;
+                        statusEl.classList.remove(
+                            "bg-blue-50",
+                            "text-blue-700",
+                            "bg-gray-100",
+                            "text-gray-600",
+                        );
+                        statusEl.classList.add(
+                            "bg-green-100",
+                            "text-green-700",
+                        );
+                        helper.classList.add("hidden");
+                        const emailInput = document.getElementById(
+                            "recipient-email",
+                        ) as HTMLInputElement;
+                        if (emailInput && !emailInput.value)
+                            emailInput.value = session.user.email || "";
+                    } else {
+                        statusEl.textContent = "No active session on port 4321";
+                        statusEl.classList.remove(
+                            "bg-blue-50",
+                            "text-blue-700",
+                            "bg-green-100",
+                            "text-green-700",
+                        );
+                        statusEl.classList.add("bg-red-50", "text-red-600");
+                        helper.classList.remove("hidden");
+                    }
+                }
+
+                async function sendTestReceipt() {
+                    const emailInput = document.getElementById(
+                        "recipient-email",
+                    ) as HTMLInputElement;
+                    const recipientEmail = emailInput.value.trim();
+
+                    if (!recipientEmail) {
+                        alert("Please enter a recipient email address.");
+                        return;
+                    }
+
+                    const originalText = btn.innerHTML;
+
+                    try {
+                        btn.disabled = true;
+                        btn.textContent = "Sending...";
+
+                        // Get session or use fallback token
+                        const {
+                            data: { session },
+                        } = await supabase.auth.getSession();
+                        const manualToken = (
+                            document.getElementById(
+                                "manual-token",
+                            ) as HTMLTextAreaElement
+                        )?.value.trim();
+
+                        let token = (
+                            manualToken ||
+                            session?.access_token ||
+                            import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+                        ).replace(/^Bearer\s+/i, "");
+
+                        const payload = {
+                            receipt: {
+                                order: {
+                                    id: "TEST-MANUAL-001",
+                                    date: new Date().toLocaleDateString(),
+                                    currency: "INR",
+                                    items: [
+                                        {
+                                            name: "Sample Product A",
+                                            quantity: 1,
+                                            price: 599,
+                                        },
+                                    ],
+                                    subtotal: 599,
+                                    total: 599,
+                                },
+                                customer: {
+                                    name: "Testing User",
+                                    email: recipientEmail,
+                                },
+                                store: {
+                                    name: "Panchasara Development",
+                                    email: "support@panchasara.com",
+                                    phone: "+91 00000 00000",
+                                    address: "Local testing environment",
+                                },
+                            },
+                        };
+
+                        console.log(
+                            "Token prefix:",
+                            token.substring(0, 15) + "...",
+                        );
+                        console.log(
+                            "Payload:",
+                            JSON.stringify(payload, null, 2),
+                        );
+
+                        const response = await fetch(
+                            `${import.meta.env.PUBLIC_SUPABASE_URL}/functions/v1/send-receipt`,
+                            {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    Authorization: `Bearer ${token}`,
+                                    apikey: import.meta.env
+                                        .PUBLIC_SUPABASE_ANON_KEY,
+                                },
+                                body: JSON.stringify(payload),
+                            },
+                        );
+
+                        const result = await response.json();
+
+                        if (!response.ok) {
+                            throw new Error(
+                                result.error ||
+                                    `Error ${response.status}: ${result.message || "Function failed"}`,
+                            );
+                        }
+
+                        alert("Success! Receipt sent to: " + recipientEmail);
+                    } catch (err: any) {
+                        console.error("Test Receipt Error:", err);
+                        alert(
+                            `Error: ${err.message}\n\nNote: If the Edge Function requires a logged-in user, the Anon Key won't work.`,
+                        );
+                    } finally {
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                    }
+                }
+
+                checkAuth();
+                btn.addEventListener("click", sendTestReceipt);
+                document
+                    .getElementById("refresh-auth-btn")
+                    ?.addEventListener("click", checkAuth);
+
+                document
+                    .getElementById("toggle-jwt")
+                    ?.addEventListener("click", (e) => {
+                        const area = document.getElementById("manual-token")!;
+                        area.classList.toggle("hidden");
+                        (e.target as HTMLElement).textContent =
+                            area.classList.contains("hidden") ? "Show" : "Hide";
+                    });
+            </script>
+
+            <style>
+                /* Simple Tailwind-like utility styles since we are using Vanilla CSS/Astro */
+                .bg-gray-50 {
+                    background-color: #f9fafb;
+                }
+                .bg-white {
+                    background-color: #ffffff;
+                }
+                .bg-blue-50 {
+                    background-color: #eff6ff;
+                }
+                .bg-blue-100 {
+                    background-color: #dbeafe;
+                }
+                .bg-blue-600 {
+                    background-color: #2563eb;
+                }
+                .bg-blue-700 {
+                    background-color: #1d4ed8;
+                }
+                .bg-yellow-100 {
+                    background-color: #fef9c3;
+                }
+                .bg-green-100 {
+                    background-color: #dcfce7;
+                }
+                .bg-red-100 {
+                    background-color: #fee2e2;
+                }
+
+                .text-gray-900 {
+                    color: #111827;
+                }
+                .text-gray-500 {
+                    color: #6b7280;
+                }
+                .text-gray-400 {
+                    color: #9ca3af;
+                }
+                .text-blue-600 {
+                    color: #2563eb;
+                }
+                .text-blue-800 {
+                    color: #1e40af;
+                }
+                .text-yellow-700 {
+                    color: #a16207;
+                }
+                .text-green-700 {
+                    color: #15803d;
+                }
+                .text-red-700 {
+                    color: #b91c1c;
+                }
+                .text-white {
+                    color: #ffffff;
+                }
+
+                .rounded-3xl {
+                    border-radius: 1.5rem;
+                }
+                .rounded-2xl {
+                    border-radius: 1rem;
+                }
+                .rounded-xl {
+                    border-radius: 0.75rem;
+                }
+                .rounded-full {
+                    border-radius: 9999px;
+                }
+
+                .shadow-xl {
+                    box-shadow:
+                        0 20px 25px -5px rgba(0, 0, 0, 0.1),
+                        0 10px 10px -5px rgba(0, 0, 0, 0.04);
+                }
+                .shadow-lg {
+                    box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2);
+                }
+
+                .flex {
+                    display: flex;
+                }
+                .items-center {
+                    align-items: center;
+                }
+                .justify-center {
+                    justify-content: center;
+                }
+                .flex-col {
+                    flex-direction: column;
+                }
+                .gap-4 {
+                    gap: 1rem;
+                }
+                .gap-3 {
+                    gap: 0.75rem;
+                }
+
+                .min-h-screen {
+                    min-height: 100vh;
+                }
+                .p-6 {
+                    padding: 1.5rem;
+                }
+                .p-8 {
+                    padding: 2rem;
+                }
+                .py-4 {
+                    padding-top: 1rem;
+                    padding-bottom: 1rem;
+                }
+                .px-6 {
+                    padding-left: 1.5rem;
+                    padding-right: 1.5rem;
+                }
+                .py-2 {
+                    padding-top: 0.5rem;
+                    padding-bottom: 0.5rem;
+                }
+                .px-4 {
+                    padding-left: 1rem;
+                    padding-right: 1rem;
+                }
+
+                .max-w-md {
+                    max-width: 28rem;
+                }
+                .w-full {
+                    width: 100%;
+                }
+                .w-12 {
+                    width: 3rem;
+                }
+                .h-12 {
+                    height: 3rem;
+                }
+                .w-fit {
+                    width: fit-content;
+                }
+                .mx-auto {
+                    margin-left: auto;
+                    margin-right: auto;
+                }
+
+                .mb-8 {
+                    margin-bottom: 2rem;
+                }
+                .mb-4 {
+                    margin-bottom: 1rem;
+                }
+                .space-y-6 > * + * {
+                    margin-top: 1.5rem;
+                }
+
+                .font-sans {
+                    font-family:
+                        "Inter",
+                        system-ui,
+                        -apple-system,
+                        sans-serif;
+                }
+                .font-bold {
+                    font-weight: 700;
+                }
+                .font-semibold {
+                    font-weight: 600;
+                }
+
+                .text-2xl {
+                    font-size: 1.5rem;
+                    line-height: 2rem;
+                }
+                .text-sm {
+                    font-size: 0.875rem;
+                    line-height: 1.25rem;
+                }
+                .text-xs {
+                    font-size: 0.75rem;
+                    line-height: 1rem;
+                }
+                .text-center {
+                    text-align: center;
+                }
+                .leading-relaxed {
+                    line-height: 1.625;
+                }
+
+                .transition-all {
+                    transition-property: all;
+                    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+                    transition-duration: 150ms;
+                }
+                .block {
+                    display: block;
+                }
+                .uppercase {
+                    text-transform: uppercase;
+                }
+                .tracking-wider {
+                    letter-spacing: 0.05em;
+                }
+                .outline-none {
+                    outline: none;
+                }
+                .focus\:border-blue-500:focus {
+                    border-color: #3b82f6;
+                }
+                .focus\:ring-2:focus {
+                    box-shadow: 0 0 0 2px #bfdbfe;
+                }
+                .active\:scale-\[0\.98\]:active {
+                    transform: scale(0.98);
+                }
+                .space-y-4 > * + * {
+                    margin-top: 1rem;
+                }
+                .bg-gray-100 {
+                    background-color: #f3f4f6;
+                }
+                .text-gray-600 {
+                    color: #4b5563;
+                }
+            </style>
+        </div>
+    </body>
+</html>

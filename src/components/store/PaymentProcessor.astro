@@ -147,23 +147,21 @@
                     payment_method: paymentMethod, // Include payment_method explicitly
                 };
 
-                // Use the Supabase instance's URL to avoid hardcoding the project ID
-                const functionsUrl = (supabase as any).supabaseUrl.replace(
-                    ".supabase.co",
-                    ".functions.supabase.co",
-                );
-                const res = await fetch(`${functionsUrl}/v1/Place-Order`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload),
-                });
+                console.log("Placing order with payload:", payload);
 
-                const data = await res.json();
-                if (!res.ok) {
+                const { data, error: funcError } =
+                    await supabase.functions.invoke("Place-Order", {
+                        body: payload,
+                    });
+
+                if (funcError) {
+                    console.error("Supabase Function Error:", funcError);
                     throw new Error(
-                        data?.error || data?.message || "Order creation failed",
+                        funcError.message || "Order creation failed",
                     );
                 }
+
+                console.log("Response from Edge Function:", data);
 
                 // 4️⃣ Handle backend response correctly
                 if (paymentMethod === "online") {
