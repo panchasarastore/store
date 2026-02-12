@@ -5,16 +5,46 @@
  * requires authentication for a page by redirecting to `/login` if not logged in, and returns the
  * session if logged in. The `logout` function logs the user out and redirects to `/login`.
  */
-import { supabase } from './supabase';
+import { supabase, STORAGE_KEY } from './supabase';
 import type { AstroGlobal } from 'astro';
 
 /**
  * Get the current session (or null)
  */
-export async function getSession() {
+export async function getSession(Astro?: AstroGlobal) {
+  // SSR Support: Restore session from cookie if on server
+  if (Astro && typeof document === 'undefined') {
+    const cookie = Astro.cookies.get(STORAGE_KEY);
+    console.log('[DEBUG] SSR Cookie Check:', {
+      key: STORAGE_KEY,
+      exists: !!cookie,
+      value: cookie?.value ? cookie.value.substring(0, 20) + '...' : 'none'
+    });
+
+    if (cookie) {
+      try {
+        const sessionData = JSON.parse(cookie.value);
+        if (sessionData.access_token && sessionData.refresh_token) {
+          console.log('[DEBUG] Restoring Session from Cookie');
+          const { data, error } = await supabase.auth.setSession(sessionData);
+          if (error) console.error('[DEBUG] setSession Error:', error.message);
+          else console.log('[DEBUG] Session Restored Successfully');
+        } else {
+          console.warn('[DEBUG] Cookie missing tokens');
+        }
+      } catch (e) {
+        console.error('[DEBUG] Cookie Parse Error:', e);
+      }
+    }
+  }
+
   const {
     data: { session },
+    error: sessionError
   } = await supabase.auth.getSession();
+
+  if (sessionError) console.error('[DEBUG] getSession Error:', sessionError.message);
+  console.log('[DEBUG] Final Session State:', !!session);
 
   return session;
 }
@@ -25,7 +55,7 @@ export async function getSession() {
  * - Returns session if logged in
  */
 export async function requireAuth(Astro: AstroGlobal) {
-  const session = await getSession();
+  const session = await getSession(Astro);
 
   if (!session) {
     return Astro.redirect('/login');

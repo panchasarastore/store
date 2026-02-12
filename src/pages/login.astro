@@ -9,7 +9,7 @@ import { hasStore } from "../lib/stores";
 // --------------------------------------------------
 // 1️⃣ If user is ALREADY logged in → route them
 // --------------------------------------------------
-const session = await getSession();
+const session = await getSession(Astro);
 
 if (session) {
   if (await hasStore()) {
@@ -42,9 +42,13 @@ if (session) {
         <img
           class="absolute inset-0 h-full w-full object-cover object-center"
           src="https://c02.purpledshub.com/uploads/sites/51/2020/01/Beginners_guide_to_crochet_new-28ef06f.jpg"
-          alt="Finishing touches on a cake"
+          alt="Crochet Making"
         />
         <div class="absolute inset-0 bg-primary mix-blend-multiply opacity-20">
+        </div>
+        <div
+          class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-40"
+        >
         </div>
       </div>
 
@@ -75,177 +79,163 @@ if (session) {
             </p>
           </div>
 
-          <div class="mt-8">
-            <div class="mt-6">
-              <div class="mt-8">
-                <div class="mt-6">
-                  <form id="login-form" class="space-y-6">
-                    <div>
-                      <label
-                        for="email"
-                        class="block text-sm font-semibold text-slate-700"
-                        >Email Address</label
-                      >
-                      <div class="mt-1">
-                        <input
-                          id="email"
-                          name="email"
-                          type="email"
-                          autocomplete="email"
-                          required
-                          placeholder="maker@example.com"
-                          class="appearance-none block w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-slate-50/50"
-                        />
-                      </div>
-                    </div>
-
-                    <div class="space-y-1">
-                      <label
-                        for="password"
-                        class="block text-sm font-semibold text-slate-700"
-                        >Password</label
-                      >
-                      <div class="mt-1">
-                        <input
-                          id="password"
-                          name="password"
-                          type="password"
-                          autocomplete="current-password"
-                          required
-                          placeholder="••••••••"
-                          class="appearance-none block w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-slate-50/50"
-                        />
-                      </div>
-                    </div>
-
-                    <div class="flex items-center justify-end">
-                      <div class="text-sm">
-                        <a
-                          href="#"
-                          class="font-medium text-primary hover:text-orange-600 transition-colors"
-                        >
-                          Forgot your password?
-                        </a>
-                      </div>
-                    </div>
-
-                    <div>
-                      <button
-                        type="submit"
-                        id="submit-btn"
-                        class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-display font-bold text-white bg-primary hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors cursor-pointer shadow-orange-100 disabled:opacity-50"
-                      >
-                        Log in
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-
-              <div
-                id="error-message"
-                class="mt-6 p-4 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm text-center font-medium hidden"
-              >
-              </div>
-
-              <script>
-                import { supabase } from "../lib/supabase";
-                import { hasStore } from "../lib/stores";
-
-                const form = document.getElementById(
-                  "login-form",
-                ) as HTMLFormElement;
-                const errorEl = document.getElementById("error-message")!;
-                const submitBtn = document.getElementById(
-                  "submit-btn",
-                ) as HTMLButtonElement;
-
-                form.addEventListener("submit", async (e) => {
-                  e.preventDefault();
-                  errorEl.classList.add("hidden");
-                  submitBtn.disabled = true;
-                  submitBtn.textContent = "Logging in...";
-
-                  const formData = new FormData(form);
-                  const email = formData.get("email")?.toString().trim();
-                  const password = formData.get("password")?.toString();
-
-                  if (!email || !password) {
-                    errorEl.textContent = "Email and password are required";
-                    errorEl.classList.remove("hidden");
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = "Log in";
-                    return;
-                  }
-
-                  try {
-                    const { error: signInError } =
-                      await supabase.auth.signInWithPassword({
-                        email,
-                        password,
-                      });
-
-                    if (signInError) {
-                      errorEl.textContent = signInError.message;
-                      errorEl.classList.remove("hidden");
-                      submitBtn.disabled = false;
-                      submitBtn.textContent = "Log in";
-                    } else {
-                      // Check if user has a store and redirect
-                      const exists = await hasStore();
-                      if (exists) {
-                        window.location.href = "http://localhost:8080";
-                      } else {
-                        window.location.href = "/create-store";
-                      }
-                    }
-                  } catch (err) {
-                    errorEl.textContent =
-                      "Something went wrong. Please try again.";
-                    errorEl.classList.remove("hidden");
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = "Log in";
-                  }
-                });
-              </script>
-
-              <div class="mt-8 relative">
-                <div
-                  class="absolute inset-0 flex items-center"
-                  aria-hidden="true"
+          <div class="mt-12">
+            <form id="login-form" class="space-y-6">
+              <div>
+                <label
+                  for="email"
+                  class="block text-sm font-semibold text-slate-700"
+                  >Email Address</label
                 >
-                  <div class="w-full border-t border-slate-200"></div>
-                </div>
-                <div class="relative flex justify-center text-sm">
-                  <span class="px-2 bg-white text-slate-500">
-                    Don't have an account? <a
-                      href="/signup"
-                      class="font-bold text-primary hover:text-orange-600 transition-colors"
-                      >Create one</a
-                    >
-                  </span>
+                <div class="mt-1">
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autocomplete="email"
+                    required
+                    placeholder="maker@example.com"
+                    class="appearance-none block w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-slate-50/50"
+                  />
                 </div>
               </div>
-            </div>
-          </div>
 
-          <div class="hidden lg:block relative w-0 flex-1">
-            <img
-              class="absolute inset-0 h-full w-full object-cover"
-              src="https://c02.purpledshub.com/uploads/sites/51/2020/01/Beginners_guide_to_crochet_new-28ef06f.jpg"
-              alt="Crochet Making"
-            />
-            <div
-              class="absolute inset-0 bg-primary mix-blend-multiply opacity-20"
-            >
-            </div>
-            <div
-              class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-40"
-            >
-            </div>
+              <div class="space-y-1">
+                <label
+                  for="password"
+                  class="block text-sm font-semibold text-slate-700"
+                  >Password</label
+                >
+                <div class="mt-1">
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autocomplete="current-password"
+                    required
+                    placeholder="••••••••"
+                    class="appearance-none block w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-slate-50/50"
+                  />
+                </div>
+              </div>
+
+              <div class="flex items-center justify-end">
+                <div class="text-sm">
+                  <a
+                    href="#"
+                    class="font-medium text-primary hover:text-orange-600 transition-colors"
+                  >
+                    Forgot your password?
+                  </a>
+                </div>
+              </div>
+
+              <div>
+                <button
+                  type="submit"
+                  id="submit-btn"
+                  class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-display font-bold text-white bg-primary hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors cursor-pointer shadow-orange-100 disabled:opacity-50"
+                >
+                  Log in
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div
+          id="error-message"
+          class="mt-6 p-4 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm text-center font-medium hidden"
+        >
+        </div>
+
+        <script>
+          import { supabase } from "../lib/supabase";
+          import { hasStore } from "../lib/stores";
+
+          const form = document.getElementById("login-form") as HTMLFormElement;
+          const errorEl = document.getElementById("error-message")!;
+          const submitBtn = document.getElementById(
+            "submit-btn",
+          ) as HTMLButtonElement;
+
+          form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            errorEl.classList.add("hidden");
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Logging in...";
+
+            const formData = new FormData(form);
+            const email = formData.get("email")?.toString().trim();
+            const password = formData.get("password")?.toString();
+
+            if (!email || !password) {
+              errorEl.textContent = "Email and password are required";
+              errorEl.classList.remove("hidden");
+              submitBtn.disabled = false;
+              submitBtn.textContent = "Log in";
+              return;
+            }
+
+            try {
+              const { error: signInError } =
+                await supabase.auth.signInWithPassword({
+                  email,
+                  password,
+                });
+
+              if (signInError) {
+                errorEl.textContent = signInError.message;
+                errorEl.classList.remove("hidden");
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Log in";
+              } else {
+                // Check if user has a store and redirect
+                const exists = await hasStore();
+                if (exists) {
+                  window.location.href = "http://localhost:8080";
+                } else {
+                  window.location.href = "/create-store";
+                }
+              }
+            } catch (err) {
+              errorEl.textContent = "Something went wrong. Please try again.";
+              errorEl.classList.remove("hidden");
+              submitBtn.disabled = false;
+              submitBtn.textContent = "Log in";
+            }
+          });
+        </script>
+
+        <div class="mt-8 relative">
+          <div class="absolute inset-0 flex items-center" aria-hidden="true">
+            <div class="w-full border-t border-slate-200"></div>
+          </div>
+          <div class="relative flex justify-center text-sm">
+            <span class="px-2 bg-white text-slate-500">
+              Don't have an account? <a
+                href="/signup"
+                class="font-bold text-primary hover:text-orange-600 transition-colors"
+                >Create one</a
+              >
+            </span>
           </div>
         </div>
       </div>
-    </div></body
-  >
+
+      <div class="hidden lg:block relative w-0 flex-1">
+        <img
+          class="absolute inset-0 h-full w-full object-cover"
+          src="https://c02.purpledshub.com/uploads/sites/51/2020/01/Beginners_guide_to_crochet_new-28ef06f.jpg"
+          alt="Crochet Making"
+        />
+        <div class="absolute inset-0 bg-primary mix-blend-multiply opacity-20">
+        </div>
+        <div
+          class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-40"
+        >
+        </div>
+      </div>
+    </div>
+  </body>
 </html>

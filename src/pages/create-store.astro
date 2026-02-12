@@ -4,15 +4,19 @@ export const prerender = false;
 
 import StoreTemplate from "../components/store/StoreTemplate.astro";
 import { requireAuth } from "../lib/auth";
-import { hasStore, createStore } from "../lib/stores";
+import { getUserStore, createStore, updateStore } from "../lib/stores";
 
 // -----------------------------------------------------------------------------
 // Auth Guard
 // -----------------------------------------------------------------------------
-await requireAuth(Astro);
+const session = await requireAuth(Astro);
+if (session instanceof Response) return session;
 
-// If user already has a store → go straight to dashboard
-if (await hasStore()) {
+const isEditMode = Astro.url.searchParams.get("edit") === "true";
+const existingStore = await getUserStore();
+
+// If user already has a store and NOT in edit mode → go straight to dashboard
+if (existingStore && !isEditMode) {
   return Astro.redirect("http://localhost:8080");
 }
 
@@ -58,14 +62,19 @@ if (Astro.request.method === "POST") {
       store_address: formData.get("store_address")?.toString(),
       instagram_url: formData.get("instagram_url")?.toString(),
       facebook_url: formData.get("facebook_url")?.toString(),
+      contact_email: formData.get("contact_email")?.toString(),
       logo: formData.get("logo") as File,
       theme,
     };
 
     // -----------------------------
-    // Create store in Supabase
+    // Create/Update store in Supabase
     // -----------------------------
-    await createStore(storeData);
+    if (isEditMode && existingStore) {
+      await updateStore(existingStore.id, storeData);
+    } else {
+      await createStore(storeData);
+    }
 
     // ✅ FINAL STEP: redirect to React dashboard
     return Astro.redirect("http://localhost:8080");
@@ -85,14 +94,33 @@ const previewStore = {
   logo: "",
   whatsapp_number: "+91 98765 43210",
   address: "Fort Kochi, Kerala",
+  slug: "",
+  email: "",
+  instagram: "",
+  facebook: "",
 };
 
-const previewTheme = {
+const previewTheme = existingStore?.theme?.colors || {
   primary: "#5b3a1e",
   secondary: "#c46a2b",
   background: "#fffaf0",
   text: "#1f1f1f",
 };
+
+const initialStore = existingStore
+  ? {
+      name: existingStore.store_name,
+      tagline: existingStore.store_tagline,
+      about: existingStore.about_us,
+      logo: existingStore.logo_url,
+      whatsapp_number: existingStore.whatsapp_number,
+      address: existingStore.store_address,
+      slug: existingStore.store_url_slug,
+      email: existingStore.contact_email,
+      instagram: existingStore.instagram_url,
+      facebook: existingStore.facebook_url,
+    }
+  : previewStore;
 
 const previewProducts = [];
 ---
@@ -242,7 +270,7 @@ const previewProducts = [];
             >
           </a>
           <h1 class="font-display text-2xl font-bold text-slate-900">
-            Design Your Store
+            {isEditMode ? "Edit Your Store" : "Design Your Store"}
           </h1>
         </div>
 
@@ -279,6 +307,7 @@ const previewProducts = [];
                     type="text"
                     name="store_name"
                     placeholder="The Sourdough Studio"
+                    value={initialStore.name}
                     required
                     class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-medium"
                   />
@@ -298,6 +327,7 @@ const previewProducts = [];
                       type="text"
                       name="store_url_slug"
                       placeholder="sourdough-studio"
+                      value={initialStore.slug}
                       required
                       class="flex-1 bg-transparent border-none p-0 focus:ring-0 text-slate-900 placeholder:text-slate-400 font-medium"
                     />
@@ -325,6 +355,7 @@ const previewProducts = [];
                     type="text"
                     name="store_tagline"
                     placeholder="Handmade with heart"
+                    value={initialStore.tagline}
                     class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-medium"
                   />
                 </div>
@@ -338,7 +369,8 @@ const previewProducts = [];
                     rows="3"
                     placeholder="Tell your story..."
                     class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-medium resize-none"
-                  ></textarea>
+                    >{initialStore.about}</textarea
+                  >
                 </div>
                 <div>
                   <label
@@ -365,7 +397,8 @@ const previewProducts = [];
                       >
                     </div>
                     <img
-                      class="logo-preview-thumb absolute inset-0 w-full h-full object-contain bg-white hidden"
+                      src={initialStore.logo}
+                      class={`logo-preview-thumb absolute inset-0 w-full h-full object-contain bg-white ${initialStore.logo ? "" : "hidden"}`}
                     />
                   </label>
                 </div>
@@ -471,7 +504,7 @@ const previewProducts = [];
                       <input
                         type="color"
                         name="color_primary"
-                        value="#5b3a1e"
+                        value={previewTheme.primary || "#5b3a1e"}
                         class="w-8 h-8 rounded-lg border-none p-0 cursor-pointer"
                       />
                     </div>
@@ -487,7 +520,7 @@ const previewProducts = [];
                       <input
                         type="color"
                         name="color_secondary"
-                        value="#c46a2b"
+                        value={previewTheme.secondary || "#c46a2b"}
                         class="w-8 h-8 rounded-lg border-none p-0 cursor-pointer"
                       />
                     </div>
@@ -503,7 +536,7 @@ const previewProducts = [];
                       <input
                         type="color"
                         name="color_background"
-                        value="#fffaf0"
+                        value={previewTheme.background || "#fffaf0"}
                         class="w-8 h-8 rounded-lg border-none p-0 cursor-pointer"
                       />
                     </div>
@@ -519,7 +552,7 @@ const previewProducts = [];
                       <input
                         type="color"
                         name="color_text"
-                        value="#1f1f1f"
+                        value={previewTheme.text || "#1f1f1f"}
                         class="w-8 h-8 rounded-lg border-none p-0 cursor-pointer"
                       />
                     </div>
@@ -535,7 +568,7 @@ const previewProducts = [];
                       <input
                         type="color"
                         name="color_header"
-                        value="#fffaf0"
+                        value={previewTheme.background || "#fffaf0"}
                         class="w-8 h-8 rounded-lg border-none p-0 cursor-pointer"
                       />
                       <span class="ml-2 text-xs text-slate-400"
@@ -639,6 +672,7 @@ const previewProducts = [];
                   type="text"
                   name="store_address"
                   placeholder="City, Region (e.g. Kochi, Kerala)"
+                  value={initialStore.address}
                   class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white focus:border-primary focus:ring-1 focus:ring-primary text-sm"
                 />
                 <p class="text-[10px] text-slate-400 mt-1.5 ml-1">
@@ -673,6 +707,7 @@ const previewProducts = [];
                     type="email"
                     name="contact_email"
                     placeholder="Email"
+                    value={initialStore.email}
                     class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white focus:border-primary focus:ring-1 focus:ring-primary text-sm"
                   />
                 </div>
@@ -702,6 +737,7 @@ const previewProducts = [];
                     type="tel"
                     name="whatsapp_number"
                     placeholder="Number"
+                    value={initialStore.whatsapp_number}
                     class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white focus:border-primary focus:ring-1 focus:ring-primary text-sm"
                   />
                 </div>
@@ -731,6 +767,7 @@ const previewProducts = [];
                     type="url"
                     name="instagram_url"
                     placeholder="URL"
+                    value={initialStore.instagram}
                     class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white focus:border-primary focus:ring-1 focus:ring-primary text-sm"
                   />
                 </div>
@@ -760,6 +797,7 @@ const previewProducts = [];
                     type="url"
                     name="facebook_url"
                     placeholder="URL"
+                    value={initialStore.facebook}
                     class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white focus:border-primary focus:ring-1 focus:ring-primary text-sm"
                   />
                 </div>
@@ -780,7 +818,7 @@ const previewProducts = [];
             type="submit"
             form="storeForm"
             class="px-8 py-3 rounded-full bg-primary hover:bg-primary-hover text-white font-bold shadow-lg shadow-orange-200 transition-all hover:-translate-y-0.5"
-            >Save & Launch</button
+            >{isEditMode ? "Update Store" : "Save & Launch"}</button
           >
         </div>
       </aside>
@@ -812,7 +850,11 @@ const previewProducts = [];
               <div
                 class="bg-white border border-slate-200 text-slate-400 text-[10px] px-4 py-1 rounded-md w-full max-w-md text-center font-mono truncate browser-url opacity-70"
               >
-                panchasara.com/sourdough-studio
+                {
+                  initialStore.slug
+                    ? `panchasara.com/${initialStore.slug}`
+                    : "panchasara.com/your-store"
+                }
               </div>
             </div>
             <button
@@ -827,7 +869,7 @@ const previewProducts = [];
 
           <div class="flex-1 overflow-y-auto bg-white preview-scroll-container">
             <StoreTemplate
-              store={previewStore}
+              store={initialStore}
               theme={previewTheme}
               products={previewProducts}
               isPreview={true}
