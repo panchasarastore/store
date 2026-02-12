@@ -5,14 +5,15 @@
 
 <script>
     import { supabase } from "../../lib/supabase";
+    import { cartItems, clearCart } from "../../lib/cartStore";
 
     document.addEventListener("DOMContentLoaded", () => {
         const finalPayBtn = document.getElementById("final-pay-btn");
-        const wrapper = document.querySelector(".store-template-wrapper");
-        const checkoutPage = document.getElementById("checkout-page");
+        const wrapper = document.querySelector(
+            ".store-template-wrapper",
+        ) as HTMLElement;
 
         // 1️⃣ Generate a checkout_session_id (UUID) once per checkout session
-        // Using a variable that persists as long as the page/component is loaded.
         let checkoutSessionId = crypto.randomUUID();
 
         if (!finalPayBtn || !wrapper) return;
@@ -73,12 +74,6 @@
             )?.value;
             const deliveryData = getDeliveryData();
 
-            const total = parseFloat(
-                document
-                    .getElementById("checkout-total")
-                    ?.textContent?.replace("₹", "") || "0",
-            );
-
             const storeId = (wrapper as HTMLElement).dataset.storeId;
             const name = (
                 document.getElementById("input-name") as HTMLInputElement
@@ -99,20 +94,16 @@
                 document.getElementById("input-time") as HTMLSelectElement
             )?.value;
 
-            // Access global cart state from StoreTemplate (it remains there for UI syncing)
-            const cartState = (window as any).cartState || {};
-            const cartNotes = (window as any).cartNotes || {};
-
-            const items = Object.entries(cartState)
-                .filter(([_, qty]) => (qty as number) > 0)
-                .map(([pid, qty]) => {
-                    return {
-                        product_id: pid,
-                        quantity: qty,
-                        variant: null,
-                        custom_note: cartNotes[pid] || null,
-                    };
-                });
+            // Access shared cart state from our store
+            const items = cartItems
+                .get()
+                .filter((item) => item.quantity > 0)
+                .map((item) => ({
+                    product_id: item.id,
+                    quantity: item.quantity,
+                    variant: null,
+                    custom_note: item.custom_note || null,
+                }));
 
             if (items.length === 0) {
                 alert("Your cart is empty!");
@@ -144,7 +135,7 @@
                     },
                     items: items,
                     notes: customerNotes,
-                    payment_method: paymentMethod, // Include payment_method explicitly
+                    payment_method: paymentMethod,
                 };
 
                 console.log("Placing order with payload:", payload);
@@ -163,9 +154,11 @@
 
                 console.log("Response from Edge Function:", data);
 
-                // 4️⃣ Handle backend response correctly
                 if (paymentMethod === "online") {
                     if (data.payment_link_url) {
+                        // For online payments, we clear cart after successful payment verification normally,
+                        // but here we redirect to a payment link.
+                        // If the user abandons payment, we might want the cart to persist.
                         window.location.href = data.payment_link_url;
                     } else {
                         throw new Error(
@@ -177,8 +170,10 @@
                     const toast = document.getElementById("success-toast");
                     if (toast) toast.classList.add("show");
 
+                    // Clear cart on successful order placement
+                    clearCart();
+
                     setTimeout(() => {
-                        // Redirect user to order success / thank-you page
                         window.location.href = "/orders/success";
                     }, 2000);
                 }

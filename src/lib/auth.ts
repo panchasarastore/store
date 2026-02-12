@@ -12,39 +12,34 @@ import type { AstroGlobal } from 'astro';
  * Get the current session (or null)
  */
 export async function getSession(Astro?: AstroGlobal) {
-  // SSR Support: Restore session from cookie if on server
-  if (Astro && typeof document === 'undefined') {
-    const cookie = Astro.cookies.get(STORAGE_KEY);
-    console.log('[DEBUG] SSR Cookie Check:', {
-      key: STORAGE_KEY,
-      exists: !!cookie,
-      value: cookie?.value ? cookie.value.substring(0, 20) + '...' : 'none'
-    });
+  // Use the client from locals if available (set by middleware)
+  const supabaseClient = Astro?.locals?.supabase || supabase;
 
+  // Use user from locals if available (set by middleware)
+  if (Astro?.locals?.user) {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    return session;
+  }
+
+  // SSR Support Fallback: Restore session from cookie if on server
+  if (Astro && typeof document === 'undefined' && !Astro.locals.user) {
+    const cookie = Astro.cookies.get(STORAGE_KEY);
     if (cookie) {
       try {
-        const sessionData = JSON.parse(cookie.value);
+        const decodedValue = decodeURIComponent(cookie.value);
+        const sessionData = JSON.parse(decodedValue);
         if (sessionData.access_token && sessionData.refresh_token) {
-          console.log('[DEBUG] Restoring Session from Cookie');
-          const { data, error } = await supabase.auth.setSession(sessionData);
-          if (error) console.error('[DEBUG] setSession Error:', error.message);
-          else console.log('[DEBUG] Session Restored Successfully');
-        } else {
-          console.warn('[DEBUG] Cookie missing tokens');
+          await supabaseClient.auth.setSession(sessionData);
         }
       } catch (e) {
-        console.error('[DEBUG] Cookie Parse Error:', e);
+        // Silent fail in fallback
       }
     }
   }
 
   const {
-    data: { session },
-    error: sessionError
-  } = await supabase.auth.getSession();
-
-  if (sessionError) console.error('[DEBUG] getSession Error:', sessionError.message);
-  console.log('[DEBUG] Final Session State:', !!session);
+    data: { session }
+  } = await supabaseClient.auth.getSession();
 
   return session;
 }
@@ -52,9 +47,15 @@ export async function getSession(Astro?: AstroGlobal) {
 /**
  * Require authentication for a page.
  * - Redirects to /login if not logged in
- * - Returns session if logged in
+ * - Returns user if logged in
  */
 export async function requireAuth(Astro: AstroGlobal) {
+  // Middleware sets locals.user, so check that first
+  if (Astro.locals.user) {
+    return Astro.locals.user;
+  }
+
+  // Fallback: try to get session
   const session = await getSession(Astro);
 
   if (!session) {
@@ -68,6 +69,7 @@ export async function requireAuth(Astro: AstroGlobal) {
  * Log the user out and redirect to login
  */
 export async function logout(Astro: AstroGlobal) {
-  await supabase.auth.signOut();
+  const supabaseClient = Astro.locals.supabase || supabase;
+  await supabaseClient.auth.signOut();
   return Astro.redirect('/login');
 }

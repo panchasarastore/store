@@ -2,25 +2,23 @@
  * Helper functions for managing stores in Panchasara.
  * This is the ONLY interface between the app and the stores table.
  */
-import { supabase } from './supabase';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Fetch the current user's active store.
  * Returns the store row or null if no store is found.
- *
- * Note: This only returns stores with status != 'deleted'.
  */
-export async function getUserStore() {
+export async function getUserStore(supabaseClient: SupabaseClient) {
   const {
     data: { user },
     error: authError,
-  } = await supabase.auth.getUser();
+  } = await supabaseClient.auth.getUser();
 
   if (authError || !user) {
     throw new Error('Not authenticated');
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('stores')
     .select('*')
     .eq('owner_id', user.id)
@@ -42,9 +40,9 @@ export async function getUserStore() {
 /**
  * Check if the current user already has a store.
  */
-export async function hasStore() {
+export async function hasStore(supabaseClient: SupabaseClient) {
   try {
-    const store = await getUserStore();
+    const store = await getUserStore(supabaseClient);
     return store !== null;
   } catch (error) {
     if (error instanceof Error && error.message === 'Not authenticated') {
@@ -81,6 +79,7 @@ export interface CreateStoreInput {
       secondary?: string;
       background?: string;
       text?: string;
+      header?: string;
     };
     fonts?: {
       heading?: string;
@@ -92,10 +91,11 @@ export interface CreateStoreInput {
 /**
  * Create a store for the current user.
  */
-export async function createStore(input: CreateStoreInput) {
+export async function createStore(supabaseClient: SupabaseClient, input: CreateStoreInput) {
   const {
     name,
     slug,
+    // ... (trimmed for replacement brevity but keeping the rest of the logic)
     tagline = null,
     about_us = null,
     whatsapp_number = null,
@@ -156,7 +156,7 @@ export async function createStore(input: CreateStoreInput) {
   const {
     data: { user },
     error: authError,
-  } = await supabase.auth.getUser();
+  } = await supabaseClient.auth.getUser();
 
   if (authError || !user) {
     throw new Error('Not authenticated');
@@ -166,7 +166,7 @@ export async function createStore(input: CreateStoreInput) {
   // 1. Insert store record
   // ----------------------------
 
-  const { data: store, error: insertError } = await supabase
+  const { data: store, error: insertError } = await supabaseClient
     .from('stores')
     .insert({
       owner_id: user.id,
@@ -184,7 +184,7 @@ export async function createStore(input: CreateStoreInput) {
       contact_email,
 
       theme,
-      status: 'draft',
+      status: 'active',
     })
     .select()
     .single();
@@ -213,7 +213,7 @@ export async function createStore(input: CreateStoreInput) {
     const fileExt = logo.name.split('.').pop() || 'png';
     const filePath = `stores/${store.id}/logo/logo.${fileExt}`;
 
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabaseClient.storage
       .from('store-assets')
       .upload(filePath, logo, {
         upsert: true,
@@ -223,11 +223,11 @@ export async function createStore(input: CreateStoreInput) {
     if (!uploadError) {
       const {
         data: { publicUrl },
-      } = supabase.storage
+      } = supabaseClient.storage
         .from('store-assets')
         .getPublicUrl(filePath);
 
-      await supabase
+      await supabaseClient
         .from('stores')
         .update({ logo_url: publicUrl })
         .eq('id', store.id);
@@ -244,8 +244,9 @@ export async function createStore(input: CreateStoreInput) {
 /**
  * Update an existing store.
  */
-export async function updateStore(id: string, input: CreateStoreInput) {
+export async function updateStore(supabaseClient: SupabaseClient, id: string, input: CreateStoreInput) {
   const {
+    // ...
     name,
     slug,
     tagline = null,
@@ -308,7 +309,7 @@ export async function updateStore(id: string, input: CreateStoreInput) {
   const {
     data: { user },
     error: authError,
-  } = await supabase.auth.getUser();
+  } = await supabaseClient.auth.getUser();
 
   if (authError || !user) {
     throw new Error('Not authenticated');
@@ -318,7 +319,7 @@ export async function updateStore(id: string, input: CreateStoreInput) {
   // 1. Update store record
   // ----------------------------
 
-  const { data: store, error: updateError } = await supabase
+  const { data: store, error: updateError } = await supabaseClient
     .from('stores')
     .update({
       store_name: normalizedName,
@@ -357,7 +358,7 @@ export async function updateStore(id: string, input: CreateStoreInput) {
     const fileExt = logo.name.split('.').pop() || 'png';
     const filePath = `stores/${store.id}/logo/logo.${fileExt}`;
 
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabaseClient.storage
       .from('store-assets')
       .upload(filePath, logo, {
         upsert: true,
@@ -367,11 +368,11 @@ export async function updateStore(id: string, input: CreateStoreInput) {
     if (!uploadError) {
       const {
         data: { publicUrl },
-      } = supabase.storage
+      } = supabaseClient.storage
         .from('store-assets')
         .getPublicUrl(filePath);
 
-      await supabase
+      await supabaseClient
         .from('stores')
         .update({ logo_url: publicUrl })
         .eq('id', store.id);

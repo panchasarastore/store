@@ -20,7 +20,9 @@ if (error || !store) {
 }
 
 // Theme mapping (adapt if needed)
-const theme = store.theme || {};
+const storeTheme = store.theme || {};
+const colors = storeTheme.colors || storeTheme;
+const fonts = storeTheme.fonts || {};
 
 // Fetch products for this store
 const { data: productsData, error: productsError } = await supabase
@@ -90,7 +92,9 @@ const products = (productsData || []).map((p) => ({
         show_instagram: store.show_instagram,
         show_facebook: store.show_facebook,
       }}
-      theme={store.theme}
+      theme={colors}
+      font={fonts.heading}
+      layout={fonts.body}
       products={products}
       isPreview={false}
     />

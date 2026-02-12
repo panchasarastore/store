@@ -1,0 +1,25 @@
+---
+// src/components/setup/SetupFooter.astro
+interface Props {
+    isEditMode?: boolean;
+}
+
+const { isEditMode = false } = Astro.props;
+---
+
+<div
+    class="p-6 bg-white border-t border-slate-200 shrink-0 flex items-center justify-between z-30"
+>
+    <button
+        type="button"
+        onclick="window.history.back()"
+        class="px-6 py-3 rounded-full text-slate-500 font-bold hover:bg-slate-50 transition-colors"
+        >Back</button
+    >
+    <button
+        type="submit"
+        form="storeForm"
+        class="px-8 py-3 rounded-full bg-primary hover:bg-primary-hover text-white font-bold shadow-lg shadow-orange-200 transition-all hover:-translate-y-0.5"
+        >{isEditMode ? "Update Store" : "Save & Launch"}</button
+    >
+</div>

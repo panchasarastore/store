@@ -1,0 +1,46 @@
+---
+// src/components/setup/SetupHeader.astro
+interface Props {
+    isEditMode?: boolean;
+}
+
+const { isEditMode = false } = Astro.props;
+---
+
+<div
+    class="lg:hidden h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 fixed top-0 left-0 right-0 z-50 shrink-0"
+>
+    <span class="font-display font-bold text-base">Setup Store</span>
+    <div class="flex bg-slate-100 rounded-lg p-1">
+        <button
+            id="tab-edit"
+            class="px-3 py-1 rounded-md text-xs font-bold bg-white shadow-sm text-primary transition-all"
+            >Edit</button
+        >
+        <button
+            id="tab-preview"
+            class="px-3 py-1 rounded-md text-xs font-bold text-slate-500 hover:text-slate-700 transition-all"
+            >Preview</button
+        >
+    </div>
+</div>
+
+<div class="p-6 border-b border-slate-100 bg-white shrink-0">
+    <a
+        href="/"
+        class="flex items-center gap-2 mb-3 group decoration-transparent w-fit"
+    >
+        <div
+            class="w-6 h-6 bg-primary rounded-full flex items-center justify-center"
+        >
+            <span class="text-white font-display font-bold text-xs">P</span>
+        </div>
+        <span
+            class="font-display font-bold text-sm tracking-tight text-slate-900"
+            >Panchasara.</span
+        >
+    </a>
+    <h1 class="font-display text-2xl font-bold text-slate-900">
+        {isEditMode ? "Edit Your Store" : "Design Your Store"}
+    </h1>
+</div>

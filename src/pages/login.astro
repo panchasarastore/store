@@ -12,7 +12,7 @@ import { hasStore } from "../lib/stores";
 const session = await getSession(Astro);
 
 if (session) {
-  if (await hasStore()) {
+  if (await hasStore(Astro.locals.supabase)) {
     // Existing store owner → dashboard (React app)
     return Astro.redirect("http://localhost:8080");
   } else {
@@ -191,7 +191,7 @@ if (session) {
                 submitBtn.textContent = "Log in";
               } else {
                 // Check if user has a store and redirect
-                const exists = await hasStore();
+                const exists = await hasStore(supabase);
                 if (exists) {
                   window.location.href = "http://localhost:8080";
                 } else {

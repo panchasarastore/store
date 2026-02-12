@@ -2,1124 +2,154 @@
 // src/pages/create-store.astro
 export const prerender = false;
 
-import StoreTemplate from "../components/store/StoreTemplate.astro";
+import SetupLayout from "../components/setup/SetupLayout.astro";
+import SetupHeader from "../components/setup/SetupHeader.astro";
+import SetupBasics from "../components/setup/SetupBasics.astro";
+import SetupBrand from "../components/setup/SetupBrand.astro";
+import SetupVisual from "../components/setup/SetupVisual.astro";
+import SetupContact from "../components/setup/SetupContact.astro";
+import SetupPreview from "../components/setup/SetupPreview.astro";
+import SetupFooter from "../components/setup/SetupFooter.astro";
+import SetupScripts from "../components/setup/SetupScripts.astro";
+import { createStore, hasStore } from "../lib/stores";
 import { requireAuth } from "../lib/auth";
-import { getUserStore, createStore, updateStore } from "../lib/stores";
 
-// -----------------------------------------------------------------------------
-// Auth Guard
-// -----------------------------------------------------------------------------
+// 1. Guard
 const session = await requireAuth(Astro);
 if (session instanceof Response) return session;
 
-const isEditMode = Astro.url.searchParams.get("edit") === "true";
-const existingStore = await getUserStore();
-
-// If user already has a store and NOT in edit mode → go straight to dashboard
-if (existingStore && !isEditMode) {
+// 2. Redirect if store already exists
+if (await hasStore(Astro.locals.supabase)) {
   return Astro.redirect("http://localhost:8080");
 }
 
 let error = "";
+const isEditMode = false;
 
-// -----------------------------------------------------------------------------
-// Handle form submit
-// -----------------------------------------------------------------------------
+// 3. Handle Form Submission
 if (Astro.request.method === "POST") {
   try {
     const formData = await Astro.request.formData();
-
-    // -----------------------------
-    // Theme construction
-    // -----------------------------
-    const theme = {
-      colors: {
-        primary: formData.get("color_primary")?.toString(),
-        secondary: formData.get("color_secondary")?.toString(),
-        background: formData.get("color_background")?.toString(),
-        text: formData.get("color_text")?.toString(),
-      },
-      fonts: {
-        heading:
-          formData.get("font_preset")?.toString() === "editorial"
-            ? "Playfair Display"
-            : formData.get("font_preset")?.toString() === "maker"
-              ? "Quicksand"
-              : "Lexend",
-        body: "Plus Jakarta Sans",
-      },
-    };
-
-    // -----------------------------
-    // Store payload
-    // -----------------------------
-    const storeData = {
-      name: formData.get("store_name")?.toString() || "",
-      slug: formData.get("store_url_slug")?.toString() || "",
-      tagline: formData.get("store_tagline")?.toString(),
-      about_us: formData.get("about_us")?.toString(),
-      whatsapp_number: formData.get("whatsapp_number")?.toString(),
-      store_address: formData.get("store_address")?.toString(),
-      instagram_url: formData.get("instagram_url")?.toString(),
-      facebook_url: formData.get("facebook_url")?.toString(),
-      contact_email: formData.get("contact_email")?.toString(),
+    const data = {
+      name: formData.get("store_name") as string,
+      slug: formData.get("store_url_slug") as string,
+      tagline: formData.get("store_tagline") as string,
+      about_us: formData.get("about_us") as string,
+      whatsapp_number: formData.get("whatsapp_number") as string,
+      store_address: formData.get("store_address") as string,
+      instagram_url: formData.get("instagram_url") as string,
+      facebook_url: formData.get("facebook_url") as string,
+      contact_email: formData.get("contact_email") as string,
       logo: formData.get("logo") as File,
-      theme,
+      theme: {
+        colors: {
+          primary: formData.get("color_primary") as string,
+          secondary: formData.get("color_secondary") as string,
+          background: formData.get("color_background") as string,
+          text: formData.get("color_text") as string,
+          header: formData.get("color_header") as string,
+        },
+        fonts: {
+          heading: formData.get("font_preset") as string,
+          body: formData.get("vibe_preset") as string,
+        },
+      },
     };
 
-    // -----------------------------
-    // Create/Update store in Supabase
-    // -----------------------------
-    if (isEditMode && existingStore) {
-      await updateStore(existingStore.id, storeData);
-    } else {
-      await createStore(storeData);
-    }
-
-    // ✅ FINAL STEP: redirect to React dashboard
+    await createStore(Astro.locals.supabase, data);
     return Astro.redirect("http://localhost:8080");
-  } catch (e) {
-    error = e instanceof Error ? e.message : "Something went wrong";
+  } catch (e: any) {
+    error = e.message;
   }
 }
 
-// -----------------------------------------------------------------------------
-// Preview-only placeholder data (UI preview)
-// -----------------------------------------------------------------------------
-const previewStore = {
-  name: "The Sourdough Studio",
-  tagline: "Slow-fermented love from my heart to yours",
-  about:
-    "Every loaf I bake is a 48-hour labor of love. I began my journey in a small kitchen in Tuscany, learning the ancient art of wild yeast fermentation.",
-  logo: "",
-  whatsapp_number: "+91 98765 43210",
-  address: "Fort Kochi, Kerala",
+// 4. Initial State for Preview
+const initialStore = {
+  name: "",
   slug: "",
+  tagline: "",
+  about: "",
+  logo: "",
+  address: "",
   email: "",
+  whatsapp_number: "",
   instagram: "",
   facebook: "",
 };
 
-const previewTheme = existingStore?.theme?.colors || {
-  primary: "#5b3a1e",
-  secondary: "#c46a2b",
-  background: "#fffaf0",
-  text: "#1f1f1f",
+const previewTheme = {
+  primary: "#5D4037",
+  secondary: "#8D6E63",
+  background: "#EFEBE9",
+  text: "#3E2723",
+  header: "#EFEBE9",
 };
 
-const initialStore = existingStore
-  ? {
-      name: existingStore.store_name,
-      tagline: existingStore.store_tagline,
-      about: existingStore.about_us,
-      logo: existingStore.logo_url,
-      whatsapp_number: existingStore.whatsapp_number,
-      address: existingStore.store_address,
-      slug: existingStore.store_url_slug,
-      email: existingStore.contact_email,
-      instagram: existingStore.instagram_url,
-      facebook: existingStore.facebook_url,
-    }
-  : previewStore;
+const previewFonts = {
+  heading: "editorial",
+  body: "natural",
+};
 
-const previewProducts = [];
+const previewProducts = [
+  {
+    id: 1,
+    name: "Sample Product 1",
+    price: 1200,
+    image_url:
+      "https://images.unsplash.com/photo-1515562141207-7a88bd7ce3ee?auto=format&fit=crop&q=80&w=800",
+  },
+  {
+    id: 2,
+    name: "Sample Product 2",
+    price: 2500,
+    image_url:
+      "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&q=80&w=800",
+  },
+];
 ---
 
-<!doctype html>
-<html lang="en" class="h-full overflow-hidden">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Create Store – Panchasara</title>
-
-    <link href="https://fonts.googleapis.com" rel="preconnect" />
-    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
-
-    <link
-      href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;600&family=Oswald:wght@400;500;700&family=Quicksand:wght@400;500;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
-      rel="stylesheet"
-    />
-
-    <script is:inline src="https://cdn.tailwindcss.com?plugins=forms"></script>
-    <script is:inline>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              primary: "#FF9D42",
-              "primary-hover": "#e88b32",
-              "background-light": "#FFFAF7",
-            },
-            fontFamily: {
-              display: ["Lexend", "sans-serif"],
-              sans: ["Plus Jakarta Sans", "sans-serif"],
-            },
-            borderRadius: {
-              DEFAULT: "1rem",
-              pill: "9999px",
-              "2xl": "2rem",
-              "3xl": "3rem",
-            },
-          },
-        },
-      };
-    </script>
-
-    <style>
-      .editor-scroll::-webkit-scrollbar {
-        width: 6px;
-      }
-      .editor-scroll::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      .editor-scroll::-webkit-scrollbar-thumb {
-        background-color: #e2e8f0;
-        border-radius: 20px;
-      }
-      .editor-scroll::-webkit-scrollbar-thumb:hover {
-        background-color: #cbd5e1;
-      }
-
-      .mobile-view-editor .editor-panel {
-        display: flex;
-      }
-      .mobile-view-editor .preview-panel {
-        display: none;
-      }
-      .mobile-view-preview .editor-panel {
-        display: none;
-      }
-      .mobile-view-preview .preview-panel {
-        display: flex;
-      }
-
-      @media (min-width: 1024px) {
-        .mobile-view-editor .preview-panel {
-          display: flex;
-        }
-        .mobile-view-editor .editor-panel {
-          display: flex;
-        }
-        .mobile-view-preview .editor-panel {
-          display: flex;
-        }
-      }
-
-      .advanced-colors {
-        transition:
-          max-height 0.3s ease-in-out,
-          opacity 0.3s ease-in-out;
-        max-height: 0;
-        opacity: 0;
-        overflow: hidden;
-      }
-      .advanced-colors.open {
-        max-height: 500px;
-        opacity: 1;
-      }
-    </style>
-  </head>
-
-  <body
-    class="h-screen bg-slate-50 text-slate-900 font-sans overflow-hidden mobile-view-editor"
-    id="app-body"
-  >
-    <div
-      class="lg:hidden h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 fixed top-0 left-0 right-0 z-50 shrink-0"
+<SetupLayout title="Create Your Store">
+  <div class="flex h-screen pt-14 lg:pt-0 overflow-hidden">
+    <aside
+      class="editor-panel w-full lg:w-[40%] bg-white h-full border-r border-slate-200 flex flex-col z-20 shadow-2xl lg:shadow-none shrink-0 relative"
     >
-      <span class="font-display font-bold text-base">Setup Store</span>
-      <div class="flex bg-slate-100 rounded-lg p-1">
-        <button
-          id="tab-edit"
-          class="px-3 py-1 rounded-md text-xs font-bold bg-white shadow-sm text-primary transition-all"
-          >Edit</button
+      <SetupHeader isEditMode={isEditMode} />
+
+      <div class="flex-1 overflow-y-auto editor-scroll min-h-0">
+        <form
+          id="storeForm"
+          class="store-form p-6 space-y-10 pb-24"
+          method="POST"
+          enctype="multipart/form-data"
         >
-        <button
-          id="tab-preview"
-          class="px-3 py-1 rounded-md text-xs font-bold text-slate-500 hover:text-slate-700 transition-all"
-          >Preview</button
-        >
+          {
+            error && (
+              <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm font-medium animate-pulse">
+                {error}
+              </div>
+            )
+          }
+
+          <SetupBasics initialStore={initialStore} />
+          <SetupBrand initialStore={initialStore} />
+          <SetupVisual
+            previewTheme={previewTheme}
+            previewFonts={previewFonts}
+          />
+          <SetupContact initialStore={initialStore} />
+        </form>
       </div>
-    </div>
 
-    <div class="flex h-screen pt-14 lg:pt-0 overflow-hidden">
-      <aside
-        class="editor-panel w-full lg:w-[40%] bg-white h-full border-r border-slate-200 flex flex-col z-20 shadow-2xl lg:shadow-none shrink-0 relative"
-      >
-        <div class="p-6 border-b border-slate-100 bg-white shrink-0">
-          <a
-            href="/"
-            class="flex items-center gap-2 mb-3 group decoration-transparent w-fit"
-          >
-            <div
-              class="w-6 h-6 bg-primary rounded-full flex items-center justify-center"
-            >
-              <span class="text-white font-display font-bold text-xs">P</span>
-            </div>
-            <span
-              class="font-display font-bold text-sm tracking-tight text-slate-900"
-              >Panchasara.</span
-            >
-          </a>
-          <h1 class="font-display text-2xl font-bold text-slate-900">
-            {isEditMode ? "Edit Your Store" : "Design Your Store"}
-          </h1>
-        </div>
+      <SetupFooter isEditMode={isEditMode} />
+    </aside>
 
-        <div class="flex-1 overflow-y-auto editor-scroll min-h-0">
-          <form
-            id="storeForm"
-            class="store-form p-6 space-y-10 pb-24"
-            method="POST"
-            enctype="multipart/form-data"
-          >
-            {
-              error && (
-                <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm font-medium animate-pulse">
-                  {error}
-                </div>
-              )
-            }
-            <section class="space-y-5">
-              <div
-                class="flex items-center gap-2 text-slate-800 border-b border-slate-100 pb-2"
-              >
-                <span class="material-symbols-rounded text-primary"
-                  >storefront</span
-                >
-                <h2 class="font-display font-bold text-lg">Store Basics</h2>
-              </div>
-              <div class="space-y-4">
-                <div>
-                  <label
-                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5"
-                    >Store Name</label
-                  >
-                  <input
-                    type="text"
-                    name="store_name"
-                    placeholder="The Sourdough Studio"
-                    value={initialStore.name}
-                    required
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-medium"
-                  />
-                </div>
-                <div>
-                  <label
-                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5"
-                    >Store URL</label
-                  >
-                  <div
-                    class="flex items-center w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus-within:bg-white focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all"
-                  >
-                    <span class="text-slate-400 text-sm mr-1"
-                      >panchasara.com/</span
-                    >
-                    <input
-                      type="text"
-                      name="store_url_slug"
-                      placeholder="sourdough-studio"
-                      value={initialStore.slug}
-                      required
-                      class="flex-1 bg-transparent border-none p-0 focus:ring-0 text-slate-900 placeholder:text-slate-400 font-medium"
-                    />
-                  </div>
-                </div>
-              </div>
-            </section>
+    <SetupPreview
+      initialStore={initialStore}
+      previewTheme={previewTheme}
+      previewFonts={previewFonts}
+      previewProducts={previewProducts}
+    />
+  </div>
 
-            <section class="space-y-5">
-              <div
-                class="flex items-center gap-2 text-slate-800 border-b border-slate-100 pb-2"
-              >
-                <span class="material-symbols-rounded text-primary"
-                  >campaign</span
-                >
-                <h2 class="font-display font-bold text-lg">Brand Voice</h2>
-              </div>
-              <div class="space-y-4">
-                <div>
-                  <label
-                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5"
-                    >Tagline</label
-                  >
-                  <input
-                    type="text"
-                    name="store_tagline"
-                    placeholder="Handmade with heart"
-                    value={initialStore.tagline}
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-medium"
-                  />
-                </div>
-                <div>
-                  <label
-                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5"
-                    >About Story</label
-                  >
-                  <textarea
-                    name="about_us"
-                    rows="3"
-                    placeholder="Tell your story..."
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-medium resize-none"
-                    >{initialStore.about}</textarea
-                  >
-                </div>
-                <div>
-                  <label
-                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5"
-                    >Logo</label
-                  >
-                  <label
-                    class="file-upload-box flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:bg-slate-50 hover:border-primary/50 transition-all relative overflow-hidden group"
-                  >
-                    <input
-                      type="file"
-                      name="logo"
-                      accept="image/*"
-                      class="hidden"
-                    />
-                    <div
-                      class="flex flex-col items-center text-slate-400 group-hover:text-primary transition-colors"
-                    >
-                      <span class="material-symbols-rounded text-2xl mb-1"
-                        >cloud_upload</span
-                      >
-                      <span class="text-xs font-bold uppercase"
-                        >Upload Image</span
-                      >
-                    </div>
-                    <img
-                      src={initialStore.logo}
-                      class={`logo-preview-thumb absolute inset-0 w-full h-full object-contain bg-white ${initialStore.logo ? "" : "hidden"}`}
-                    />
-                  </label>
-                </div>
-              </div>
-            </section>
-
-            <section class="space-y-6">
-              <div
-                class="flex items-center gap-2 text-slate-800 border-b border-slate-100 pb-2"
-              >
-                <span class="material-symbols-rounded text-primary"
-                  >palette</span
-                >
-                <h2 class="font-display font-bold text-lg">Visual Identity</h2>
-              </div>
-
-              <div>
-                <label
-                  class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"
-                  >1. Choose a Vibe</label
-                >
-                <div class="grid grid-cols-3 gap-3">
-                  <label class="cursor-pointer relative group">
-                    <input
-                      type="radio"
-                      name="vibe_preset"
-                      value="natural"
-                      checked
-                      class="peer sr-only"
-                    />
-                    <div
-                      class="p-3 border-2 border-slate-100 rounded-xl hover:bg-slate-50 peer-checked:border-primary peer-checked:bg-orange-50 transition-all text-center h-full flex flex-col items-center justify-center gap-2"
-                    >
-                      <div class="w-6 h-6 rounded-full bg-[#5D4037]"></div>
-                      <span
-                        class="text-[10px] uppercase font-bold text-slate-600"
-                        >Natural</span
-                      >
-                    </div>
-                  </label>
-                  <label class="cursor-pointer relative group">
-                    <input
-                      type="radio"
-                      name="vibe_preset"
-                      value="gallery"
-                      class="peer sr-only"
-                    />
-                    <div
-                      class="p-3 border-2 border-slate-100 rounded-xl hover:bg-slate-50 peer-checked:border-primary peer-checked:bg-orange-50 transition-all text-center h-full flex flex-col items-center justify-center gap-2"
-                    >
-                      <div
-                        class="w-6 h-6 rounded-full bg-black border border-slate-200"
-                      >
-                      </div>
-                      <span
-                        class="text-[10px] uppercase font-bold text-slate-600"
-                        >Gallery</span
-                      >
-                    </div>
-                  </label>
-                  <label class="cursor-pointer relative group">
-                    <input
-                      type="radio"
-                      name="vibe_preset"
-                      value="pop"
-                      class="peer sr-only"
-                    />
-                    <div
-                      class="p-3 border-2 border-slate-100 rounded-xl hover:bg-slate-50 peer-checked:border-primary peer-checked:bg-orange-50 transition-all text-center h-full flex flex-col items-center justify-center gap-2"
-                    >
-                      <div class="w-6 h-6 rounded-full bg-[#E91E63]"></div>
-                      <span
-                        class="text-[10px] uppercase font-bold text-slate-600"
-                        >Pop</span
-                      >
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              <div class="pt-2">
-                <button
-                  type="button"
-                  id="toggle-advanced"
-                  class="flex items-center gap-2 text-xs font-bold text-primary hover:text-primary-hover transition-colors mb-4"
-                >
-                  <span class="material-symbols-rounded text-lg">tune</span>
-                  Customize Colors
-                </button>
-
-                <div
-                  id="advanced-options"
-                  class="advanced-colors grid grid-cols-2 gap-4"
-                >
-                  <div>
-                    <label
-                      class="block text-[10px] font-bold text-slate-500 uppercase mb-1"
-                      >Brand (Logo)</label
-                    >
-                    <div
-                      class="flex items-center w-full p-2 rounded-xl border border-slate-200 bg-white"
-                    >
-                      <input
-                        type="color"
-                        name="color_primary"
-                        value={previewTheme.primary || "#5b3a1e"}
-                        class="w-8 h-8 rounded-lg border-none p-0 cursor-pointer"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label
-                      class="block text-[10px] font-bold text-slate-500 uppercase mb-1"
-                      >Button Accent</label
-                    >
-                    <div
-                      class="flex items-center w-full p-2 rounded-xl border border-slate-200 bg-white"
-                    >
-                      <input
-                        type="color"
-                        name="color_secondary"
-                        value={previewTheme.secondary || "#c46a2b"}
-                        class="w-8 h-8 rounded-lg border-none p-0 cursor-pointer"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label
-                      class="block text-[10px] font-bold text-slate-500 uppercase mb-1"
-                      >Page Background</label
-                    >
-                    <div
-                      class="flex items-center w-full p-2 rounded-xl border border-slate-200 bg-white"
-                    >
-                      <input
-                        type="color"
-                        name="color_background"
-                        value={previewTheme.background || "#fffaf0"}
-                        class="w-8 h-8 rounded-lg border-none p-0 cursor-pointer"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label
-                      class="block text-[10px] font-bold text-slate-500 uppercase mb-1"
-                      >Text / Ink</label
-                    >
-                    <div
-                      class="flex items-center w-full p-2 rounded-xl border border-slate-200 bg-white"
-                    >
-                      <input
-                        type="color"
-                        name="color_text"
-                        value={previewTheme.text || "#1f1f1f"}
-                        class="w-8 h-8 rounded-lg border-none p-0 cursor-pointer"
-                      />
-                    </div>
-                  </div>
-                  <div class="col-span-2">
-                    <label
-                      class="block text-[10px] font-bold text-slate-500 uppercase mb-1"
-                      >Header/Footer Bg</label
-                    >
-                    <div
-                      class="flex items-center w-full p-2 rounded-xl border border-slate-200 bg-white"
-                    >
-                      <input
-                        type="color"
-                        name="color_header"
-                        value={previewTheme.background || "#fffaf0"}
-                        class="w-8 h-8 rounded-lg border-none p-0 cursor-pointer"
-                      />
-                      <span class="ml-2 text-xs text-slate-400"
-                        >Usually matches page bg</span
-                      >
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label
-                  class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"
-                  >2. Typography</label
-                >
-                <div class="grid grid-cols-3 gap-3">
-                  <label class="cursor-pointer relative">
-                    <input
-                      type="radio"
-                      name="font_preset"
-                      value="editorial"
-                      checked
-                      class="peer sr-only"
-                    />
-                    <div
-                      class="p-3 border-2 border-slate-100 rounded-xl hover:bg-slate-50 peer-checked:border-primary peer-checked:bg-orange-50 transition-all text-center"
-                    >
-                      <span
-                        class="block text-2xl mb-1"
-                        style="font-family: 'Playfair Display', serif;">Aa</span
-                      >
-                      <span
-                        class="text-[10px] uppercase font-bold text-slate-500"
-                        >Editorial</span
-                      >
-                    </div>
-                  </label>
-                  <label class="cursor-pointer relative">
-                    <input
-                      type="radio"
-                      name="font_preset"
-                      value="modernist"
-                      class="peer sr-only"
-                    />
-                    <div
-                      class="p-3 border-2 border-slate-100 rounded-xl hover:bg-slate-50 peer-checked:border-primary peer-checked:bg-orange-50 transition-all text-center"
-                    >
-                      <span
-                        class="block text-2xl mb-1"
-                        style="font-family: 'Lexend', sans-serif;">Aa</span
-                      >
-                      <span
-                        class="text-[10px] uppercase font-bold text-slate-500"
-                        >Modern</span
-                      >
-                    </div>
-                  </label>
-                  <label class="cursor-pointer relative">
-                    <input
-                      type="radio"
-                      name="font_preset"
-                      value="maker"
-                      class="peer sr-only"
-                    />
-                    <div
-                      class="p-3 border-2 border-slate-100 rounded-xl hover:bg-slate-50 peer-checked:border-primary peer-checked:bg-orange-50 transition-all text-center"
-                    >
-                      <span
-                        class="block text-2xl mb-1"
-                        style="font-family: 'Quicksand', sans-serif;">Aa</span
-                      >
-                      <span
-                        class="text-[10px] uppercase font-bold text-slate-500"
-                        >Maker</span
-                      >
-                    </div>
-                  </label>
-                </div>
-              </div>
-            </section>
-
-            <section class="space-y-5">
-              <div
-                class="flex items-center gap-2 text-slate-800 border-b border-slate-100 pb-2"
-              >
-                <span class="material-symbols-rounded text-primary"
-                  >contacts</span
-                >
-                <h2 class="font-display font-bold text-lg">Contact</h2>
-              </div>
-
-              <div
-                class="p-4 rounded-xl border border-slate-100 bg-slate-50/50"
-              >
-                <div class="flex justify-between items-center mb-2">
-                  <span class="text-xs font-bold text-slate-500 uppercase"
-                    >Location</span
-                  >
-                </div>
-                <input
-                  type="text"
-                  name="store_address"
-                  placeholder="City, Region (e.g. Kochi, Kerala)"
-                  value={initialStore.address}
-                  class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white focus:border-primary focus:ring-1 focus:ring-primary text-sm"
-                />
-                <p class="text-[10px] text-slate-400 mt-1.5 ml-1">
-                  Leave blank to hide. Long addresses will be truncated.
-                </p>
-              </div>
-
-              <div class="space-y-4">
-                <div
-                  class="p-4 rounded-xl border border-slate-100 bg-slate-50/50"
-                >
-                  <div class="flex justify-between items-center mb-2">
-                    <span class="text-xs font-bold text-slate-500 uppercase"
-                      >Email</span
-                    >
-                    <label
-                      class="relative inline-flex items-center cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        name="show_email"
-                        checked
-                        class="sr-only peer"
-                      />
-                      <div
-                        class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"
-                      >
-                      </div>
-                    </label>
-                  </div>
-                  <input
-                    type="email"
-                    name="contact_email"
-                    placeholder="Email"
-                    value={initialStore.email}
-                    class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white focus:border-primary focus:ring-1 focus:ring-primary text-sm"
-                  />
-                </div>
-                <div
-                  class="p-4 rounded-xl border border-slate-100 bg-slate-50/50"
-                >
-                  <div class="flex justify-between items-center mb-2">
-                    <span class="text-xs font-bold text-slate-500 uppercase"
-                      >WhatsApp</span
-                    >
-                    <label
-                      class="relative inline-flex items-center cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        name="show_whatsapp"
-                        checked
-                        class="sr-only peer"
-                      />
-                      <div
-                        class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"
-                      >
-                      </div>
-                    </label>
-                  </div>
-                  <input
-                    type="tel"
-                    name="whatsapp_number"
-                    placeholder="Number"
-                    value={initialStore.whatsapp_number}
-                    class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white focus:border-primary focus:ring-1 focus:ring-primary text-sm"
-                  />
-                </div>
-                <div
-                  class="p-4 rounded-xl border border-slate-100 bg-slate-50/50"
-                >
-                  <div class="flex justify-between items-center mb-2">
-                    <span class="text-xs font-bold text-slate-500 uppercase"
-                      >Instagram</span
-                    >
-                    <label
-                      class="relative inline-flex items-center cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        name="show_instagram"
-                        checked
-                        class="sr-only peer"
-                      />
-                      <div
-                        class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"
-                      >
-                      </div>
-                    </label>
-                  </div>
-                  <input
-                    type="url"
-                    name="instagram_url"
-                    placeholder="URL"
-                    value={initialStore.instagram}
-                    class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white focus:border-primary focus:ring-1 focus:ring-primary text-sm"
-                  />
-                </div>
-                <div
-                  class="p-4 rounded-xl border border-slate-100 bg-slate-50/50"
-                >
-                  <div class="flex justify-between items-center mb-2">
-                    <span class="text-xs font-bold text-slate-500 uppercase"
-                      >Facebook</span
-                    >
-                    <label
-                      class="relative inline-flex items-center cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        name="show_facebook"
-                        checked
-                        class="sr-only peer"
-                      />
-                      <div
-                        class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"
-                      >
-                      </div>
-                    </label>
-                  </div>
-                  <input
-                    type="url"
-                    name="facebook_url"
-                    placeholder="URL"
-                    value={initialStore.facebook}
-                    class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white focus:border-primary focus:ring-1 focus:ring-primary text-sm"
-                  />
-                </div>
-              </div>
-            </section>
-          </form>
-        </div>
-
-        <div
-          class="p-6 bg-white border-t border-slate-200 shrink-0 flex items-center justify-between z-30"
-        >
-          <button
-            type="button"
-            class="px-6 py-3 rounded-full text-slate-500 font-bold hover:bg-slate-50 transition-colors"
-            >Back</button
-          >
-          <button
-            type="submit"
-            form="storeForm"
-            class="px-8 py-3 rounded-full bg-primary hover:bg-primary-hover text-white font-bold shadow-lg shadow-orange-200 transition-all hover:-translate-y-0.5"
-            >{isEditMode ? "Update Store" : "Save & Launch"}</button
-          >
-        </div>
-      </aside>
-
-      <main
-        class="preview-panel flex-1 bg-slate-100 flex-col items-center justify-center p-4 lg:p-8 relative overflow-hidden hidden lg:flex h-full"
-      >
-        <div
-          class="absolute top-0 right-0 w-[500px] h-[500px] bg-orange-100 rounded-full blur-3xl opacity-60 -translate-y-1/2 translate-x-1/2 pointer-events-none"
-        >
-        </div>
-        <div
-          class="absolute bottom-0 left-0 w-80 h-80 bg-slate-200 rounded-full blur-3xl opacity-60 translate-y-1/2 -translate-x-1/2 pointer-events-none"
-        >
-        </div>
-
-        <div
-          class="w-full h-full bg-white rounded-2xl shadow-2xl border border-slate-300/50 flex flex-col overflow-hidden relative z-10"
-        >
-          <div
-            class="h-10 bg-slate-50 border-b border-slate-200 flex items-center px-4 gap-3 shrink-0"
-          >
-            <div class="flex gap-1.5">
-              <div class="w-2.5 h-2.5 rounded-full bg-red-400"></div>
-              <div class="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>
-              <div class="w-2.5 h-2.5 rounded-full bg-green-400"></div>
-            </div>
-            <div class="flex-1 flex justify-center px-4">
-              <div
-                class="bg-white border border-slate-200 text-slate-400 text-[10px] px-4 py-1 rounded-md w-full max-w-md text-center font-mono truncate browser-url opacity-70"
-              >
-                {
-                  initialStore.slug
-                    ? `panchasara.com/${initialStore.slug}`
-                    : "panchasara.com/your-store"
-                }
-              </div>
-            </div>
-            <button
-              id="open-preview-btn"
-              type="button"
-              title="Open in new tab"
-              class="text-slate-400 hover:text-primary transition-colors"
-            >
-              <span class="material-symbols-rounded text-lg">open_in_new</span>
-            </button>
-          </div>
-
-          <div class="flex-1 overflow-y-auto bg-white preview-scroll-container">
-            <StoreTemplate
-              store={initialStore}
-              theme={previewTheme}
-              products={previewProducts}
-              isPreview={true}
-            />
-          </div>
-        </div>
-      </main>
-    </div>
-
-    <script>
-      const form = document.querySelector(".store-form");
-      // FIXED: Select the actual component root inside our new container
-      // Note: We use .querySelector inside the event listener to be safe,
-      // or define it here if we trust DOM order. Let's make it robust.
-      let previewContainer = document.querySelector(".store-template-wrapper");
-
-      const browserUrl = document.querySelector(".browser-url");
-      const broadcast = new BroadcastChannel("panchasara_preview_sync");
-
-      // Vibe Presets
-      const vibes = {
-        natural: {
-          primary: "#5D4037",
-          secondary: "#8D6E63",
-          bg: "#EFEBE9",
-          text: "#3E2723",
-          header: "#EFEBE9",
-        },
-        gallery: {
-          primary: "#000000",
-          secondary: "#616161",
-          bg: "#FFFFFF",
-          text: "#212121",
-          header: "#FFFFFF",
-        },
-        pop: {
-          primary: "#E91E63",
-          secondary: "#FF80AB",
-          bg: "#FFF0F5",
-          text: "#880E4F",
-          header: "#FFF0F5",
-        },
-      };
-
-      const textMappings = {
-        store_name: [".store-template-name", ".store-template-name-footer"],
-        store_tagline: ".store-template-tagline",
-        about_us: ".store-template-about",
-        store_address: ".footer-address-text",
-        contact_email: ".footer-email-text",
-        whatsapp_number: ".footer-whatsapp-text",
-      };
-
-      const cssVarMappings = {
-        color_primary: "--theme-brand",
-        color_secondary: "--theme-accent",
-        color_background: "--theme-page",
-        color_text: "--theme-ink",
-        color_header: "--theme-header-bg",
-      };
-
-      const toggleVisibility = (selector, isVisible) => {
-        const el = document.querySelector(selector);
-        if (el) el.style.display = isVisible ? "flex" : "none";
-      };
-
-      const updateColorInputs = (preset) => {
-        document.querySelector('input[name="color_primary"]').value =
-          preset.primary;
-        document.querySelector('input[name="color_secondary"]').value =
-          preset.secondary;
-        document.querySelector('input[name="color_background"]').value =
-          preset.bg;
-        document.querySelector('input[name="color_text"]').value = preset.text;
-        document.querySelector('input[name="color_header"]').value =
-          preset.header;
-
-        applyChanges(); // Trigger sync
-      };
-
-      // MAIN UPDATE FUNCTION
-      const applyChanges = () => {
-        // Ensure we have the container
-        if (!previewContainer)
-          previewContainer = document.querySelector(".store-template-wrapper");
-        if (!previewContainer) return;
-
-        const formData = new FormData(form);
-        const data = Object.fromEntries(formData.entries());
-
-        // 1. URL Sync (FIXED)
-        if (data.store_url_slug !== undefined) {
-          const slug = data.store_url_slug
-            .trim()
-            .toLowerCase()
-            .replace(/[^a-z0-9-]/g, "-");
-          browserUrl.textContent = slug
-            ? `panchasara.com/${slug}`
-            : "panchasara.com/your-store";
-        }
-
-        // 2. CSS Variables Sync (FIXED)
-        for (const [key, cssVar] of Object.entries(cssVarMappings)) {
-          if (data[key]) {
-            previewContainer.style.setProperty(cssVar, data[key]);
-          }
-        }
-
-        // 3. Fonts & Layout Sync (FIXED)
-        if (data.font_preset)
-          previewContainer.setAttribute("data-font-preset", data.font_preset);
-        if (data.vibe_preset)
-          previewContainer.setAttribute("data-layout", data.vibe_preset);
-
-        // 4. Text Sync
-        for (const [name, selectorList] of Object.entries(textMappings)) {
-          if (data[name]) {
-            const selectors = Array.isArray(selectorList)
-              ? selectorList
-              : [selectorList];
-            selectors.forEach((s) => {
-              document
-                .querySelectorAll(s)
-                .forEach((el) => (el.textContent = data[name]));
-            });
-          }
-        }
-
-        // 5. Visibility Sync
-        toggleVisibility(
-          ".footer-email-link",
-          form.querySelector('[name="show_email"]').checked,
-        );
-        toggleVisibility(
-          ".footer-whatsapp-link",
-          form.querySelector('[name="show_whatsapp"]').checked,
-        );
-        toggleVisibility(
-          ".footer-insta-link",
-          form.querySelector('[name="show_instagram"]').checked,
-        );
-        toggleVisibility(
-          ".footer-fb-link",
-          form.querySelector('[name="show_facebook"]').checked,
-        );
-        const addressVal = data.store_address ? data.store_address.trim() : "";
-        toggleVisibility(".footer-address-link", addressVal.length > 0);
-
-        // 6. Broadcast
-        broadcast.postMessage({ type: "UPDATE_STORE", payload: data });
-      };
-
-      form.addEventListener("input", (e) => {
-        const input = e.target;
-        if (input.name === "vibe_preset" && vibes[input.value]) {
-          updateColorInputs(vibes[input.value]);
-        } else {
-          applyChanges();
-        }
-      });
-
-      // --- LOGO HANDLING ---
-      const logoInput = form.querySelector('input[name="logo"]');
-      logoInput.addEventListener("change", (e) => {
-        const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            const result = e.target.result;
-            document.querySelectorAll(".store-template-logo").forEach((img) => {
-              img.src = result;
-              img.style.display = "block";
-            });
-            document
-              .querySelectorAll(".store-logo-initial")
-              .forEach((el) => (el.style.display = "none"));
-
-            broadcast.postMessage({ type: "UPDATE_LOGO", payload: result });
-          };
-          reader.readAsDataURL(file);
-        }
-      });
-
-      // --- OPEN NEW TAB ---
-      const openPreviewBtn = document.getElementById("open-preview-btn");
-      openPreviewBtn.addEventListener("click", () => {
-        if (!previewContainer)
-          previewContainer = document.querySelector(".store-template-wrapper");
-
-        const formData = new FormData(form);
-        const data = Object.fromEntries(formData.entries());
-
-        // Capture visibility toggles (FormData only captures checked items if they have names, but it's cleaner to be explicit)
-        data.show_email = form.querySelector('[name="show_email"]').checked;
-        data.show_whatsapp = form.querySelector(
-          '[name="show_whatsapp"]',
-        ).checked;
-        data.show_instagram = form.querySelector(
-          '[name="show_instagram"]',
-        ).checked;
-        data.show_facebook = form.querySelector(
-          '[name="show_facebook"]',
-        ).checked;
-
-        // Add Computed Styles for perfect match
-        const computed = getComputedStyle(previewContainer);
-        data.cssVars = {
-          "--theme-brand": computed.getPropertyValue("--theme-brand"),
-          "--theme-accent": computed.getPropertyValue("--theme-accent"),
-          "--theme-page": computed.getPropertyValue("--theme-page"),
-          "--theme-ink": computed.getPropertyValue("--theme-ink"),
-          "--theme-header-bg": computed.getPropertyValue("--theme-header-bg"),
-        };
-
-        const logoImg = document.querySelector(".store-template-logo");
-        if (logoImg && logoImg.src && logoImg.style.display !== "none") {
-          data.logoSrc = logoImg.src;
-        }
-
-        sessionStorage.setItem("panchasara_preview_data", JSON.stringify(data));
-        window.open("/preview", "_blank");
-      });
-
-      // --- TOGGLES ---
-      const advToggle = document.getElementById("toggle-advanced");
-      advToggle.addEventListener("click", () =>
-        document.getElementById("advanced-options").classList.toggle("open"),
-      );
-
-      const btnEdit = document.getElementById("tab-edit");
-      const btnPreview = document.getElementById("tab-preview");
-      const body = document.getElementById("app-body");
-
-      btnEdit.addEventListener("click", () => {
-        body.classList.remove("mobile-view-preview");
-        body.classList.add("mobile-view-editor");
-        btnEdit.classList.add("bg-white", "shadow-sm", "text-primary");
-        btnEdit.classList.remove("text-slate-500");
-        btnPreview.classList.remove("bg-white", "shadow-sm", "text-primary");
-        btnPreview.classList.add("text-slate-500");
-      });
-
-      btnPreview.addEventListener("click", () => {
-        body.classList.remove("mobile-view-editor");
-        body.classList.add("mobile-view-preview");
-        btnPreview.classList.add("bg-white", "shadow-sm", "text-primary");
-        btnPreview.classList.remove("text-slate-500");
-        btnEdit.classList.remove("bg-white", "shadow-sm", "text-primary");
-        btnEdit.classList.add("text-slate-500");
-      });
-    </script>
-  </body>
-</html>
+  <SetupScripts />
+</SetupLayout>

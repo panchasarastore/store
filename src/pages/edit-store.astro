@@ -1,0 +1,156 @@
+---
+// src/pages/edit-store.astro
+export const prerender = false;
+
+import SetupLayout from "../components/setup/SetupLayout.astro";
+import SetupHeader from "../components/setup/SetupHeader.astro";
+import SetupBasics from "../components/setup/SetupBasics.astro";
+import SetupBrand from "../components/setup/SetupBrand.astro";
+import SetupVisual from "../components/setup/SetupVisual.astro";
+import SetupContact from "../components/setup/SetupContact.astro";
+import SetupPreview from "../components/setup/SetupPreview.astro";
+import SetupFooter from "../components/setup/SetupFooter.astro";
+import SetupScripts from "../components/setup/SetupScripts.astro";
+import { getUserStore, updateStore } from "../lib/stores";
+import { requireAuth } from "../lib/auth";
+
+// 1. Guard
+const session = await requireAuth(Astro);
+if (session instanceof Response) return session;
+
+// 2. Fetch existing store
+const store = await getUserStore(Astro.locals.supabase);
+if (!store) {
+    return Astro.redirect("/create-store");
+}
+
+let error = "";
+const isEditMode = true;
+
+// 3. Handle Form Submission
+if (Astro.request.method === "POST") {
+    try {
+        const formData = await Astro.request.formData();
+        const data = {
+            name: formData.get("store_name") as string,
+            slug: formData.get("store_url_slug") as string,
+            tagline: formData.get("store_tagline") as string,
+            about_us: formData.get("about_us") as string,
+            whatsapp_number: formData.get("whatsapp_number") as string,
+            store_address: formData.get("store_address") as string,
+            instagram_url: formData.get("instagram_url") as string,
+            facebook_url: formData.get("facebook_url") as string,
+            contact_email: formData.get("contact_email") as string,
+            logo: formData.get("logo") as File,
+            theme: {
+                colors: {
+                    primary: formData.get("color_primary") as string,
+                    secondary: formData.get("color_secondary") as string,
+                    background: formData.get("color_background") as string,
+                    text: formData.get("color_text") as string,
+                    header: formData.get("color_header") as string,
+                },
+                fonts: {
+                    heading: formData.get("font_preset") as string,
+                    body: formData.get("vibe_preset") as string, // Note: This is currently how it's stored in DB
+                },
+            },
+        };
+
+        await updateStore(Astro.locals.supabase, store.id, data);
+        return Astro.redirect("http://localhost:8080");
+    } catch (e: any) {
+        error = e.message;
+    }
+}
+
+// 4. Map DB fields to component Props
+const initialStore = {
+    name: store.store_name || "",
+    slug: store.store_url_slug || "",
+    tagline: store.store_tagline || "",
+    about: store.about_us || "",
+    logo: store.logo_url || "",
+    address: store.store_address || "",
+    email: store.contact_email || "",
+    whatsapp_number: store.whatsapp_number || "",
+    instagram: store.instagram_url || "",
+    facebook: store.facebook_url || "",
+};
+
+const previewTheme = store.theme?.colors || store.theme || {
+    primary: "#5D4037",
+    secondary: "#8D6E63",
+    background: "#EFEBE9",
+    text: "#3E2723",
+    header: "#EFEBE9",
+};
+
+const previewFonts = store.theme?.fonts || {
+    heading: "editorial",
+    body: "natural",
+};
+
+const previewProducts = [
+    {
+        id: 1,
+        name: "Sample Product 1",
+        price: 1200,
+        image_url:
+            "https://images.unsplash.com/photo-1515562141207-7a88bd7ce3ee?auto=format&fit=crop&q=80&w=800",
+    },
+    {
+        id: 2,
+        name: "Sample Product 2",
+        price: 2500,
+        image_url:
+            "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&q=80&w=800",
+    },
+];
+---
+
+<SetupLayout title="Edit Your Store">
+    <div class="flex h-screen pt-14 lg:pt-0 overflow-hidden">
+        <aside
+            class="editor-panel w-full lg:w-[40%] bg-white h-full border-r border-slate-200 flex flex-col z-20 shadow-2xl lg:shadow-none shrink-0 relative"
+        >
+            <SetupHeader isEditMode={isEditMode} />
+
+            <div class="flex-1 overflow-y-auto editor-scroll min-h-0">
+                <form
+                    id="storeForm"
+                    class="store-form p-6 space-y-10 pb-24"
+                    method="POST"
+                    enctype="multipart/form-data"
+                >
+                    {
+                        error && (
+                            <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm font-medium animate-pulse">
+                                {error}
+                            </div>
+                        )
+                    }
+
+                    <SetupBasics initialStore={initialStore} />
+                    <SetupBrand initialStore={initialStore} />
+                    <SetupVisual
+                        previewTheme={previewTheme}
+                        previewFonts={previewFonts}
+                    />
+                    <SetupContact initialStore={initialStore} />
+                </form>
+            </div>
+
+            <SetupFooter isEditMode={isEditMode} />
+        </aside>
+
+        <SetupPreview
+            initialStore={initialStore}
+            previewTheme={previewTheme}
+            previewFonts={previewFonts}
+            previewProducts={previewProducts}
+        />
+    </div>
+
+    <SetupScripts />
+</SetupLayout>
