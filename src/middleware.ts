@@ -6,7 +6,13 @@ const SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL || process.env.PUBLIC_S
 const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || process.env.PUBLIC_SUPABASE_ANON_KEY;
 const STORAGE_KEY = 'sb-auth-token';
 
-export const onRequest = defineMiddleware(async ({ cookies, locals, request }, next) => {
+export const onRequest = defineMiddleware(async ({ cookies, locals, request, url }, next) => {
+    // Skip middleware for public pages (static pages that don't need auth)
+    const publicPaths = ['/', '/favicon.ico'];
+    if (publicPaths.includes(url.pathname)) {
+        return next();
+    }
+
     // Create a SCOPED Supabase client for this request
     const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         auth: {
