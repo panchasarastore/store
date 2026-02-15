@@ -311,34 +311,144 @@ const displayProducts =
   setupModalLogic(productsData, toggleCart);
   setupCheckoutLogic(renderCheckoutSummary, toggleCart);
 
-  // Initialize Product Cards
-  document.querySelectorAll(".product-card").forEach((card) => {
-    const pid = (card as HTMLElement).dataset.id;
-    const wrapper = card.querySelector(".add-action-wrapper");
-    if (wrapper && pid)
-      attachStepperLogic(wrapper, pid, productsData, toggleCart);
-  });
+  // Initialize Product Cards helper
+  function attachToCard(card: HTMLElement) {
+    const pid = card.dataset.id;
+    const stepperWrapper = card.querySelector(".add-action-wrapper");
+    if (stepperWrapper && pid)
+      attachStepperLogic(stepperWrapper, pid, productsData, toggleCart);
 
-  // Global helper for inline onclick handlers
-  (window as any).updateCartItem = (pid: string, newQty: number) =>
-    updateQuantity(pid, newQty);
-  (window as any).syncUI = syncUI;
+    // Add click handler for modal
+    card.addEventListener("click", () => {
+      if ((window as any).openProductModal) {
+        const product = productsData.find((p: any) => p.id === pid);
+        if (product) (window as any).openProductModal(product);
+      }
+    });
+  }
+
+  document
+    .querySelectorAll(".product-card")
+    .forEach((card) => attachToCard(card as HTMLElement));
 
   // ==========================================
-  // 3. CART STATE SUBSCRIPTION
+  // 3. LOAD MORE LOGIC
+  // ==========================================
+  let currentPage = 1;
+  const PAGE_SIZE = 24;
+  const loadMoreBtn = document.getElementById("load-more-btn");
+  const productsGrid = document.getElementById("products-grid");
+  const storeId = wrapper?.dataset.storeId;
+
+  function createProductCardHTML(product: any) {
+    return `
+      <div class="product-card group" data-id="${product.id}" data-product='${JSON.stringify(product).replace(/'/g, "&apos;")}'>
+          <div class="product-image">
+              <img src="${product.image}" alt="${product.name}" loading="lazy" />
+              <div class="card-badges">
+                  ${product.accepts_custom_note ? '<span class="badge icon-badge" title="Customizable">✎</span>' : ""}
+                  ${product.product_notice ? '<span class="badge icon-badge" title="Has Notice">!</span>' : ""}
+              </div>
+          </div>
+          <div class="product-content">
+              <h4 class="product-name">${product.name}</h4>
+              <p class="product-short-desc">${product.description}</p>
+              <div class="product-footer">
+                  <span class="product-price">₹${Number(product.price).toFixed(2)}</span>
+              </div>
+              <div class="add-action-wrapper" onclick="event.stopPropagation()">
+                  <button class="big-add-btn">ADD TO CART</button>
+                  <div class="stepper-controls" style="display: none;">
+                      <button class="step-btn minus"><span class="material-symbols-rounded">remove</span></button>
+                      <span class="qty-display">1</span>
+                      <button class="step-btn plus"><span class="material-symbols-rounded">add</span></button>
+                  </div>
+              </div>
+          </div>
+      </div>
+    `;
+  }
+
+  if (loadMoreBtn && productsGrid && storeId) {
+    loadMoreBtn.addEventListener("click", async () => {
+      const spinner = loadMoreBtn.querySelector(
+        ".loader-spinner",
+      ) as HTMLElement;
+      loadMoreBtn.setAttribute("disabled", "true");
+      if (spinner) spinner.style.display = "inline";
+
+      try {
+        const from = currentPage * PAGE_SIZE;
+        const to = from + PAGE_SIZE - 1;
+
+        const { data, error } = await (window as any).supabase
+          .from("products")
+          .select("*")
+          .eq("store_id", storeId)
+          .eq("is_in_stock", true)
+          .order("created_at", { ascending: false })
+          .range(from, to);
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          data.forEach((p: any) => {
+            const mappedProduct = {
+              id: p.id,
+              name: p.name,
+              price: p.price,
+              image:
+                p.images?.[0] || "https://placehold.co/600x400?text=No+Image",
+              description: p.description,
+              full_details: p.description,
+              product_notice: p.product_notice,
+              accepts_custom_note: p.accepts_custom_note,
+            };
+
+            // 1. Add to local state
+            productsData.push(mappedProduct);
+
+            // 2. Append to grid
+            const tempDiv = document.createElement("div");
+            tempDiv.innerHTML = createProductCardHTML(mappedProduct).trim();
+            const newCard = tempDiv.firstChild as HTMLElement;
+            productsGrid.appendChild(newCard);
+
+            // 3. Attach logic
+            attachToCard(newCard);
+          });
+
+          currentPage++;
+          if (data.length < PAGE_SIZE) {
+            loadMoreBtn.style.display = "none";
+          }
+        } else {
+          loadMoreBtn.style.display = "none";
+        }
+      } catch (err) {
+        console.error("Failed to load more products:", err);
+      } finally {
+        loadMoreBtn.removeAttribute("disabled");
+        if (spinner) spinner.style.display = "none";
+      }
+    });
+  }
+
+  // ==========================================
+  // 4. CART STATE SUBSCRIPTION
   // ==========================================
   cartItems.subscribe((items) => {
     // Sync Card Buttons
     document.querySelectorAll(".product-card").forEach((card) => {
       const pid = (card as HTMLElement).dataset.id;
       if (pid) {
-        const item = items.find((i) => i.id === pid);
+        const item = items.find((i: any) => i.id === pid);
         syncUI(pid, item ? item.quantity : 0);
       }
     });
 
     // Update Header Badge
-    const totalCount = items.reduce((acc, i) => acc + i.quantity, 0);
+    const totalCount = items.reduce((acc, i: any) => acc + i.quantity, 0);
     document
       .querySelectorAll(".cart-count")
       .forEach((el) => (el.textContent = totalCount.toString()));
@@ -356,11 +466,11 @@ const displayProducts =
 
     // Shadow state for PaymentProcessor (legacy compatibility)
     (window as any).cartState = items.reduce(
-      (acc, i) => ({ ...acc, [i.id]: i.quantity }),
+      (acc, i: any) => ({ ...acc, [i.id]: i.quantity }),
       {},
     );
     (window as any).cartNotes = items.reduce(
-      (acc, i) => ({ ...acc, [i.id]: i.custom_note || "" }),
+      (acc, i: any) => ({ ...acc, [i.id]: i.custom_note || "" }),
       {},
     );
   });

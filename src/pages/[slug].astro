@@ -24,13 +24,15 @@ const storeTheme = store.theme || {};
 const colors = storeTheme.colors || storeTheme;
 const fonts = storeTheme.fonts || {};
 
-// Fetch products for this store
+// Fetch products for this store (initial page)
+const PAGE_SIZE = 24;
 const { data: productsData, error: productsError } = await supabase
   .from("products")
   .select("*")
   .eq("store_id", store.id)
   .eq("is_in_stock", true)
-  .order("created_at", { ascending: false });
+  .order("created_at", { ascending: false })
+  .range(0, PAGE_SIZE - 1);
 
 const products = (productsData || []).map((p) => ({
   id: p.id,
