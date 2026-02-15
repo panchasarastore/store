@@ -8,12 +8,18 @@ const { displayProducts = [] } = Astro.props;
         {displayProducts.map((product) => <ProductCard product={product} />)}
     </div>
 
-    <div id="load-more-container" class="load-more-container">
-        <button id="load-more-btn" class="load-more-btn">
-            LOAD MORE
-            <span class="loader-spinner" style="display: none;">...</span>
-        </button>
-    </div>
+    {
+        displayProducts.length >= 24 && (
+            <div id="load-more-container" class="load-more-container">
+                <button id="load-more-btn" class="load-more-btn">
+                    LOAD MORE
+                    <span class="loader-spinner" style="display: none;">
+                        ...
+                    </span>
+                </button>
+            </div>
+        )
+    }
 </section>
 <style is:inline>
     .store-products {

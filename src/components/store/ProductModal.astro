@@ -9,21 +9,51 @@
         >
 
         <div class="modal-body">
-            <div class="modal-img-wrapper">
-                <img id="modal-img" src="" alt="" />
+            <div class="modal-gallery-side">
+                <div class="main-img-container shadow-premium">
+                    <button id="modal-prev-btn" class="nav-btn prev-btn">
+                        <span class="material-symbols-rounded"
+                            >chevron_left</span
+                        >
+                    </button>
+                    <img id="modal-img" src="" alt="" />
+                    <button id="modal-next-btn" class="nav-btn next-btn">
+                        <span class="material-symbols-rounded"
+                            >chevron_right</span
+                        >
+                    </button>
+                    <div class="img-zoom-overlay"></div>
+                </div>
+                <div
+                    id="modal-thumbnails"
+                    class="thumbnail-list scrollbar-hide"
+                >
+                </div>
             </div>
-            <div class="modal-info">
-                <h3 id="modal-title">Product Name</h3>
-                <p id="modal-price">₹0.00</p>
-                <p id="modal-desc">Description...</p>
+
+            <div class="modal-info-side">
+                <div class="modal-header-meta">
+                    <h3 id="modal-title">Product Name</h3>
+                    <div id="modal-price-tag" class="price-tag">₹0.00</div>
+                </div>
 
                 <div
                     id="modal-notice-box"
-                    class="notice-box"
+                    class="soft-info-box"
                     style="display: none;"
                 >
-                    <span class="material-symbols-rounded">info</span>
-                    <span id="modal-notice-text"></span>
+                    <div class="info-icon">
+                        <span class="material-symbols-rounded">info</span>
+                    </div>
+                    <div class="info-content">
+                        <span class="info-label">Note for this item</span>
+                        <p id="modal-notice-text"></p>
+                    </div>
+                </div>
+
+                <div class="details-section">
+                    <label class="section-label">Description</label>
+                    <p id="modal-desc">Description...</p>
                 </div>
 
                 <div
@@ -100,72 +130,224 @@
         transition: transform 0.2s;
     }
     .modal-close-btn:hover {
-        transform: scale(1.1);
+        transform: rotate(90deg) scale(1.1);
+        background: white;
     }
 
+    /* PREMIUM GRID LAYOUT */
     .modal-body {
         display: flex;
         flex-direction: column;
+        min-height: 500px;
     }
-    @media (min-width: 768px) {
-        .modal-body {
-            flex-direction: row;
-            min-height: 500px;
-        }
-        .modal-img-wrapper {
-            width: 50%;
-            height: auto;
-            position: relative;
-        }
-        .modal-info {
-            width: 50%;
-            padding: 3rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
+
+    .modal-gallery-side {
+        width: 100%;
+        background: rgba(0, 0, 0, 0.02);
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        align-items: center;
+        justify-content: center;
     }
-    .modal-img-wrapper img {
+
+    .main-img-container {
+        width: 100%;
+        max-width: 400px;
+        aspect-ratio: 1;
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        position: relative;
+        cursor: crosshair;
+    }
+
+    .main-img-container img {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        display: block;
+        transition: transform 0.5s ease;
     }
-    .modal-info {
-        padding: 1.5rem;
-    }
-    #modal-title {
-        font-family: var(--font-heading);
-        font-size: 2rem;
-        margin: 0 0 0.5rem 0;
-        color: var(--theme-brand);
-        line-height: 1.2;
-    }
-    #modal-price {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: var(--theme-accent);
-        margin-bottom: 1.5rem;
-    }
-    #modal-desc {
-        font-family: var(--font-body);
-        line-height: 1.6;
-        opacity: 0.8;
-        margin-bottom: 1.5rem;
-        font-size: 0.95rem;
-    }
-    .notice-box {
-        background: #fff9c4;
-        color: #856404;
-        padding: 0.8rem 1rem;
-        border-radius: 8px;
-        font-size: 0.85rem;
-        font-weight: 500;
+
+    /* NAV BUTTONS */
+    .nav-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 40px;
+        height: 40px;
+        background: rgba(255, 255, 255, 0.9);
+        border: none;
+        border-radius: 50%;
+        color: var(--theme-ink);
         display: flex;
         align-items: center;
-        gap: 8px;
-        margin-bottom: 1.5rem;
-        border: 1px solid rgba(0, 0, 0, 0.05);
+        justify-content: center;
+        cursor: pointer;
+        z-index: 10;
+        opacity: 0;
+        transition: var(--transition-smooth);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .main-img-container:hover .nav-btn {
+        opacity: 1;
+    }
+
+    .prev-btn {
+        left: 1rem;
+    }
+    .next-btn {
+        right: 1rem;
+    }
+
+    .nav-btn:hover {
+        background: white;
+        transform: translateY(-50%) scale(1.1);
+        color: var(--theme-accent);
+    }
+
+    .nav-btn:disabled {
+        opacity: 0 !important;
+        cursor: default;
+    }
+
+    .main-img-container:hover img {
+        transform: scale(1.2);
+    }
+
+    .thumbnail-list {
+        display: flex;
+        gap: 10px;
+        padding: 0.5rem;
+        overflow-x: auto;
+        width: 100%;
+        justify-content: center;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE and Edge */
+    }
+
+    .thumbnail-list::-webkit-scrollbar {
+        display: none; /* Chrome, Safari and Opera */
+    }
+
+    .modal-thumb {
+        width: 64px;
+        height: 64px;
+        border-radius: 12px;
+        object-fit: cover;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: var(--transition-smooth);
+        flex-shrink: 0;
+        opacity: 0.6;
+    }
+
+    .modal-thumb.active {
+        opacity: 1;
+        border-color: var(--theme-accent);
+        transform: scale(1.05);
+    }
+
+    .modal-info-side {
+        width: 100%;
+        padding: 2.5rem;
+        display: flex;
+        flex-direction: column;
+    }
+
+    @media (min-width: 768px) {
+        .modal-body {
+            flex-direction: row;
+        }
+        .modal-gallery-side {
+            width: 45%;
+            height: auto;
+        }
+        .modal-info-side {
+            width: 55%;
+            padding: 3.5rem;
+        }
+    }
+
+    /* TYPOGRAPHY & TAGS */
+    .modal-header-meta {
+        margin-bottom: 2rem;
+    }
+
+    #modal-title {
+        font-family: var(--font-heading);
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0 0 0.5rem 0;
+        color: var(--theme-brand);
+        line-height: 1.1;
+    }
+
+    .price-tag {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--theme-accent);
+        display: inline-block;
+        padding: 0.2rem 0;
+        border-bottom: 2px solid var(--theme-accent);
+    }
+
+    .section-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-weight: 700;
+        color: var(--theme-ink);
+        opacity: 0.5;
+        display: block;
+        margin-bottom: 0.75rem;
+    }
+
+    /* SOFT INFO BOX */
+    .soft-info-box {
+        display: flex;
+        gap: 1rem;
+        padding: 1.25rem;
+        background: rgba(var(--theme-accent-rgb, 196, 106, 43), 0.08);
+        border-left: 4px solid var(--theme-accent);
+        border-radius: 12px;
+        margin-bottom: 2rem;
+    }
+
+    .info-icon {
+        color: var(--theme-accent);
+        display: flex;
+        align-items: flex-start;
+        padding-top: 2px;
+    }
+
+    .info-label {
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--theme-accent);
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+
+    #modal-notice-text {
+        font-size: 0.9rem;
+        line-height: 1.4;
+        color: var(--theme-ink);
+        font-weight: 500;
+    }
+
+    .details-section {
+        margin-bottom: 2rem;
+    }
+
+    #modal-desc {
+        line-height: 1.6;
+        opacity: 0.8;
+        font-size: 1rem;
     }
     #modal-custom-input label {
         font-family: var(--font-heading);
@@ -173,42 +355,54 @@
     }
     #modal-custom-input textarea {
         background: rgba(0, 0, 0, 0.03);
-        border: 1px solid rgba(0, 0, 0, 0.1);
+        border: 1.5px solid rgba(0, 0, 0, 0.06);
         resize: none;
         width: 100%;
-        padding: 0.5rem;
+        padding: 1rem;
         font-family: inherit;
-        font-size: 0.9rem;
-        border-radius: 8px;
+        font-size: 0.95rem;
+        border-radius: 12px;
+        transition: var(--transition-smooth);
     }
     #modal-custom-input textarea:focus {
         background: #fff;
         border-color: var(--theme-accent);
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(var(--theme-accent-rgb, 196, 106, 43), 0.1);
     }
     .modal-actions {
-        margin-top: 2rem;
+        margin-top: auto;
     }
     .big-add-btn {
-        padding: 0 1.5rem;
-        min-height: 42px;
+        width: 100%;
+        padding: 1.25rem;
+        min-height: 56px;
         background-color: var(--theme-accent);
         color: white;
         border: none;
-        border-radius: 6px;
-        font-weight: 700;
-        font-size: 0.8rem;
-        letter-spacing: 0.05em;
+        border-radius: 14px;
+        font-weight: 800;
+        font-size: 0.9rem;
+        letter-spacing: 0.1em;
         text-transform: uppercase;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: var(--transition-smooth);
         display: flex;
         justify-content: center;
         align-items: center;
         text-align: center;
+        box-shadow: 0 8px 20px -6px
+            rgba(var(--theme-accent-rgb, 196, 106, 43), 0.4);
     }
     .big-add-btn:hover {
-        opacity: 0.9;
-        transform: translateY(-1px);
+        opacity: 0.95;
+        transform: translateY(-2px);
+        box-shadow: 0 12px 25px -5px
+            rgba(var(--theme-accent-rgb, 196, 106, 43), 0.5);
+    }
+
+    .big-add-btn:active {
+        transform: translateY(0);
     }
 
     #product-modal .stepper-controls {

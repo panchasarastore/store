@@ -7,16 +7,19 @@ export function syncUI(id: string, qty: number) {
 
     wrappers.forEach((wrapper) => {
         const bigBtn = wrapper.querySelector(".big-add-btn") as HTMLElement;
+        const miniBtn = wrapper.querySelector(".mini-add-btn") as HTMLElement;
         const stepper = wrapper.querySelector(".stepper-controls") as HTMLElement;
         const display = wrapper.querySelector(".qty-display") as HTMLElement;
 
         if (qty > 0) {
             if (bigBtn) bigBtn.style.display = "none";
+            if (miniBtn) miniBtn.style.display = "none";
             if (stepper) stepper.style.display = "flex";
             if (display) display.textContent = qty.toString();
         } else {
             if (stepper) stepper.style.display = "none";
             if (bigBtn) bigBtn.style.display = "flex";
+            if (miniBtn) miniBtn.style.display = "flex";
         }
     });
 }
@@ -67,7 +70,7 @@ export function renderCart() {
 }
 
 export function attachStepperLogic(wrapper: Element, productId: string, productsData: any[], toggleCart: (open: boolean) => void) {
-    const bigBtn = wrapper.querySelector(".big-add-btn");
+    const bigBtn = wrapper.querySelector(".big-add-btn") || wrapper.querySelector(".mini-add-btn");
     const plus = wrapper.querySelector(".plus");
     const minus = wrapper.querySelector(".minus");
     if (!bigBtn || !plus || !minus) return;
@@ -80,10 +83,21 @@ export function attachStepperLogic(wrapper: Element, productId: string, products
     plus.parentNode?.replaceChild(newPlus, plus);
     minus.parentNode?.replaceChild(newMinus, minus);
 
-    newBig.addEventListener("click", (e) => {
+    newBig.addEventListener("click", (e: any) => {
         e.stopPropagation();
         const product = productsData.find((p: any) => p.id == productId);
         if (!product) return;
+
+        // Visual feedback
+        const target = e.currentTarget as HTMLElement;
+        target.classList.add('button-click-pop');
+        setTimeout(() => target.classList.remove('button-click-pop'), 300);
+
+        const cartIcons = document.querySelectorAll(".cart-count-badge, .cart-icon-wrapper");
+        cartIcons.forEach(icon => {
+            icon.classList.add('cart-bump');
+            setTimeout(() => icon.classList.remove('cart-bump'), 400);
+        });
 
         const noteInput = document.getElementById("custom-note-text") as HTMLTextAreaElement;
         const modalWrapper = document.getElementById("modal-add-wrapper");
@@ -97,7 +111,7 @@ export function attachStepperLogic(wrapper: Element, productId: string, products
             id: product.id,
             name: product.name,
             price: product.price,
-            image: product.image,
+            image: product.image || (product.images && product.images[0]),
         }, note);
 
         toggleCart(true);
