@@ -14,6 +14,7 @@ export function setupModalLogic(productsData: any[], toggleCart: (open: boolean)
     const mNoticeText = document.getElementById("modal-notice-text");
     const mCustom = document.getElementById("modal-custom-input") as HTMLElement;
     const mCustomText = document.getElementById("custom-note-text") as HTMLTextAreaElement;
+    const mStockAlert = document.getElementById("modal-stock-alert") as HTMLElement;
 
     let currentImageIndex = 0;
     let currentImages: string[] = [];
@@ -105,6 +106,16 @@ export function setupModalLogic(productsData: any[], toggleCart: (open: boolean)
                 if (mNoticeText) mNoticeText.textContent = data.product_notice;
             } else {
                 if (mNotice) mNotice.style.display = "none";
+            }
+
+            if (mStockAlert) {
+                const stock = Number(data.stock_quantity);
+                const minStock = Number(data.min_stock_level) || 5;
+                if (stock > 0 && stock <= minStock) {
+                    mStockAlert.style.display = "inline-block";
+                } else {
+                    mStockAlert.style.display = "none";
+                }
             }
 
             if (data.accepts_custom_note) {

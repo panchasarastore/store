@@ -35,6 +35,13 @@
                 <div class="modal-header-meta">
                     <h3 id="modal-title">Product Name</h3>
                     <div id="modal-price-tag" class="price-tag">₹0.00</div>
+                    <div
+                        id="modal-stock-alert"
+                        class="modal-stock-alert"
+                        style="display: none;"
+                    >
+                        Selling Fast! 🔥
+                    </div>
                 </div>
 
                 <div
@@ -303,6 +310,35 @@
         opacity: 0.5;
         display: block;
         margin-bottom: 0.75rem;
+    }
+
+    .modal-stock-alert {
+        display: inline-block;
+        margin-top: 0.5rem;
+        background: rgba(255, 165, 0, 0.15);
+        color: #d97706;
+        border: 1px solid rgba(217, 119, 6, 0.2);
+        font-size: 0.75rem;
+        font-weight: 800;
+        padding: 5px 12px;
+        border-radius: 50px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        animation: pulse-soft 2s infinite;
+    }
+    @keyframes pulse-soft {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        50% {
+            transform: scale(1.02);
+            opacity: 0.8;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
     }
 
     /* SOFT INFO BOX */
