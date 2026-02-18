@@ -29,8 +29,15 @@ const isEditMode = true;
 
 // 3. Handle Form Submission
 if (Astro.request.method === "POST") {
+    const formData = await Astro.request.formData();
+    const action = formData.get("action");
+
+    // Handle Logout
+    if (action === "logout") {
+        return await logout(Astro);
+    }
+
     try {
-        const formData = await Astro.request.formData();
         const data = {
             name: formData.get("store_name") as string,
             slug: formData.get("store_url_slug") as string,
@@ -58,7 +65,7 @@ if (Astro.request.method === "POST") {
         };
 
         await updateStore(Astro.locals.supabase, store.id, data);
-        return Astro.redirect("http://localhost:8080");
+        return Astro.redirect(import.meta.env.PUBLIC_DASHBOARD_URL);
     } catch (e: any) {
         error = e.message;
     }
@@ -78,13 +85,14 @@ const initialStore = {
     facebook: store.facebook_url || "",
 };
 
-const previewTheme = store.theme?.colors || store.theme || {
-    primary: "#5D4037",
-    secondary: "#8D6E63",
-    background: "#EFEBE9",
-    text: "#3E2723",
-    header: "#EFEBE9",
-};
+const previewTheme = store.theme?.colors ||
+    store.theme || {
+        primary: "#5D4037",
+        secondary: "#8D6E63",
+        background: "#EFEBE9",
+        text: "#3E2723",
+        header: "#EFEBE9",
+    };
 
 const previewFonts = store.theme?.fonts || {
     heading: "editorial",

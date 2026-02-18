@@ -88,9 +88,11 @@ export function setupCheckoutLogic(renderCheckoutSummary: () => void, toggleCart
                     pin.classList.add("input-error");
                 }
 
-                if (!(window as any).checkoutLocation) {
+                // RELAXED VALIDATION: If address is manually entered, don't block if map pin is missing
+                // We still prefer coordinates, but if the user typed an address, let them proceed.
+                if (!(window as any).checkoutLocation && !addr.value.trim()) {
                     isValid = false;
-                    alert("Please select your delivery location on the map");
+                    alert("Please select your delivery location on the map or enter your full address.");
                 }
 
                 if (isValid) locationText = "Delivery";
@@ -210,6 +212,8 @@ export function renderCheckoutSummary() {
 
     const checkedDelivery = document.querySelector('input[name="delivery-mode"]:checked') as HTMLInputElement;
     const mode = checkedDelivery ? checkedDelivery.value : "pickup";
+
+    // TODO: Ideally fetch this from store settings
     const deliveryFee = mode === "delivery" ? 50 : 0;
     const total = subtotal + deliveryFee;
 

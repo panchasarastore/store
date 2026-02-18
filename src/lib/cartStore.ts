@@ -1,5 +1,4 @@
-import { persistentAtom } from '@nanostores/persistent';
-import { computed } from 'nanostores';
+import { atom, computed } from 'nanostores';
 
 export interface CartItem {
     id: string;
@@ -10,26 +9,55 @@ export interface CartItem {
     custom_note?: string;
 }
 
-/**
- * Hydration Guard: Nanostores persistent handles browser check internally,
- * but we export a flag for UI components.
- */
 export const isBrowser = typeof window !== 'undefined';
 
+// --- State ---
+// We use a simple atom. Persistence is handled manually via subscribers.
+export const cartItems = atom<CartItem[]>([]);
+let activeStoreId: string | null = null;
+let isInitialized = false;
+
+// --- Initialization ---
+
 /**
- * Persistent Cart Store (v1)
- * Using persistentAtom for simple JSON-serialized array of items.
+ * Initialize the cart for a specific store.
+ * This MUST be called when the store page loads.
  */
-export const cartItems = persistentAtom<CartItem[]>('cart:v1', [], {
-    encode: JSON.stringify,
-    decode: (value) => {
-        try {
-            return JSON.parse(value);
-        } catch (e) {
-            return [];
+export function initCart(storeId: string) {
+    if (!isBrowser || !storeId) return;
+
+    // If we are already initialized for this store, do nothing
+    if (isInitialized && activeStoreId === storeId) return;
+
+    activeStoreId = storeId;
+    isInitialized = true;
+
+    const key = `cart_${storeId}`;
+
+    // 1. Load initial state
+    try {
+        const stored = localStorage.getItem(key);
+        if (stored) {
+            cartItems.set(JSON.parse(stored));
+        } else {
+            cartItems.set([]);
         }
-    },
-});
+    } catch (e) {
+        console.warn("Failed to load cart", e);
+        cartItems.set([]);
+    }
+
+    // 2. Subscribe to changes and save to specific key
+    cartItems.subscribe((items) => {
+        if (activeStoreId) {
+            try {
+                localStorage.setItem(`cart_${activeStoreId}`, JSON.stringify(items));
+            } catch (e) {
+                console.error("Failed to save cart", e);
+            }
+        }
+    });
+}
 
 // --- Computed Stores ---
 
@@ -43,32 +71,53 @@ export const cartSubtotal = computed(cartItems, (items) =>
 
 // --- Actions ---
 
-export function addItem(product: Omit<CartItem, 'quantity' | 'custom_note'>, note?: string) {
+export function addItem(product: Omit<CartItem, 'quantity' | 'custom_note'> & { stock_quantity?: number | null }, note?: string) {
+    if (!activeStoreId) {
+        console.warn("Cart not initialized with a Store ID!");
+        // Optional: fallback or throw
+    }
+
     const items = cartItems.get();
     const existingIndex = items.findIndex((i) => i.id === product.id);
+    const maxStock = product.stock_quantity;
 
     if (existingIndex > -1) {
+        const currentQty = items[existingIndex].quantity;
+        if (maxStock !== null && maxStock !== undefined && currentQty >= maxStock) {
+            return false; // Limit reached
+        }
+
         const newItems = [...items];
         newItems[existingIndex] = {
             ...newItems[existingIndex],
-            quantity: newItems[existingIndex].quantity + 1,
+            quantity: currentQty + 1,
             custom_note: note || newItems[existingIndex].custom_note
         };
         cartItems.set(newItems);
     } else {
+        if (maxStock !== null && maxStock !== undefined && maxStock <= 0) {
+            return false; // Out of stock
+        }
         cartItems.set([...items, { ...product, quantity: 1, custom_note: note }]);
     }
+    return true;
 }
 
-export function updateQuantity(id: string, quantity: number) {
+export function updateQuantity(id: string, quantity: number, maxStock?: number | null) {
     if (quantity <= 0) {
         removeItem(id);
-        return;
+        return true;
     }
+
+    if (maxStock !== null && maxStock !== undefined && quantity > maxStock) {
+        return false; // Limit reached
+    }
+
     const items = cartItems.get();
     cartItems.set(
         items.map((item) => (item.id === id ? { ...item, quantity } : item))
     );
+    return true;
 }
 
 export function removeItem(id: string) {

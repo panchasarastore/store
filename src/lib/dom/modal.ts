@@ -130,6 +130,25 @@ export function setupModalLogic(productsData: any[], toggleCart: (open: boolean)
 
             if (modalWrapper) {
                 modalWrapper.setAttribute("data-id", pid);
+                const isOutOfStock = data.stock_quantity !== null && data.stock_quantity <= 0;
+                const bigBtn = modalWrapper.querySelector(".big-add-btn") as HTMLButtonElement;
+
+                if (isOutOfStock) {
+                    if (bigBtn) {
+                        bigBtn.disabled = true;
+                        bigBtn.textContent = "OUT OF STOCK";
+                        bigBtn.style.background = "#ccc";
+                        bigBtn.style.color = "#666";
+                    }
+                } else {
+                    if (bigBtn) {
+                        bigBtn.disabled = false;
+                        bigBtn.textContent = "ADD TO CART";
+                        bigBtn.style.background = ""; // Restore theme color
+                        bigBtn.style.color = "";
+                    }
+                }
+
                 attachStepperLogic(modalWrapper, pid, productsData, toggleCart);
                 const items = cartItems.get();
                 const item = items.find((i) => i.id === pid);

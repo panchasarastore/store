@@ -107,12 +107,18 @@ export function attachStepperLogic(wrapper: Element, productId: string, products
             noteInput.value = "";
         }
 
-        addItem({
+        const success = addItem({
             id: product.id,
             name: product.name,
             price: product.price,
             image: product.image || (product.images && product.images[0]),
+            stock_quantity: product.stock_quantity,
         }, note);
+
+        if (!success) {
+            (window as any).showToast?.('This item is currently out of stock');
+            return;
+        }
 
         toggleCart(true);
 
@@ -122,9 +128,13 @@ export function attachStepperLogic(wrapper: Element, productId: string, products
 
     newPlus.addEventListener("click", (e) => {
         e.stopPropagation();
+        const product = productsData.find((p: any) => p.id == productId);
         const items = cartItems.get();
         const item = items.find((i) => i.id === productId);
-        updateQuantity(productId, (item?.quantity || 0) + 1);
+        const success = updateQuantity(productId, (item?.quantity || 0) + 1, product?.stock_quantity);
+        if (!success) {
+            (window as any).showToast?.('Limit reached: Only ' + product?.stock_quantity + ' available');
+        }
     });
 
     newMinus.addEventListener("click", (e) => {

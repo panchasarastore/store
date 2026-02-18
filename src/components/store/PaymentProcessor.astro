@@ -13,9 +13,6 @@
             ".store-template-wrapper",
         ) as HTMLElement;
 
-        // 1️⃣ Generate a checkout_session_id (UUID) once per checkout session
-        let checkoutSessionId = crypto.randomUUID();
-
         if (!finalPayBtn || !wrapper) return;
 
         // Helper to get delivery data from the DOM
@@ -28,6 +25,7 @@
 
             if (deliveryMode === "pickup") {
                 return {
+                    method: "pickup",
                     delivery_address: null,
                     delivery_pincode: null,
                     delivery_landmark: null,
@@ -38,6 +36,7 @@
             }
 
             return {
+                method: "delivery",
                 delivery_address:
                     (
                         document.getElementById(
@@ -62,16 +61,15 @@
         }
 
         finalPayBtn.addEventListener("click", async () => {
+            // 1️⃣ Generate a NEW checkout_session_id (UUID) for every attempt
+            let checkoutSessionId = crypto.randomUUID();
+
             const paymentMethod = (
                 document.querySelector(
                     'input[name="payment"]:checked',
                 ) as HTMLInputElement
             )?.value;
-            const deliveryMode = (
-                document.querySelector(
-                    'input[name="delivery-mode"]:checked',
-                ) as HTMLInputElement
-            )?.value;
+
             const deliveryData = getDeliveryData();
 
             const storeId = (wrapper as HTMLElement).dataset.storeId;
@@ -123,7 +121,7 @@
                     store_id: storeId,
                     customer: { name, phone, email },
                     delivery: {
-                        method: deliveryMode,
+                        method: deliveryData.method,
                         address: deliveryData.delivery_address,
                         lat: deliveryData.delivery_lat,
                         lng: deliveryData.delivery_lng,

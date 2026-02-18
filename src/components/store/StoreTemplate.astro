@@ -400,7 +400,7 @@ const displayProducts =
 </style>
 
 <script>
-  import { cartItems, updateQuantity } from "../../lib/cartStore";
+  import { cartItems, updateQuantity, initCart } from "../../lib/cartStore";
   import { setupStoreUI } from "../../lib/dom/store-ui";
   import {
     syncUI,
@@ -422,12 +422,22 @@ const displayProducts =
   const productsData = wrapper?.dataset.products
     ? JSON.parse(wrapper.dataset.products)
     : [];
+  const storeId = wrapper?.dataset.storeId;
 
   // ==========================================
   // 2. INITIALIZE ALL MODULES
   // ==========================================
+  if (storeId) {
+    initCart(storeId);
+  }
+
   setupStoreUI();
   const toggleCart = (window as any).toggleCart;
+
+  // Make updateQuantity available globally for inline onclick handlers in cart-sync.ts
+  (window as any).updateCartItem = (id: string, qty: number) => {
+    updateQuantity(id, qty);
+  };
 
   setupModalLogic(productsData, toggleCart);
   setupCheckoutLogic(renderCheckoutSummary, toggleCart);
@@ -459,7 +469,7 @@ const displayProducts =
   const PAGE_SIZE = 24;
   const loadMoreBtn = document.getElementById("load-more-btn");
   const productsGrid = document.getElementById("products-grid");
-  const storeId = wrapper?.dataset.storeId;
+  // storeId is already declared above
 
   function createProductCardHTML(product: any) {
     return `

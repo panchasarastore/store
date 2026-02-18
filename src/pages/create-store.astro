@@ -20,7 +20,7 @@ if (session instanceof Response) return session;
 
 // 2. Redirect if store already exists
 if (await hasStore(Astro.locals.supabase)) {
-  return Astro.redirect("http://localhost:8080");
+  return Astro.redirect(import.meta.env.PUBLIC_DASHBOARD_URL);
 }
 
 let error = "";
@@ -30,6 +30,7 @@ const isEditMode = false;
 if (Astro.request.method === "POST") {
   try {
     const formData = await Astro.request.formData();
+    // ... (rest of data collection)
     const data = {
       name: formData.get("store_name") as string,
       slug: formData.get("store_url_slug") as string,
@@ -57,7 +58,7 @@ if (Astro.request.method === "POST") {
     };
 
     await createStore(Astro.locals.supabase, data);
-    return Astro.redirect("http://localhost:8080");
+    return Astro.redirect(import.meta.env.PUBLIC_DASHBOARD_URL);
   } catch (e: any) {
     error = e.message;
   }

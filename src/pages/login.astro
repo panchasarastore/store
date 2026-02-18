@@ -6,6 +6,8 @@ import { supabase } from "../lib/supabase";
 import { getSession } from "../lib/auth";
 import { hasStore } from "../lib/stores";
 
+const dashboardUrl = import.meta.env.PUBLIC_DASHBOARD_URL;
+
 // --------------------------------------------------
 // 1️⃣ If user is ALREADY logged in → route them
 // --------------------------------------------------
@@ -14,7 +16,7 @@ const session = await getSession(Astro);
 if (session) {
   if (await hasStore(Astro.locals.supabase)) {
     // Existing store owner → dashboard (React app)
-    return Astro.redirect("http://localhost:8080");
+    return Astro.redirect(dashboardUrl);
   } else {
     // Logged in but no store yet
     return Astro.redirect("/create-store");
@@ -36,7 +38,10 @@ if (session) {
       rel="stylesheet"
     />
   </head>
-  <body class="h-full font-sans text-slate-900 bg-white">
+  <body
+    class="h-full font-sans text-slate-900 bg-white"
+    data-dashboard-url={dashboardUrl}
+  >
     <div class="min-h-full flex flex-col lg:flex-row">
       <div class="lg:hidden relative h-28 w-full bg-slate-100 shrink-0">
         <img
@@ -158,6 +163,8 @@ if (session) {
           const submitBtn = document.getElementById(
             "submit-btn",
           ) as HTMLButtonElement;
+          const dashboardUrl =
+            document.body.dataset.dashboardUrl || "http://localhost:8080";
 
           form.addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -193,7 +200,7 @@ if (session) {
                 // Check if user has a store and redirect
                 const exists = await hasStore(supabase);
                 if (exists) {
-                  window.location.href = "http://localhost:8080";
+                  window.location.href = dashboardUrl;
                 } else {
                   window.location.href = "/create-store";
                 }
