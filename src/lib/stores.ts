@@ -70,6 +70,10 @@ export interface CreateStoreInput {
   facebook_url?: string | null;
 
   contact_email?: string | null;
+  show_email?: boolean;
+  show_whatsapp?: boolean;
+  show_instagram?: boolean;
+  show_facebook?: boolean;
 
   logo?: File | null;
 
@@ -103,6 +107,10 @@ export async function createStore(supabaseClient: SupabaseClient, input: CreateS
     instagram_url = null,
     facebook_url = null,
     contact_email = null,
+    show_email = true,
+    show_whatsapp = true,
+    show_instagram = true,
+    show_facebook = true,
     logo = null,
     theme = undefined,
   } = input;
@@ -183,6 +191,11 @@ export async function createStore(supabaseClient: SupabaseClient, input: CreateS
       facebook_url,
       contact_email,
 
+      show_email,
+      show_whatsapp,
+      show_instagram,
+      show_facebook,
+
       theme,
       status: 'active',
     })
@@ -256,6 +269,10 @@ export async function updateStore(supabaseClient: SupabaseClient, id: string, in
     instagram_url = null,
     facebook_url = null,
     contact_email = null,
+    show_email = true,
+    show_whatsapp = true,
+    show_instagram = true,
+    show_facebook = true,
     logo = null,
     theme = undefined,
   } = input;
@@ -333,6 +350,11 @@ export async function updateStore(supabaseClient: SupabaseClient, id: string, in
       instagram_url,
       facebook_url,
       contact_email,
+
+      show_email,
+      show_whatsapp,
+      show_instagram,
+      show_facebook,
 
       theme,
     })

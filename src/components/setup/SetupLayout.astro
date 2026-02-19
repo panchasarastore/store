@@ -114,6 +114,16 @@ const { title } = Astro.props;
                 max-height: 500px;
                 opacity: 1;
             }
+
+            /* Visual Validation Feedback */
+            input:invalid:not(:placeholder-shown) {
+                border-color: #ef4444;
+                background-color: #fef2f2;
+            }
+            input:invalid:not(:placeholder-shown) + p {
+                color: #ef4444;
+                font-weight: 600;
+            }
         </style>
     </head>
 

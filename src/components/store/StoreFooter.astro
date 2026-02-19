@@ -33,7 +33,9 @@ const { safeStore } = Astro.props;
                 <span class="footer-email-text">{safeStore.email}</span>
             </a>
             <a
-                href="#"
+                href={safeStore.whatsapp
+                    ? `https://wa.me/${safeStore.whatsapp.replace(/\D/g, "")}`
+                    : "#"}
                 class="contact-link footer-whatsapp-link"
                 target="_blank"
                 style={safeStore.whatsapp ? "display: flex" : "display: none"}
@@ -47,10 +49,12 @@ const { safeStore } = Astro.props;
             <h5>FOLLOW US</h5>
             <div class="social-icons">
                 <a
-                    href="#"
+                    href={safeStore.instagram}
                     class="social-link footer-insta-link"
                     target="_blank"
-                    style="display: flex"
+                    style={safeStore.instagram
+                        ? "display: flex"
+                        : "display: none"}
                 >
                     <span class="material-symbols-rounded text-sm"
                         >photo_camera</span
@@ -58,10 +62,12 @@ const { safeStore } = Astro.props;
                     <span>Instagram</span>
                 </a>
                 <a
-                    href="#"
+                    href={safeStore.facebook}
                     class="social-link footer-fb-link"
                     target="_blank"
-                    style="display: flex"
+                    style={safeStore.facebook
+                        ? "display: flex"
+                        : "display: none"}
                 >
                     <span class="material-symbols-rounded text-sm">public</span>
                     <span>Facebook</span>

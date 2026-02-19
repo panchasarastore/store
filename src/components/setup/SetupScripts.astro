@@ -163,6 +163,71 @@
         broadcast.postMessage({ type: "UPDATE_STORE", payload: data });
     };
 
+    // CONDITIONAL VALIDATION HANDLER
+    const updateSocialValidation = () => {
+        const fields = [
+            {
+                name: "show_email",
+                inputId: "contact_email_input",
+                hintId: null,
+                pattern: null,
+                type: "email",
+            },
+            {
+                name: "show_whatsapp",
+                inputId: "whatsapp_number_input",
+                hintId: "whatsapp_hint",
+                pattern: null,
+                type: "tel",
+            },
+            {
+                name: "show_instagram",
+                inputId: "instagram_url_input",
+                hintId: "instagram_hint",
+                pattern: "^https?://(www\\.)?instagram\\.com/[a-zA-Z0-9._]+/?$",
+                type: "url",
+            },
+            {
+                name: "show_facebook",
+                inputId: "facebook_url_input",
+                hintId: "facebook_hint",
+                pattern: "^https?://(www\\.)?facebook\\.com/[a-zA-Z0-9.]+/?$",
+                type: "url",
+            },
+        ];
+
+        fields.forEach((field) => {
+            const toggle = form.querySelector(
+                `[name="${field.name}"]`,
+            ) as HTMLInputElement;
+            const input = document.getElementById(
+                field.inputId,
+            ) as HTMLInputElement;
+            const hint = field.hintId
+                ? document.getElementById(field.hintId)
+                : null;
+
+            if (input && toggle) {
+                if (toggle.checked) {
+                    input.type = field.type;
+                    if (field.pattern)
+                        input.setAttribute("pattern", field.pattern);
+                    input.classList.remove("opacity-30", "grayscale-[0.5]");
+                    if (hint) hint.style.opacity = "1";
+                } else {
+                    // When OFF, we turn it into type="text" and remove pattern so it doesn't block submission
+                    input.type = "text";
+                    input.removeAttribute("pattern");
+                    input.classList.add("opacity-30", "grayscale-[0.5]");
+                    if (hint) hint.style.opacity = "0.3";
+                }
+            }
+        });
+    };
+
+    // Initial check
+    updateSocialValidation();
+
     form?.addEventListener("input", (e) => {
         const input = e.target as HTMLInputElement;
         if (
@@ -170,7 +235,18 @@
             vibes[input.value as keyof typeof vibes]
         ) {
             updateColorInputs(vibes[input.value as keyof typeof vibes]);
+        } else if (input.name.startsWith("show_")) {
+            updateSocialValidation();
+            applyChanges();
         } else {
+            applyChanges();
+        }
+    });
+
+    form?.addEventListener("change", (e) => {
+        const input = e.target as HTMLInputElement;
+        if (input.name.startsWith("show_")) {
+            updateSocialValidation();
             applyChanges();
         }
     });

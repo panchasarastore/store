@@ -31,6 +31,8 @@ const safeStore = {
   address: store.address || null,
   email: store.contact_email,
   whatsapp: store.whatsapp_number,
+  instagram: store.instagram_url,
+  facebook: store.facebook_url,
 };
 
 // 2. Color Mapping
@@ -65,46 +67,7 @@ const productCats = (products as any[])
 const categories = ["All", ...productCats];
 
 // 4. Products
-const displayProducts =
-  products.length > 0
-    ? products
-    : [
-        {
-          id: 1,
-          name: "Rustic Sourdough",
-          price: 12.0,
-          image:
-            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQE9r-lTbqJKsW1nwiQTdVftDfHtIbyqbzyPQ&s",
-          description: "Crispy crust with a chewy, airy interior.",
-          full_details:
-            "Our signature loaf, fermented for 48 hours using wild yeast.",
-          product_notice: null,
-          accepts_custom_note: false,
-        },
-        {
-          id: 2,
-          name: "Rosemary Focaccia",
-          price: 14.0,
-          image:
-            "https://howtofeedaloon.com/wp-content/uploads/2025/04/Focaccia-wtih-Rosemary-and-Olive-Oil-IG.jpg",
-          description: "Infused with fresh rosemary and sea salt.",
-          full_details: "Baked in olive oil for that perfect golden crunch.",
-          product_notice: "Best eaten within 24 hours",
-          accepts_custom_note: false,
-        },
-        {
-          id: 3,
-          name: "Celebration Cake",
-          price: 45.0,
-          image:
-            "https://images.unsplash.com/photo-1578985545062-69928b1d9587?q=80&w=800&auto=format&fit=crop",
-          description: "Vanilla bean sponge with berry compote.",
-          full_details:
-            "A delicate sponge cake layered with fresh seasonal berries.",
-          product_notice: "Requires 48hr advance notice",
-          accepts_custom_note: true,
-        },
-      ];
+const displayProducts = products;
 ---
 
 <div
@@ -115,6 +78,7 @@ const displayProducts =
   data-layout={layout}
   data-products={JSON.stringify(displayProducts)}
   data-store-id={safeStore.id}
+  data-is-preview={isPreview}
 >
   <StoreNavbar safeStore={safeStore} />
 
@@ -133,346 +97,362 @@ const displayProducts =
   <CheckoutWizard safeStore={safeStore} />
 
   <PaymentProcessor />
-</div>
 
-<script>
-  import { supabase } from "../../lib/supabase";
-  (window as any).supabase = supabase;
-</script>
+  <script>
+    import { supabase } from "../../lib/supabase";
+    (window as any).supabase = supabase;
+  </script>
 
-<style is:inline>
-  /* =========================================
+  <style is:inline>
+    /* =========================================
    CORE VARIABLES & RESET
 ========================================= */
-  .store-template-wrapper {
-    --spacing-container: 92%;
-    --max-width: 1200px;
+    .store-template-wrapper {
+      --spacing-container: 92%;
+      --max-width: 1200px;
 
-    --theme-brand: #5b3a1e;
-    --theme-accent: #c46a2b;
-    --theme-page: #fffaf0;
-    --theme-ink: #1f1f1f;
+      --theme-brand: #5b3a1e;
+      --theme-accent: #c46a2b;
+      --theme-page: #fffaf0;
+      --theme-ink: #1f1f1f;
 
-    --font-display: "Playfair Display", serif;
-    --font-heading: "Playfair Display", serif;
-    --font-body: "Inter", sans-serif;
+      --font-display: "Playfair Display", serif;
+      --font-heading: "Playfair Display", serif;
+      --font-body: "Inter", sans-serif;
 
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --shadow-premium:
-      0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 5px 15px -8px rgba(0, 0, 0, 0.05);
-    --shadow-hover: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
+      --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --shadow-premium:
+        0 10px 30px -5px rgba(0, 0, 0, 0.05),
+        0 5px 15px -8px rgba(0, 0, 0, 0.05);
+      --shadow-hover: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
 
-    background-color: var(--theme-page);
-    background-image:
-      radial-gradient(
-        circle at top right,
-        rgba(255, 255, 255, 0.5),
-        transparent
-      ),
-      radial-gradient(circle at bottom left, rgba(0, 0, 0, 0.02), transparent);
-    color: var(--theme-ink);
-    font-family: var(--font-body);
-    width: 100%;
-    min-height: 100%;
-    position: relative;
-    overflow-x: hidden;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    transition: background-color 0.5s ease;
-  }
-
-  /* UTILITIES */
-  .glass-effect {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(12px) saturate(180%);
-    -webkit-backdrop-filter: blur(12px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-  }
-
-  .premium-shadow {
-    box-shadow: var(--shadow-premium);
-    transition: var(--transition-smooth);
-  }
-
-  .premium-shadow:hover {
-    box-shadow: var(--shadow-hover);
-  }
-
-  /* FONT PRESETS */
-  .store-template-wrapper[data-font-preset="editorial"] {
-    --font-display: "Playfair Display", serif;
-    --font-heading: "Playfair Display", serif;
-    --font-body: "Inter", sans-serif;
-  }
-  .store-template-wrapper[data-font-preset="editorial"] .store-name {
-    font-style: italic;
-  }
-
-  .store-template-wrapper[data-font-preset="modernist"] {
-    --font-display: "Lexend", sans-serif;
-    --font-heading: "Lexend", sans-serif;
-    --font-body: "Inter", sans-serif;
-  }
-  .store-template-wrapper[data-font-preset="modernist"] .store-name {
-    text-transform: uppercase;
-    letter-spacing: -0.02em;
-  }
-
-  .store-template-wrapper[data-font-preset="maker"] {
-    --font-display: "Dosis", sans-serif;
-    --font-heading: "Dosis", sans-serif;
-    --font-body: "Quicksand", sans-serif;
-  }
-
-  /* LAYOUT PRESETS */
-  .store-template-wrapper[data-layout="gallery"] {
-    --spacing-container: 100%;
-    --max-width: 1400px;
-  }
-  .store-template-wrapper[data-layout="gallery"] .store-navbar {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  }
-
-  .store-template-wrapper[data-layout="pop"] {
-    --spacing-container: 85%;
-    --max-width: 1100px;
-  }
-  .store-template-wrapper[data-layout="pop"] .product-card {
-    border-radius: 4px;
-    transform: rotate(-0.5deg);
-  }
-  .store-template-wrapper[data-layout="pop"] .product-card:nth-child(even) {
-    transform: rotate(0.5deg);
-  }
-
-  /* Global Scroll & Helper Styles */
-  html {
-    scroll-behavior: smooth;
-  }
-  section[id] {
-    scroll-margin-top: 100px;
-  }
-
-  /* MINI STEPPER (Used in Cart) */
-  .mini-stepper {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: rgba(0, 0, 0, 0.03);
-    padding: 4px 8px;
-    border-radius: 50px;
-  }
-  .mini-step-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1.2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    color: var(--theme-ink);
-    opacity: 0.6;
-    transition: opacity 0.2s;
-  }
-  .mini-step-btn:hover {
-    opacity: 1;
-  }
-  .mini-step-qty {
-    font-weight: 700;
-    font-size: 0.9rem;
-    min-width: 15px;
-    text-align: center;
-  }
-
-  /* ERROR STATES */
-  .input-error {
-    border-color: #ef4444 !important;
-    background-color: #fef2f2 !important;
-    animation: shake 0.4s ease-in-out;
-  }
-  @keyframes shake {
-    0%,
-    100% {
-      transform: translateX(0);
+      background-color: var(--theme-page);
+      background-image:
+        radial-gradient(
+          circle at top right,
+          rgba(255, 255, 255, 0.5),
+          transparent
+        ),
+        radial-gradient(circle at bottom left, rgba(0, 0, 0, 0.02), transparent);
+      color: var(--theme-ink);
+      font-family: var(--font-body);
+      width: 100%;
+      min-height: 100%;
+      position: relative;
+      overflow-x: hidden;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: background-color 0.5s ease;
     }
-    25% {
-      transform: translateX(-5px);
-    }
-    75% {
-      transform: translateX(5px);
-    }
-  }
 
-  .select-wrapper {
-    position: relative;
-    width: 100%;
-  }
-  .select-wrapper::after {
-    content: "\e5cf";
-    font-family: "Material Symbols Rounded";
-    position: absolute;
-    right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    pointer-events: none;
-    opacity: 0.5;
-  }
+    /* UTILITIES */
+    .glass-effect {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(12px) saturate(180%);
+      -webkit-backdrop-filter: blur(12px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
 
-  .info-box {
-    font-size: 0.9rem;
-    line-height: 1.5;
-  }
+    .premium-shadow {
+      box-shadow: var(--shadow-premium);
+      transition: var(--transition-smooth);
+    }
 
-  /* CART & BUTTON ANIMATIONS */
-  @keyframes cart-bump {
-    0% {
-      transform: scale(1);
+    .premium-shadow:hover {
+      box-shadow: var(--shadow-hover);
     }
-    50% {
-      transform: scale(1.3);
-    }
-    100% {
-      transform: scale(1);
-    }
-  }
-  .cart-bump {
-    animation: cart-bump 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  }
 
-  @keyframes button-pop {
-    0% {
-      transform: scale(0.95);
-      opacity: 0.8;
+    /* FONT PRESETS */
+    .store-template-wrapper[data-font-preset="editorial"] {
+      --font-display: "Playfair Display", serif;
+      --font-heading: "Playfair Display", serif;
+      --font-body: "Inter", sans-serif;
     }
-    50% {
-      transform: scale(1.05);
+    .store-template-wrapper[data-font-preset="editorial"] .store-name {
+      font-style: italic;
+    }
+
+    .store-template-wrapper[data-font-preset="modernist"] {
+      --font-display: "Lexend", sans-serif;
+      --font-heading: "Lexend", sans-serif;
+      --font-body: "Inter", sans-serif;
+    }
+    .store-template-wrapper[data-font-preset="modernist"] .store-name {
+      text-transform: uppercase;
+      letter-spacing: -0.02em;
+    }
+
+    .store-template-wrapper[data-font-preset="maker"] {
+      --font-display: "Dosis", sans-serif;
+      --font-heading: "Dosis", sans-serif;
+      --font-body: "Quicksand", sans-serif;
+    }
+
+    /* LAYOUT PRESETS */
+    .store-template-wrapper[data-layout="gallery"] {
+      --spacing-container: 100%;
+      --max-width: 1400px;
+    }
+    .store-template-wrapper[data-layout="gallery"] .store-navbar {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .store-template-wrapper[data-layout="pop"] {
+      --spacing-container: 85%;
+      --max-width: 1100px;
+    }
+    .store-template-wrapper[data-layout="pop"] .product-card {
+      border-radius: 4px;
+      transform: rotate(-0.5deg);
+    }
+    .store-template-wrapper[data-layout="pop"] .product-card:nth-child(even) {
+      transform: rotate(0.5deg);
+    }
+
+    /* Global Scroll & Helper Styles */
+    html {
+      scroll-behavior: smooth;
+    }
+    section[id] {
+      scroll-margin-top: 100px;
+    }
+
+    /* MINI STEPPER (Used in Cart) */
+    .mini-stepper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(0, 0, 0, 0.03);
+      padding: 4px 8px;
+      border-radius: 50px;
+    }
+    .mini-step-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      color: var(--theme-ink);
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+    .mini-step-btn:hover {
       opacity: 1;
     }
-    100% {
-      transform: scale(1);
+    .mini-step-qty {
+      font-weight: 700;
+      font-size: 0.9rem;
+      min-width: 15px;
+      text-align: center;
     }
-  }
-  .button-click-pop {
-    animation: button-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  }
 
-  /* STEPPER REFINEMENT */
-  .stepper-controls {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: white;
-    padding: 2px;
-    border-radius: 12px;
-    border: 1.5px solid rgba(0, 0, 0, 0.05);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-  }
-
-  .step-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    background: rgba(0, 0, 0, 0.03);
-    color: var(--theme-brand);
-    cursor: pointer;
-    transition: var(--transition-smooth);
-  }
-
-  .step-btn:hover {
-    background: var(--theme-brand);
-    color: white;
-  }
-
-  .qty-display {
-    font-weight: 800;
-    min-width: 20px;
-    text-align: center;
-    font-size: 0.95rem;
-    color: var(--theme-brand);
-  }
-</style>
-
-<script>
-  import { cartItems, updateQuantity, initCart } from "../../lib/cartStore";
-  import { setupStoreUI } from "../../lib/dom/store-ui";
-  import {
-    syncUI,
-    renderCart,
-    attachStepperLogic,
-  } from "../../lib/dom/cart-sync";
-  import { setupModalLogic } from "../../lib/dom/modal";
-  import {
-    setupCheckoutLogic,
-    renderCheckoutSummary,
-  } from "../../lib/dom/checkout";
-
-  // ==========================================
-  // 1. DATA & STATE
-  // ==========================================
-  const wrapper = document.querySelector(
-    ".store-template-wrapper",
-  ) as HTMLElement;
-  const productsData = wrapper?.dataset.products
-    ? JSON.parse(wrapper.dataset.products)
-    : [];
-  const storeId = wrapper?.dataset.storeId;
-
-  // ==========================================
-  // 2. INITIALIZE ALL MODULES
-  // ==========================================
-  if (storeId) {
-    initCart(storeId);
-  }
-
-  setupStoreUI();
-  const toggleCart = (window as any).toggleCart;
-
-  // Make updateQuantity available globally for inline onclick handlers in cart-sync.ts
-  (window as any).updateCartItem = (id: string, qty: number) => {
-    updateQuantity(id, qty);
-  };
-
-  setupModalLogic(productsData, toggleCart);
-  setupCheckoutLogic(renderCheckoutSummary, toggleCart);
-
-  // Initialize Product Cards helper
-  function attachToCard(card: HTMLElement) {
-    const pid = card.dataset.id;
-    const stepperWrapper = card.querySelector(".add-action-wrapper");
-    if (stepperWrapper && pid)
-      attachStepperLogic(stepperWrapper, pid, productsData, toggleCart);
-
-    // Add click handler for modal
-    card.addEventListener("click", () => {
-      if ((window as any).openProductModal) {
-        const product = productsData.find((p: any) => p.id === pid);
-        if (product) (window as any).openProductModal(product);
+    /* ERROR STATES */
+    .input-error {
+      border-color: #ef4444 !important;
+      background-color: #fef2f2 !important;
+      animation: shake 0.4s ease-in-out;
+    }
+    @keyframes shake {
+      0%,
+      100% {
+        transform: translateX(0);
       }
-    });
-  }
+      25% {
+        transform: translateX(-5px);
+      }
+      75% {
+        transform: translateX(5px);
+      }
+    }
 
-  document
-    .querySelectorAll(".product-card")
-    .forEach((card) => attachToCard(card as HTMLElement));
+    .select-wrapper {
+      position: relative;
+      width: 100%;
+    }
+    .select-wrapper::after {
+      content: "\e5cf";
+      font-family: "Material Symbols Rounded";
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      opacity: 0.5;
+    }
 
-  // ==========================================
-  // 3. LOAD MORE LOGIC
-  // ==========================================
-  let currentPage = 1;
-  const PAGE_SIZE = 24;
-  const loadMoreBtn = document.getElementById("load-more-btn");
-  const productsGrid = document.getElementById("products-grid");
-  // storeId is already declared above
+    .info-box {
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
 
-  function createProductCardHTML(product: any) {
-    return `
+    /* CART & BUTTON ANIMATIONS */
+    @keyframes cart-bump {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.3);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+    .cart-bump {
+      animation: cart-bump 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes button-pop {
+      0% {
+        transform: scale(0.95);
+        opacity: 0.8;
+      }
+      50% {
+        transform: scale(1.05);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+    .button-click-pop {
+      animation: button-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    /* STEPPER REFINEMENT */
+    .stepper-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: white;
+      padding: 2px;
+      border-radius: 12px;
+      border: 1.5px solid rgba(0, 0, 0, 0.05);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .step-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: rgba(0, 0, 0, 0.03);
+      color: var(--theme-brand);
+      cursor: pointer;
+      transition: var(--transition-smooth);
+    }
+
+    .step-btn:hover {
+      background: var(--theme-brand);
+      color: white;
+    }
+
+    .qty-display {
+      font-weight: 800;
+      min-width: 20px;
+      text-align: center;
+      font-size: 0.95rem;
+      color: var(--theme-brand);
+    }
+  </style>
+
+  <script>
+    import { cartItems, updateQuantity, initCart } from "../../lib/cartStore";
+    import { setupStoreUI } from "../../lib/dom/store-ui";
+    import {
+      syncUI,
+      renderCart,
+      attachStepperLogic,
+    } from "../../lib/dom/cart-sync";
+    import { setupModalLogic } from "../../lib/dom/modal";
+    import {
+      setupCheckoutLogic,
+      renderCheckoutSummary,
+    } from "../../lib/dom/checkout";
+
+    // ==========================================
+    // 1. DATA & STATE
+    // ==========================================
+    const wrapper = document.querySelector(
+      ".store-template-wrapper",
+    ) as HTMLElement;
+    const productsData = wrapper?.dataset.products
+      ? JSON.parse(wrapper.dataset.products)
+      : [];
+    const isPreview = wrapper?.dataset.isPreview === "true";
+    const storeId = wrapper?.dataset.storeId;
+
+    // ==========================================
+    // 2. INITIALIZE ALL MODULES
+    // ==========================================
+    if (storeId && !isPreview) {
+      initCart(storeId);
+    }
+
+    setupStoreUI();
+    const toggleCart = (window as any).toggleCart;
+
+    // Make updateQuantity available globally for inline onclick handlers in cart-sync.ts
+    (window as any).updateCartItem = (id: string, qty: number) => {
+      updateQuantity(id, qty);
+    };
+
+    setupModalLogic(productsData, toggleCart);
+
+    // PREVIEW PROTECTION: Disable checkout listeners if in preview mode
+    if (isPreview) {
+      console.log("Store in Preview Mode: Checkout functionality disabled.");
+      const checkoutBtn = document.querySelector(".checkout-btn");
+      if (checkoutBtn) {
+        (checkoutBtn as HTMLButtonElement).disabled = true;
+        checkoutBtn.innerHTML = "CHECKOUT (DISABLED IN PREVIEW)";
+        checkoutBtn.classList.add("opacity-50", "cursor-not-allowed");
+      }
+
+      // Override toggleCart to prevent opening in preview if desired,
+      // or just leave it to show the empty bag.
+    } else {
+      setupCheckoutLogic(renderCheckoutSummary, toggleCart);
+    }
+
+    // Initialize Product Cards helper
+    function attachToCard(card: HTMLElement) {
+      const pid = card.dataset.id;
+      const stepperWrapper = card.querySelector(".add-action-wrapper");
+      if (stepperWrapper && pid)
+        attachStepperLogic(stepperWrapper, pid, productsData, toggleCart);
+
+      // Add click handler for modal
+      card.addEventListener("click", () => {
+        if ((window as any).openProductModal) {
+          const product = productsData.find((p: any) => p.id === pid);
+          if (product) (window as any).openProductModal(product);
+        }
+      });
+    }
+
+    document
+      .querySelectorAll(".product-card")
+      .forEach((card) => attachToCard(card as HTMLElement));
+
+    // ==========================================
+    // 3. LOAD MORE LOGIC
+    // ==========================================
+    let currentPage = 1;
+    const PAGE_SIZE = 24;
+    const loadMoreBtn = document.getElementById("load-more-btn");
+    const productsGrid = document.getElementById("products-grid");
+    // storeId is already declared above
+
+    function createProductCardHTML(product: any) {
+      return `
       <div class="product-card group" data-id="${product.id}" data-product='${JSON.stringify(product).replace(/'/g, "&apos;")}'>
           <div class="product-image">
               <img src="${product.image}" alt="${product.name}" loading="lazy" />
@@ -499,113 +479,114 @@ const displayProducts =
           </div>
       </div>
     `;
-  }
-
-  if (loadMoreBtn && productsGrid && storeId) {
-    loadMoreBtn.addEventListener("click", async () => {
-      const spinner = loadMoreBtn.querySelector(
-        ".loader-spinner",
-      ) as HTMLElement;
-      loadMoreBtn.setAttribute("disabled", "true");
-      if (spinner) spinner.style.display = "inline";
-
-      try {
-        const from = currentPage * PAGE_SIZE;
-        const to = from + PAGE_SIZE - 1;
-
-        const { data, error } = await (window as any).supabase
-          .from("products")
-          .select("*")
-          .eq("store_id", storeId)
-          .eq("is_in_stock", true)
-          .order("created_at", { ascending: false })
-          .range(from, to);
-
-        if (error) throw error;
-
-        if (data && data.length > 0) {
-          data.forEach((p: any) => {
-            const mappedProduct = {
-              id: p.id,
-              name: p.name,
-              price: p.price,
-              image:
-                p.images?.[0] || "https://placehold.co/600x400?text=No+Image",
-              description: p.description,
-              full_details: p.description,
-              product_notice: p.product_notice,
-              accepts_custom_note: p.accepts_custom_note,
-              stock_quantity: p.stock_quantity,
-              min_stock_level: p.min_stock_level,
-            };
-
-            // 1. Add to local state
-            productsData.push(mappedProduct);
-
-            // 2. Append to grid
-            const tempDiv = document.createElement("div");
-            tempDiv.innerHTML = createProductCardHTML(mappedProduct).trim();
-            const newCard = tempDiv.firstChild as HTMLElement;
-            productsGrid.appendChild(newCard);
-
-            // 3. Attach logic
-            attachToCard(newCard);
-          });
-
-          currentPage++;
-          if (data.length < PAGE_SIZE) {
-            loadMoreBtn.style.display = "none";
-          }
-        } else {
-          loadMoreBtn.style.display = "none";
-        }
-      } catch (err) {
-        console.error("Failed to load more products:", err);
-      } finally {
-        loadMoreBtn.removeAttribute("disabled");
-        if (spinner) spinner.style.display = "none";
-      }
-    });
-  }
-
-  // ==========================================
-  // 4. CART STATE SUBSCRIPTION
-  // ==========================================
-  cartItems.subscribe((items) => {
-    // Sync Card Buttons
-    document.querySelectorAll(".product-card").forEach((card) => {
-      const pid = (card as HTMLElement).dataset.id;
-      if (pid) {
-        const item = items.find((i: any) => i.id === pid);
-        syncUI(pid, item ? item.quantity : 0);
-      }
-    });
-
-    // Update Header Badge
-    const totalCount = items.reduce((acc, i: any) => acc + i.quantity, 0);
-    document
-      .querySelectorAll(".cart-count")
-      .forEach((el) => (el.textContent = totalCount.toString()));
-    const cartCountNum = document.querySelector(".cart-count-num");
-    if (cartCountNum) cartCountNum.textContent = totalCount.toString();
-
-    // Render Drawer
-    renderCart();
-
-    // Update Checkout Summary if open
-    const checkoutPage = document.getElementById("checkout-page");
-    if (checkoutPage?.classList.contains("open")) {
-      renderCheckoutSummary();
     }
 
-    // Shadow state for PaymentProcessor (legacy compatibility)
-    (window as any).cartState = items.reduce(
-      (acc, i: any) => ({ ...acc, [i.id]: i.quantity }),
-      {},
-    );
-    (window as any).cartNotes = items.reduce(
-      (acc, i: any) => ({ ...acc, [i.id]: i.custom_note || "" }),
-      {},
-    );
-  });
-</script>
+    if (loadMoreBtn && productsGrid && storeId) {
+      loadMoreBtn.addEventListener("click", async () => {
+        const spinner = loadMoreBtn.querySelector(
+          ".loader-spinner",
+        ) as HTMLElement;
+        loadMoreBtn.setAttribute("disabled", "true");
+        if (spinner) spinner.style.display = "inline";
+
+        try {
+          const from = currentPage * PAGE_SIZE;
+          const to = from + PAGE_SIZE - 1;
+
+          const { data, error } = await (window as any).supabase
+            .from("products")
+            .select("*")
+            .eq("store_id", storeId)
+            .eq("is_in_stock", true)
+            .order("created_at", { ascending: false })
+            .range(from, to);
+
+          if (error) throw error;
+
+          if (data && data.length > 0) {
+            data.forEach((p: any) => {
+              const mappedProduct = {
+                id: p.id,
+                name: p.name,
+                price: p.price,
+                image:
+                  p.images?.[0] || "https://placehold.co/600x400?text=No+Image",
+                description: p.description,
+                full_details: p.description,
+                product_notice: p.product_notice,
+                accepts_custom_note: p.accepts_custom_note,
+                stock_quantity: p.stock_quantity,
+                min_stock_level: p.min_stock_level,
+              };
+
+              // 1. Add to local state
+              productsData.push(mappedProduct);
+
+              // 2. Append to grid
+              const tempDiv = document.createElement("div");
+              tempDiv.innerHTML = createProductCardHTML(mappedProduct).trim();
+              const newCard = tempDiv.firstChild as HTMLElement;
+              productsGrid.appendChild(newCard);
+
+              // 3. Attach logic
+              attachToCard(newCard);
+            });
+
+            currentPage++;
+            if (data.length < PAGE_SIZE) {
+              loadMoreBtn.style.display = "none";
+            }
+          } else {
+            loadMoreBtn.style.display = "none";
+          }
+        } catch (err) {
+          console.error("Failed to load more products:", err);
+        } finally {
+          loadMoreBtn.removeAttribute("disabled");
+          if (spinner) spinner.style.display = "none";
+        }
+      });
+    }
+
+    // ==========================================
+    // 4. CART STATE SUBSCRIPTION
+    // ==========================================
+    cartItems.subscribe((items) => {
+      // Sync Card Buttons
+      document.querySelectorAll(".product-card").forEach((card) => {
+        const pid = (card as HTMLElement).dataset.id;
+        if (pid) {
+          const item = items.find((i: any) => i.id === pid);
+          syncUI(pid, item ? item.quantity : 0);
+        }
+      });
+
+      // Update Header Badge
+      const totalCount = items.reduce((acc, i: any) => acc + i.quantity, 0);
+      document
+        .querySelectorAll(".cart-count")
+        .forEach((el) => (el.textContent = totalCount.toString()));
+      const cartCountNum = document.querySelector(".cart-count-num");
+      if (cartCountNum) cartCountNum.textContent = totalCount.toString();
+
+      // Render Drawer
+      renderCart();
+
+      // Update Checkout Summary if open
+      const checkoutPage = document.getElementById("checkout-page");
+      if (checkoutPage?.classList.contains("open")) {
+        renderCheckoutSummary();
+      }
+
+      // Shadow state for PaymentProcessor (legacy compatibility)
+      (window as any).cartState = items.reduce(
+        (acc, i: any) => ({ ...acc, [i.id]: i.quantity }),
+        {},
+      );
+      (window as any).cartNotes = items.reduce(
+        (acc, i: any) => ({ ...acc, [i.id]: i.custom_note || "" }),
+        {},
+      );
+    });
+  </script>
+</div>

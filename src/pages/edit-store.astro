@@ -48,6 +48,10 @@ if (Astro.request.method === "POST") {
             instagram_url: formData.get("instagram_url") as string,
             facebook_url: formData.get("facebook_url") as string,
             contact_email: formData.get("contact_email") as string,
+            show_email: formData.get("show_email") === "on",
+            show_whatsapp: formData.get("show_whatsapp") === "on",
+            show_instagram: formData.get("show_instagram") === "on",
+            show_facebook: formData.get("show_facebook") === "on",
             logo: formData.get("logo") as File,
             theme: {
                 colors: {
@@ -83,6 +87,10 @@ const initialStore = {
     whatsapp_number: store.whatsapp_number || "",
     instagram: store.instagram_url || "",
     facebook: store.facebook_url || "",
+    show_email: store.show_email ?? true,
+    show_whatsapp: store.show_whatsapp ?? true,
+    show_instagram: store.show_instagram ?? true,
+    show_facebook: store.show_facebook ?? true,
 };
 
 const previewTheme = store.theme?.colors ||
