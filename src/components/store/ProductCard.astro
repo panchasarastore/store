@@ -56,16 +56,17 @@ const isOutOfStock =
                     </span>
                 )
             }
-            {
-                isOutOfStock && (
-                    <div class="out-of-stock-overlay glass-effect">
-                        <span class="badge out-of-stock-badge">
-                            OUT OF STOCK
-                        </span>
-                    </div>
-                )
-            }
         </div>
+        {
+            isOutOfStock && (
+                <div class="sold-out-ribbon-wrapper">
+                    <span class="sold-out-ribbon">
+                        SOLD OUT
+                    </span>
+                </div>
+                <div class="out-of-stock-overlay" />
+            )
+        }
     </div>
 
     <div class="product-content">
@@ -79,7 +80,7 @@ const isOutOfStock =
 
         <div class="add-action-wrapper" onclick="event.stopPropagation()">
             <button class="big-add-btn" disabled={isOutOfStock}>
-                {isOutOfStock ? "OUT OF STOCK" : "ADD TO CART"}
+                {isOutOfStock ? "SOLD OUT" : "ADD TO CART"}
             </button>
             <div class="stepper-controls" style="display: none;">
                 <button class="step-btn minus">
@@ -161,23 +162,38 @@ const isOutOfStock =
     .out-of-stock-overlay {
         position: absolute;
         inset: 0;
-        background: rgba(255, 255, 255, 0.6);
+        background: rgba(255, 255, 255, 0.1);
         display: flex;
         align-items: center;
         justify-content: center;
         z-index: 4;
-        backdrop-filter: grayscale(1) blur(4px);
+        pointer-events: none;
     }
-    .out-of-stock-badge {
-        background: white !important;
-        color: var(--theme-ink) !important;
-        font-weight: 900 !important;
-        padding: 0.75rem 1.5rem !important;
+    .sold-out-ribbon-wrapper {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100px;
+        height: 100px;
+        z-index: 6;
+        overflow: hidden;
+        pointer-events: none;
+    }
+    .sold-out-ribbon {
+        position: absolute;
+        top: 18px;
+        left: -32px;
+        width: 140px;
+        background: var(--theme-ink);
+        color: white;
+        text-align: center;
+        font-size: 0.65rem;
+        font-weight: 900;
         letter-spacing: 0.1em;
-        font-size: 0.7rem;
-        border-radius: 12px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-        border: 1px solid rgba(0, 0, 0, 0.05);
+        text-transform: uppercase;
+        padding: 6px 0;
+        transform: rotate(-45deg);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     }
     .big-add-btn:disabled {
         background: #f1f1f1 !important;
