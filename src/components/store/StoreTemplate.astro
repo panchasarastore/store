@@ -104,6 +104,8 @@ const displayProducts = products;
   </script>
 
   <style is:inline>
+    @import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@400;500;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Nunito:wght@400;600;700&family=Sora:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;700&family=Fredoka:wght@400;600&family=Quicksand:wght@400;600;700&family=Abril+Fatface&family=Mulish:wght@400;600;700&display=swap");
+
     /* =========================================
    CORE VARIABLES & RESET
 ========================================= */
@@ -164,29 +166,78 @@ const displayProducts = products;
     }
 
     /* FONT PRESETS */
-    .store-template-wrapper[data-font-preset="editorial"] {
-      --font-display: "Playfair Display", serif;
-      --font-heading: "Playfair Display", serif;
-      --font-body: "Inter", sans-serif;
+    .store-template-wrapper[data-font-preset="softloom"] {
+      --font-display: "Cormorant+Garamond", serif;
+      --font-heading: "Cormorant+Garamond", serif;
+      --font-body: "DM+Sans", sans-serif;
     }
-    .store-template-wrapper[data-font-preset="editorial"] .store-name {
+    .store-template-wrapper[data-font-preset="softloom"] .store-template-name {
+      font-family: "Cormorant Garamond", serif;
+      font-style: italic;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .store-template-wrapper[data-font-preset="softloom"] .store-tagline {
+      font-family: "Cormorant Garamond", serif;
       font-style: italic;
     }
 
-    .store-template-wrapper[data-font-preset="modernist"] {
-      --font-display: "Lexend", sans-serif;
-      --font-heading: "Lexend", sans-serif;
-      --font-body: "Inter", sans-serif;
+    .store-template-wrapper[data-font-preset="hearth"] {
+      --font-display: "Playfair+Display", serif;
+      --font-heading: "Playfair+Display", serif;
+      --font-body: "Nunito", sans-serif;
     }
-    .store-template-wrapper[data-font-preset="modernist"] .store-name {
-      text-transform: uppercase;
-      letter-spacing: -0.02em;
+    .store-template-wrapper[data-font-preset="hearth"] .store-template-name {
+      font-family: "Playfair Display", serif;
+      font-weight: 700;
+    }
+    .store-template-wrapper[data-font-preset="hearth"] .store-tagline {
+      font-family: "Playfair Display", serif;
+      font-style: italic;
     }
 
-    .store-template-wrapper[data-font-preset="maker"] {
-      --font-display: "Dosis", sans-serif;
-      --font-heading: "Dosis", sans-serif;
+    .store-template-wrapper[data-font-preset="creator"] {
+      --font-display: "Sora", sans-serif;
+      --font-heading: "Sora", sans-serif;
+      --font-body: "Sora", sans-serif;
+    }
+    .store-template-wrapper[data-font-preset="creator"] .store-template-name {
+      font-family: "Sora", sans-serif;
+      font-weight: 700;
+    }
+
+    .store-template-wrapper[data-font-preset="heritage"] {
+      --font-display: "Lora", serif;
+      --font-heading: "Lora", serif;
+      --font-body: "Inter", sans-serif;
+    }
+    .store-template-wrapper[data-font-preset="heritage"] .store-template-name {
+      font-family: "Lora", serif;
+      font-weight: 700;
+    }
+    .store-template-wrapper[data-font-preset="heritage"] .store-tagline {
+      font-family: "Lora", serif;
+      font-style: italic;
+    }
+
+    .store-template-wrapper[data-font-preset="bloom"] {
+      --font-display: "Fredoka", sans-serif;
+      --font-heading: "Fredoka", sans-serif;
       --font-body: "Quicksand", sans-serif;
+    }
+    .store-template-wrapper[data-font-preset="bloom"] .store-template-name {
+      font-family: "Fredoka", sans-serif;
+      font-weight: 600;
+    }
+
+    .store-template-wrapper[data-font-preset="loom"] {
+      --font-display: "Abril+Fatface", serif;
+      --font-heading: "Abril+Fatface", serif;
+      --font-body: "Mulish", sans-serif;
+    }
+    .store-template-wrapper[data-font-preset="loom"] .store-template-name {
+      font-family: "Abril Fatface", serif;
+      font-weight: 400;
     }
 
     /* LAYOUT PRESETS */

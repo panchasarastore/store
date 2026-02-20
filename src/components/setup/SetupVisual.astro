@@ -4,9 +4,10 @@ interface Props {
     previewTheme: any;
     previewFonts: any;
     layout_preset?: string;
+    errors?: Record<string, string>;
 }
 
-const { previewTheme, previewFonts, layout_preset } = Astro.props;
+const { previewTheme, previewFonts, layout_preset, errors = {} } = Astro.props;
 ---
 
 <section class="space-y-6">
@@ -193,19 +194,40 @@ const { previewTheme, previewFonts, layout_preset } = Astro.props;
                 <input
                     type="radio"
                     name="font_preset"
-                    value="editorial"
-                    checked={previewFonts.heading === "editorial"}
+                    value="softloom"
+                    checked={previewFonts.heading === "softloom"}
                     class="peer sr-only"
                 />
                 <div
                     class="p-3 border-2 border-slate-100 rounded-xl hover:bg-slate-50 peer-checked:border-primary peer-checked:bg-orange-50 transition-all text-center"
                 >
                     <span
-                        class="block text-2xl mb-1"
+                        class="block text-2xl mb-1 italic"
+                        style="font-family: 'Cormorant Garamond', serif;"
+                        >Aa</span
+                    >
+                    <span class="text-[10px] uppercase font-bold text-slate-500"
+                        >Softloom</span
+                    >
+                </div>
+            </label>
+            <label class="cursor-pointer relative">
+                <input
+                    type="radio"
+                    name="font_preset"
+                    value="hearth"
+                    checked={previewFonts.heading === "hearth"}
+                    class="peer sr-only"
+                />
+                <div
+                    class="p-3 border-2 border-slate-100 rounded-xl hover:bg-slate-50 peer-checked:border-primary peer-checked:bg-orange-50 transition-all text-center"
+                >
+                    <span
+                        class="block text-2xl mb-1 font-bold"
                         style="font-family: 'Playfair Display', serif;">Aa</span
                     >
                     <span class="text-[10px] uppercase font-bold text-slate-500"
-                        >Editorial</span
+                        >Hearth</span
                     >
                 </div>
             </label>
@@ -213,19 +235,42 @@ const { previewTheme, previewFonts, layout_preset } = Astro.props;
                 <input
                     type="radio"
                     name="font_preset"
-                    value="modernist"
-                    checked={previewFonts.heading === "modernist"}
+                    value="creator"
+                    checked={previewFonts.heading === "creator"}
                     class="peer sr-only"
                 />
                 <div
                     class="p-3 border-2 border-slate-100 rounded-xl hover:bg-slate-50 peer-checked:border-primary peer-checked:bg-orange-50 transition-all text-center"
                 >
                     <span
-                        class="block text-2xl mb-1"
-                        style="font-family: 'Lexend', sans-serif;">Aa</span
+                        class="block text-2xl mb-1 font-bold"
+                        style="font-family: 'Sora', sans-serif;">AA</span
                     >
                     <span class="text-[10px] uppercase font-bold text-slate-500"
-                        >Modern</span
+                        >Creator</span
+                    >
+                </div>
+            </label>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 mt-3">
+            <label class="cursor-pointer relative">
+                <input
+                    type="radio"
+                    name="font_preset"
+                    value="heritage"
+                    checked={previewFonts.heading === "heritage"}
+                    class="peer sr-only"
+                />
+                <div
+                    class="p-3 border-2 border-slate-100 rounded-xl hover:bg-slate-50 peer-checked:border-primary peer-checked:bg-orange-50 transition-all text-center"
+                >
+                    <span
+                        class="block text-2xl mb-1 font-bold"
+                        style="font-family: 'Lora', serif;">Aa</span
+                    >
+                    <span class="text-[10px] uppercase font-bold text-slate-500"
+                        >Heritage</span
                     >
                 </div>
             </label>
@@ -233,19 +278,39 @@ const { previewTheme, previewFonts, layout_preset } = Astro.props;
                 <input
                     type="radio"
                     name="font_preset"
-                    value="maker"
-                    checked={previewFonts.heading === "maker"}
+                    value="bloom"
+                    checked={previewFonts.heading === "bloom"}
                     class="peer sr-only"
                 />
                 <div
                     class="p-3 border-2 border-slate-100 rounded-xl hover:bg-slate-50 peer-checked:border-primary peer-checked:bg-orange-50 transition-all text-center"
                 >
                     <span
-                        class="block text-2xl mb-1"
-                        style="font-family: 'Quicksand', sans-serif;">Aa</span
+                        class="block text-2xl mb-1 font-semibold"
+                        style="font-family: 'Fredoka', sans-serif;">Aa</span
                     >
                     <span class="text-[10px] uppercase font-bold text-slate-500"
-                        >Maker</span
+                        >Bloom</span
+                    >
+                </div>
+            </label>
+            <label class="cursor-pointer relative">
+                <input
+                    type="radio"
+                    name="font_preset"
+                    value="loom"
+                    checked={previewFonts.heading === "loom"}
+                    class="peer sr-only"
+                />
+                <div
+                    class="p-3 border-2 border-slate-100 rounded-xl hover:bg-slate-50 peer-checked:border-primary peer-checked:bg-orange-50 transition-all text-center"
+                >
+                    <span
+                        class="block text-2xl mb-1 uppercase font-bold"
+                        style="font-family: 'Abril Fatface', serif;">Aa</span
+                    >
+                    <span class="text-[10px] uppercase font-bold text-slate-500"
+                        >Loom</span
                     >
                 </div>
             </label>

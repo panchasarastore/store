@@ -12,9 +12,10 @@ interface Props {
         show_instagram: boolean;
         show_facebook: boolean;
     };
+    errors?: Record<string, string>;
 }
 
-const { initialStore } = Astro.props;
+const { initialStore, errors = {} } = Astro.props;
 ---
 
 <section class="space-y-5">
@@ -28,18 +29,28 @@ const { initialStore } = Astro.props;
     <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
         <div class="flex justify-between items-center mb-2">
             <span class="text-xs font-bold text-slate-500 uppercase"
-                >Location</span
+                >Store Location</span
             >
         </div>
         <input
             type="text"
+            id="store_address_input"
             name="store_address"
             placeholder="City, Region (e.g. Kochi, Kerala)"
             value={initialStore.address}
-            class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white focus:border-primary focus:ring-1 focus:ring-primary text-sm"
+            required
+            class={`w-full px-3 py-2 rounded-lg border bg-white focus:border-primary focus:ring-1 focus:ring-primary text-sm transition-all ${errors.store_address ? "border-red-500 ring-1 ring-red-100" : "border-slate-200"}`}
         />
-        <p class="text-[10px] text-slate-400 mt-1.5 ml-1">
-            Leave blank to hide. Long addresses will be truncated.
+        {
+            errors.store_address && (
+                <p class="text-xs text-red-500 mt-1 font-bold italic">
+                    {errors.store_address}
+                </p>
+            )
+        }
+        <p class="text-[10px] text-slate-500 mt-2 ml-1 leading-tight">
+            📍 This address is used to show "Store Pickup" options and calculate
+            delivery during checkout.
         </p>
     </div>
 
@@ -68,8 +79,15 @@ const { initialStore } = Astro.props;
                 name="contact_email"
                 placeholder="Email"
                 value={initialStore.email}
-                class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white focus:border-primary focus:ring-1 focus:ring-primary text-sm transition-all"
+                class={`w-full px-3 py-2 rounded-lg border bg-white focus:border-primary focus:ring-1 focus:ring-primary text-sm transition-all ${errors.contact_email ? "border-red-500 ring-1 ring-red-100" : "border-slate-200"}`}
             />
+            {
+                errors.contact_email && (
+                    <p class="text-xs text-red-500 mt-1 font-bold italic">
+                        {errors.contact_email}
+                    </p>
+                )
+            }
         </div>
 
         <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
@@ -96,8 +114,15 @@ const { initialStore } = Astro.props;
                 name="whatsapp_number"
                 placeholder="Number (e.g. +91...)"
                 value={initialStore.whatsapp_number}
-                class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white focus:border-primary focus:ring-1 focus:ring-primary text-sm transition-all"
+                class={`w-full px-3 py-2 rounded-lg border bg-white focus:border-primary focus:ring-1 focus:ring-primary text-sm transition-all ${errors.whatsapp_number ? "border-red-500 ring-1 ring-red-100" : "border-slate-200"}`}
             />
+            {
+                errors.whatsapp_number && (
+                    <p class="text-xs text-red-500 mt-1 font-bold italic">
+                        {errors.whatsapp_number}
+                    </p>
+                )
+            }
             <p
                 class="text-[10px] text-slate-400 mt-1.5 ml-1 flex items-center gap-1"
                 id="whatsapp_hint"

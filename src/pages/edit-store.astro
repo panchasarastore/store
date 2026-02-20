@@ -24,7 +24,7 @@ if (!store) {
     return Astro.redirect("/create-store");
 }
 
-let error = "";
+let errors: Record<string, string> = {};
 const isEditMode = true;
 
 // 3. Handle Form Submission
@@ -72,7 +72,13 @@ if (Astro.request.method === "POST") {
         await updateStore(Astro.locals.supabase, store.id, data);
         return Astro.redirect(import.meta.env.PUBLIC_DASHBOARD_URL);
     } catch (e: any) {
-        error = e.message;
+        const msg = e.message || "";
+        if (msg.startsWith("FIELD_ERROR:")) {
+            const [_, field, message] = msg.split(":");
+            errors[field] = message;
+        } else {
+            errors.form = msg;
+        }
     }
 }
 
@@ -143,21 +149,22 @@ const previewProducts = [
                     enctype="multipart/form-data"
                 >
                     {
-                        error && (
+                        errors.form && (
                             <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm font-medium animate-pulse">
-                                {error}
+                                {errors.form}
                             </div>
                         )
                     }
 
-                    <SetupBasics initialStore={initialStore} />
-                    <SetupBrand initialStore={initialStore} />
+                    <SetupBasics initialStore={initialStore} errors={errors} />
+                    <SetupBrand initialStore={initialStore} errors={errors} />
                     <SetupVisual
                         previewTheme={previewTheme}
                         previewFonts={previewFonts}
                         layout_preset={layout_preset}
+                        errors={errors}
                     />
-                    <SetupContact initialStore={initialStore} />
+                    <SetupContact initialStore={initialStore} errors={errors} />
                 </form>
             </div>
 
