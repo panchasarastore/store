@@ -7,6 +7,7 @@ export interface CartItem {
     quantity: number;
     image: string;
     custom_note?: string;
+    stock_quantity: number | null;
 }
 
 export const isBrowser = typeof window !== 'undefined';
@@ -71,7 +72,7 @@ export const cartSubtotal = computed(cartItems, (items) =>
 
 // --- Actions ---
 
-export function addItem(product: Omit<CartItem, 'quantity' | 'custom_note'> & { stock_quantity?: number | null }, note?: string) {
+export function addItem(product: Omit<CartItem, 'quantity' | 'custom_note'>, note?: string) {
     if (!activeStoreId) {
         console.warn("Cart not initialized with a Store ID!");
         // Optional: fallback or throw
@@ -109,11 +110,16 @@ export function updateQuantity(id: string, quantity: number, maxStock?: number |
         return true;
     }
 
-    if (maxStock !== null && maxStock !== undefined && quantity > maxStock) {
+    const items = cartItems.get();
+    const item = items.find(i => i.id === id);
+
+    // Use provided maxStock or fall back to stored stock_quantity
+    const effectiveMax = (maxStock !== undefined) ? maxStock : (item?.stock_quantity ?? null);
+
+    if (effectiveMax !== null && quantity > effectiveMax) {
         return false; // Limit reached
     }
 
-    const items = cartItems.get();
     cartItems.set(
         items.map((item) => (item.id === id ? { ...item, quantity } : item))
     );
