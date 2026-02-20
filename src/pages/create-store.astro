@@ -56,9 +56,10 @@ if (Astro.request.method === "POST") {
         },
         fonts: {
           heading: formData.get("font_preset") as string,
-          body: formData.get("vibe_preset") as string,
+          body: "", // body is deprecated
         },
       },
+      layout_preset: formData.get("layout_preset") as string,
     };
 
     await createStore(Astro.locals.supabase, data);

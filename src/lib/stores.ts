@@ -76,7 +76,7 @@ export interface CreateStoreInput {
   show_facebook?: boolean;
 
   logo?: File | null;
-
+  layout_preset?: string | null;
   theme?: {
     colors?: {
       primary?: string;
@@ -87,7 +87,7 @@ export interface CreateStoreInput {
     };
     fonts?: {
       heading?: string;
-      body?: string;
+      // body is being deprecated in favor of layout_preset at the top level
     };
   };
 }
@@ -95,11 +95,13 @@ export interface CreateStoreInput {
 /**
  * Create a store for the current user.
  */
+/**
+ * Create a store for the current user.
+ */
 export async function createStore(supabaseClient: SupabaseClient, input: CreateStoreInput) {
   const {
     name,
     slug,
-    // ... (trimmed for replacement brevity but keeping the rest of the logic)
     tagline = null,
     about_us = null,
     whatsapp_number = null,
@@ -113,6 +115,7 @@ export async function createStore(supabaseClient: SupabaseClient, input: CreateS
     show_facebook = true,
     logo = null,
     theme = undefined,
+    layout_preset = 'natural',
   } = input;
 
   // ----------------------------
@@ -196,6 +199,7 @@ export async function createStore(supabaseClient: SupabaseClient, input: CreateS
       show_instagram,
       show_facebook,
 
+      layout_preset,
       theme,
       status: 'active',
     })
@@ -209,7 +213,7 @@ export async function createStore(supabaseClient: SupabaseClient, input: CreateS
         throw new Error('You already have a store');
       }
       if (detail.includes('store_url_slug')) {
-        throw new Error('This store URL is already taken');
+        throw new Error('FIELD_ERROR:store_url_slug:This store URL is already taken');
       }
       throw new Error('A store with these details already exists');
     }
@@ -259,7 +263,6 @@ export async function createStore(supabaseClient: SupabaseClient, input: CreateS
  */
 export async function updateStore(supabaseClient: SupabaseClient, id: string, input: CreateStoreInput) {
   const {
-    // ...
     name,
     slug,
     tagline = null,
@@ -275,6 +278,7 @@ export async function updateStore(supabaseClient: SupabaseClient, id: string, in
     show_facebook = true,
     logo = null,
     theme = undefined,
+    layout_preset = 'natural',
   } = input;
 
   // ----------------------------
@@ -356,6 +360,7 @@ export async function updateStore(supabaseClient: SupabaseClient, id: string, in
       show_instagram,
       show_facebook,
 
+      layout_preset,
       theme,
     })
     .eq('id', id)
@@ -365,7 +370,7 @@ export async function updateStore(supabaseClient: SupabaseClient, id: string, in
 
   if (updateError) {
     if (updateError.code === '23505') {
-      throw new Error('This store URL is already taken');
+      throw new Error('FIELD_ERROR:store_url_slug:This store URL is already taken');
     }
 
     console.error('Error updating store:', updateError);

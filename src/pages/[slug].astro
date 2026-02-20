@@ -99,7 +99,7 @@ const products = (productsData || []).map((p) => ({
       }}
       theme={colors}
       font={fonts.heading}
-      layout={fonts.body}
+      layout={store.layout_preset || fonts.body}
       products={products}
       isPreview={false}
     />

@@ -3,9 +3,10 @@
 interface Props {
     previewTheme: any;
     previewFonts: any;
+    layout_preset?: string;
 }
 
-const { previewTheme, previewFonts } = Astro.props;
+const { previewTheme, previewFonts, layout_preset } = Astro.props;
 ---
 
 <section class="space-y-6">
@@ -25,9 +26,10 @@ const { previewTheme, previewFonts } = Astro.props;
             <label class="cursor-pointer relative group">
                 <input
                     type="radio"
-                    name="vibe_preset"
+                    name="layout_preset"
                     value="natural"
-                    checked={previewFonts.body === "natural"}
+                    checked={previewFonts.body === "natural" ||
+                        Astro.props.layout_preset === "natural"}
                     class="peer sr-only"
                 />
                 <div
@@ -42,9 +44,10 @@ const { previewTheme, previewFonts } = Astro.props;
             <label class="cursor-pointer relative group">
                 <input
                     type="radio"
-                    name="vibe_preset"
+                    name="layout_preset"
                     value="gallery"
-                    checked={previewFonts.body === "gallery"}
+                    checked={previewFonts.body === "gallery" ||
+                        Astro.props.layout_preset === "gallery"}
                     class="peer sr-only"
                 />
                 <div
@@ -62,9 +65,10 @@ const { previewTheme, previewFonts } = Astro.props;
             <label class="cursor-pointer relative group">
                 <input
                     type="radio"
-                    name="vibe_preset"
+                    name="layout_preset"
                     value="pop"
-                    checked={previewFonts.body === "pop"}
+                    checked={previewFonts.body === "pop" ||
+                        Astro.props.layout_preset === "pop"}
                     class="peer sr-only"
                 />
                 <div

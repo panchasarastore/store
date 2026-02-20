@@ -104,8 +104,8 @@ import StoreTemplate from "../components/store/StoreTemplate.astro";
         // 4. Update Attributes (Font & Vibe)
         if (data.font_preset)
           container.setAttribute("data-font-preset", data.font_preset);
-        if (data.vibe_preset)
-          container.setAttribute("data-layout", data.vibe_preset);
+        if (data.layout_preset)
+          container.setAttribute("data-layout", data.layout_preset);
 
         // 5. Update Visibility Toggles
         // Note: Checkbox values come as strings/booleans depending on transmission, checking existence or 'on'
@@ -172,8 +172,8 @@ import StoreTemplate from "../components/store/StoreTemplate.astro";
         // 4. Attributes (Font & Vibe)
         if (data.font_preset)
           container.setAttribute("data-font-preset", data.font_preset);
-        if (data.vibe_preset)
-          container.setAttribute("data-layout", data.vibe_preset);
+        if (data.layout_preset)
+          container.setAttribute("data-layout", data.layout_preset);
 
         // 5. Visibility Toggles
         toggleVisibility(

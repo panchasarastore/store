@@ -7,8 +7,8 @@
     const browserUrl = document.querySelector(".browser-url");
     const broadcast = new BroadcastChannel("panchasara_preview_sync");
 
-    // Vibe Presets
-    const vibes = {
+    // Layout Presets
+    const layouts = {
         natural: {
             primary: "#5D4037",
             secondary: "#8D6E63",
@@ -118,8 +118,8 @@
         // 3. Fonts & Layout Sync
         if (data.font_preset)
             previewContainer.setAttribute("data-font-preset", data.font_preset);
-        if (data.vibe_preset)
-            previewContainer.setAttribute("data-layout", data.vibe_preset);
+        if (data.layout_preset)
+            previewContainer.setAttribute("data-layout", data.layout_preset);
 
         // 4. Text Sync
         for (const [name, selectorList] of Object.entries(textMappings)) {
@@ -231,10 +231,10 @@
     form?.addEventListener("input", (e) => {
         const input = e.target as HTMLInputElement;
         if (
-            input.name === "vibe_preset" &&
-            vibes[input.value as keyof typeof vibes]
+            input.name === "layout_preset" &&
+            layouts[input.value as keyof typeof layouts]
         ) {
-            updateColorInputs(vibes[input.value as keyof typeof vibes]);
+            updateColorInputs(layouts[input.value as keyof typeof layouts]);
         } else if (input.name.startsWith("show_")) {
             updateSocialValidation();
             applyChanges();

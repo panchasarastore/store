@@ -7,10 +7,16 @@ interface Props {
     previewTheme: any;
     previewFonts: any;
     previewProducts: any;
+    layout_preset?: string;
 }
 
-const { initialStore, previewTheme, previewFonts, previewProducts } =
-    Astro.props;
+const {
+    initialStore,
+    previewTheme,
+    previewFonts,
+    previewProducts,
+    layout_preset,
+} = Astro.props;
 ---
 
 <main
@@ -65,7 +71,7 @@ const { initialStore, previewTheme, previewFonts, previewProducts } =
                 products={previewProducts}
                 isPreview={true}
                 font={previewFonts.heading}
-                layout={previewFonts.body}
+                layout={layout_preset || previewFonts.body}
             />
         </div>
     </div>

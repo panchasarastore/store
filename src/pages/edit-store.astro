@@ -63,9 +63,10 @@ if (Astro.request.method === "POST") {
                 },
                 fonts: {
                     heading: formData.get("font_preset") as string,
-                    body: formData.get("vibe_preset") as string, // Note: This is currently how it's stored in DB
+                    body: "", // body is deprecated
                 },
             },
+            layout_preset: formData.get("layout_preset") as string,
         };
 
         await updateStore(Astro.locals.supabase, store.id, data);
@@ -104,8 +105,10 @@ const previewTheme = store.theme?.colors ||
 
 const previewFonts = store.theme?.fonts || {
     heading: "editorial",
-    body: "natural",
 };
+
+const layout_preset =
+    store.layout_preset || store.theme?.fonts?.body || "natural";
 
 const previewProducts = [
     {
@@ -152,6 +155,7 @@ const previewProducts = [
                     <SetupVisual
                         previewTheme={previewTheme}
                         previewFonts={previewFonts}
+                        layout_preset={layout_preset}
                     />
                     <SetupContact initialStore={initialStore} />
                 </form>
@@ -165,6 +169,7 @@ const previewProducts = [
             previewTheme={previewTheme}
             previewFonts={previewFonts}
             previewProducts={previewProducts}
+            layout_preset={layout_preset}
         />
     </div>
 
