@@ -499,6 +499,25 @@ const displayProducts = products;
         width: 100%;
       }
     }
+    /* CART WARNINGS */
+    .cart-item.has-error {
+      background: rgba(239, 68, 68, 0.03);
+      border-radius: 12px;
+      padding: 0.5rem;
+      margin: -0.5rem;
+    }
+    .stock-warning {
+      color: #ef4444;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+    .disabled-opacity {
+      opacity: 0.5;
+      cursor: not-allowed !important;
+    }
   </style>
 
   <script>
@@ -705,17 +724,169 @@ const displayProducts = products;
     }
 
     // ==========================================
-    // 4. CART STATE SUBSCRIPTION
+    // 4. REAL-TIME UPDATES
+    // ==========================================
+    import { updateStock } from "../../lib/cartStore";
+
+    if (storeId && (window as any).supabase) {
+      console.log("Initializing Real-time for Store:", storeId);
+      (window as any).supabase
+        .channel(`store_products_${storeId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "products",
+            filter: `store_id=eq.${storeId}`,
+          },
+          (payload: any) => {
+            const updated = payload.new;
+            console.log(
+              "Real-time Update received:",
+              updated.name,
+              "Stock:",
+              updated.stock_quantity,
+            );
+
+            // 1. Update local productsData
+            const pIdx = productsData.findIndex(
+              (p: any) => p.id === updated.id,
+            );
+            if (pIdx > -1) {
+              productsData[pIdx] = {
+                ...productsData[pIdx],
+                stock_quantity: updated.stock_quantity,
+                is_in_stock: updated.is_in_stock,
+                track_inventory: updated.track_inventory,
+              };
+            }
+
+            // 2. Update Cart Store (caps quantity if stock dropped)
+            updateStock(updated.id, updated.stock_quantity);
+
+            // 3. Update UI DOM Elements
+            const cards = document.querySelectorAll(
+              `.product-card[data-id="${updated.id}"]`,
+            );
+            cards.forEach((cardEl: any) => {
+              const isOutOfStock =
+                updated.is_in_stock === false ||
+                (updated.track_inventory &&
+                  updated.stock_quantity !== null &&
+                  updated.stock_quantity <= 0);
+              const isLowStock =
+                updated.stock_quantity !== null &&
+                updated.stock_quantity > 0 &&
+                updated.stock_quantity <= (updated.min_stock_level || 5);
+
+              // Update ribbons and overlays
+              let ribbon = cardEl.querySelector(".sold-out-ribbon-wrapper");
+              let overlay = cardEl.querySelector(".out-of-stock-overlay");
+
+              if (isOutOfStock) {
+                if (!ribbon) {
+                  cardEl.querySelector(".product-image").insertAdjacentHTML(
+                    "beforeend",
+                    `
+                    <div class="sold-out-ribbon-wrapper">
+                      <span class="sold-out-ribbon">SOLD OUT</span>
+                    </div>
+                  `,
+                  );
+                }
+                if (!overlay) {
+                  cardEl
+                    .querySelector(".product-image")
+                    .insertAdjacentHTML(
+                      "beforeend",
+                      '<div class="out-of-stock-overlay"></div>',
+                    );
+                }
+              } else {
+                ribbon?.remove();
+                overlay?.remove();
+              }
+
+              // Update "Selling Fast" badge
+              let warningBadge = cardEl.querySelector(".warning-badge");
+              if (isLowStock && !isOutOfStock) {
+                if (!warningBadge) {
+                  cardEl
+                    .querySelector(".card-badges")
+                    .insertAdjacentHTML(
+                      "afterbegin",
+                      '<span class="badge warning-badge glass-effect warning">Selling Fast!</span>',
+                    );
+                }
+              } else {
+                warningBadge?.remove();
+              }
+
+              // Update Buttons
+              const addBtn = cardEl.querySelector(".big-add-btn");
+              if (addBtn) {
+                addBtn.disabled = isOutOfStock;
+                addBtn.textContent = isOutOfStock ? "SOLD OUT" : "ADD TO CART";
+              }
+
+              // Update internal data attribute for syncUI
+              cardEl.dataset.product = JSON.stringify(
+                productsData[pIdx],
+              ).replace(/'/g, "&apos;");
+            });
+
+            // 4. Update Modal if open
+            const modal = document.getElementById(
+              "product-modal",
+            ) as HTMLDialogElement;
+            if (modal && modal.open) {
+              const modalId = (window as any).currentModalProductId;
+              if (modalId === updated.id) {
+                const isOutOfStock =
+                  updated.is_in_stock === false ||
+                  (updated.track_inventory &&
+                    updated.stock_quantity !== null &&
+                    updated.stock_quantity <= 0);
+                const alert = document.getElementById("modal-stock-alert");
+                const addBtn = modal.querySelector(
+                  ".big-add-btn",
+                ) as HTMLButtonElement;
+
+                if (alert)
+                  alert.style.display =
+                    updated.stock_quantity !== null &&
+                    updated.stock_quantity <= (updated.min_stock_level || 5) &&
+                    !isOutOfStock
+                      ? "inline-block"
+                      : "none";
+                if (addBtn) {
+                  addBtn.disabled = isOutOfStock;
+                  addBtn.textContent = isOutOfStock
+                    ? "SOLD OUT"
+                    : "ADD TO CART";
+                }
+              }
+            }
+          },
+        )
+        .subscribe();
+    }
+
+    // ==========================================
+    // 5. CART STATE SUBSCRIPTION
     // ==========================================
     cartItems.subscribe((items) => {
       // Sync Card Buttons
-      document.querySelectorAll(".product-card").forEach((card) => {
-        const pid = (card as HTMLElement).dataset.id;
-        if (pid) {
-          const item = items.find((i: any) => i.id === pid);
-          syncUI(pid, item ? item.quantity : 0);
-        }
-      });
+      document
+        .querySelectorAll(".product-card:not([data-loading])")
+        .forEach((card) => {
+          const pid = (card as HTMLElement).dataset.id;
+          if (pid) {
+            const item = items.find((i: any) => i.id === pid);
+            syncUI(pid, item ? item.quantity : 0);
+          }
+        });
 
       // Update Header Badge
       const totalCount = items.reduce((acc, i: any) => acc + i.quantity, 0);

@@ -33,14 +33,19 @@ export function renderCart() {
     container.innerHTML = "";
     let total = 0;
     let hasItems = false;
+    let hasStockError = false;
 
     items.forEach((item) => {
         if (item.quantity > 0) {
             hasItems = true;
             total += item.price * item.quantity;
 
+            const isOverStock = item.stock_quantity !== null && item.quantity > item.stock_quantity;
+            const isSoldOut = item.stock_quantity !== null && item.stock_quantity <= 0;
+            if (isOverStock || isSoldOut) hasStockError = true;
+
             const itemHTML = `
-                <div class="cart-item">
+                <div class="cart-item ${isOverStock || isSoldOut ? 'has-error' : ''}">
                     <img src="${item.image}" class="cart-item-img" alt="${item.name}">
                     <div class="cart-item-details">
                         <div class="cart-item-top">
@@ -52,9 +57,11 @@ export function renderCart() {
                             <div class="mini-stepper">
                                 <button class="mini-step-btn" onclick="updateCartItem('${item.id}', ${item.quantity - 1})">-</button>
                                 <span class="mini-step-qty">${item.quantity}</span>
-                                <button class="mini-step-btn" onclick="updateCartItem('${item.id}', ${item.quantity + 1})">+</button>
+                                <button class="mini-step-btn" onclick="updateCartItem('${item.id}', ${item.quantity + 1})" ${isOverStock ? 'disabled' : ''}>+</button>
                             </div>
                         </div>
+                        ${isSoldOut ? '<div class="stock-warning">Sold out! Please remove.</div>' :
+                    isOverStock ? `<div class="stock-warning">Only ${item.stock_quantity} remaining.</div>` : ''}
                     </div>
                     <button class="cart-remove-btn" onclick="updateCartItem('${item.id}', 0)" title="Remove Product">
                         <span class="material-symbols-rounded">close</span>
@@ -67,6 +74,23 @@ export function renderCart() {
 
     if (!hasItems) container.innerHTML = '<div class="cart-empty-state">Your bag is empty</div>';
     if (totalPriceEl) totalPriceEl.textContent = `₹${total.toFixed(2)}`;
+
+    // Disable/Enable checkout button based on stock
+    const checkoutBtn = document.querySelector(".checkout-btn") as HTMLButtonElement;
+    if (checkoutBtn) {
+        if (hasStockError) {
+            checkoutBtn.disabled = true;
+            checkoutBtn.classList.add("disabled-opacity");
+            const btnText = checkoutBtn.querySelector('.btn-text') || checkoutBtn;
+            btnText.textContent = "INSUFFICIENT STOCK";
+        } else {
+            checkoutBtn.disabled = false || !hasItems;
+            checkoutBtn.classList.remove("disabled-opacity");
+            const btnText = checkoutBtn.querySelector('.btn-text') || checkoutBtn;
+            btnText.textContent = "CHECKOUT";
+        }
+    }
+
 }
 
 export function attachStepperLogic(wrapper: Element, productId: string, productsData: any[], toggleCart: (open: boolean) => void) {

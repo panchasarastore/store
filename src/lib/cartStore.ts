@@ -138,6 +138,23 @@ export function setNote(id: string, note: string) {
     );
 }
 
+export function updateStock(id: string, newStock: number | null) {
+    const items = cartItems.get();
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+
+    const newItems = items.map(i => {
+        if (i.id === id) {
+            return { ...i, stock_quantity: newStock };
+        }
+        return i;
+    });
+
+    if (JSON.stringify(items) !== JSON.stringify(newItems)) {
+        cartItems.set(newItems);
+    }
+}
+
 export function clearCart() {
     cartItems.set([]);
 }
