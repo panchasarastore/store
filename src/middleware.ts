@@ -8,7 +8,7 @@ const STORAGE_KEY = 'sb-auth-token';
 
 export const onRequest = defineMiddleware(async ({ cookies, locals, request, url }, next) => {
     // Skip middleware for public pages (static pages that don't need auth)
-    const publicPaths = ['/', '/favicon.ico'];
+    const publicPaths = ['/', '/favicon.ico', '/track'];
     if (publicPaths.includes(url.pathname)) {
         return next();
     }
