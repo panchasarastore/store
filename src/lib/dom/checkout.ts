@@ -28,6 +28,79 @@ export function setupCheckoutLogic(renderCheckoutSummary: () => void, toggleCart
                 checkoutPage.scrollTop = 0;
                 window.scrollTo(0, 0);
             }, 500);
+
+            // Set today as the minimum date to prevent past-date selection
+            const dateInput = document.getElementById("input-date") as HTMLInputElement;
+            const timeSelect = document.getElementById("input-time") as HTMLSelectElement;
+
+            if (dateInput) {
+                const today = new Date().toISOString().split('T')[0];
+                dateInput.setAttribute('min', today);
+
+                const wrapper = document.querySelector(".store-template-wrapper") as HTMLElement;
+                const blackoutDatesStr = wrapper?.dataset.blackoutDates;
+                const operatingHoursStr = wrapper?.dataset.operatingHours;
+
+                let blackoutDates: string[] = [];
+                let operatingHours: any = {};
+
+                try {
+                    if (blackoutDatesStr) blackoutDates = JSON.parse(blackoutDatesStr);
+                    if (operatingHoursStr) operatingHours = JSON.parse(operatingHoursStr);
+                } catch (e) {
+                    console.error("Error parsing store settings", e);
+                }
+
+                dateInput.addEventListener('change', () => {
+                    const selectedDate = dateInput.value;
+                    if (!selectedDate) return;
+
+                    // 1. Check Blackout Dates
+                    if (blackoutDates.includes(selectedDate)) {
+                        alert("The store is closed on this date. Please select another date.");
+                        dateInput.value = "";
+                        if (timeSelect) timeSelect.innerHTML = '<option value="">Select a date first</option>';
+                        return;
+                    }
+
+                    // 2. Populate Time Slots
+                    if (timeSelect) {
+                        const date = new Date(selectedDate);
+                        const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+                        const dayName = days[date.getDay()];
+                        const slots = operatingHours[dayName] || [];
+
+                        if (slots.length === 0) {
+                            alert(`The store is closed on ${dayName.charAt(0).toUpperCase() + dayName.slice(1)}s.`);
+                            dateInput.value = "";
+                            timeSelect.innerHTML = '<option value="">Select a date first</option>';
+                        } else {
+                            // Filter slots if date is TODAY
+                            let activeSlots = slots;
+                            const now = new Date();
+                            const isToday = date.toDateString() === now.toDateString();
+
+                            if (isToday) {
+                                activeSlots = slots.filter((s: string) => {
+                                    const [start] = s.split(' - ');
+                                    const [hours, mins] = start.split(':').map(Number);
+                                    const slotTime = new Date();
+                                    slotTime.setHours(hours, mins, 0, 0);
+                                    return slotTime > now;
+                                });
+                            }
+
+                            if (activeSlots.length === 0 && isToday) {
+                                alert("Sorry, all time slots for today have passed. Please select tomorrow.");
+                                dateInput.value = "";
+                                timeSelect.innerHTML = '<option value="">Select a date first</option>';
+                            } else {
+                                timeSelect.innerHTML = activeSlots.map((s: string) => `<option value="${s}">${s}</option>`).join('');
+                            }
+                        }
+                    }
+                });
+            }
             renderCheckoutSummary();
 
             maxStepReached = 1;
@@ -113,6 +186,16 @@ export function setupCheckoutLogic(renderCheckoutSummary: () => void, toggleCart
             if (!date.value) {
                 isValid = false;
                 date.classList.add("input-error");
+            } else {
+                // Reject dates in the past
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const selected = new Date(date.value + "T00:00:00");
+                if (selected < today) {
+                    isValid = false;
+                    date.classList.add("input-error");
+                    alert("Please select today's date or a future date.");
+                }
             }
             if (isValid) {
                 const summary2 = document.getElementById("summary-2");
@@ -213,8 +296,9 @@ export function renderCheckoutSummary() {
     const checkedDelivery = document.querySelector('input[name="delivery-mode"]:checked') as HTMLInputElement;
     const mode = checkedDelivery ? checkedDelivery.value : "pickup";
 
-    // TODO: Ideally fetch this from store settings
-    const deliveryFee = mode === "delivery" ? 50 : 0;
+    const wrapper = document.querySelector(".store-template-wrapper") as HTMLElement;
+    const storeDeliveryFee = wrapper?.dataset.deliveryFee ? Number(wrapper.dataset.deliveryFee) : 0;
+    const deliveryFee = mode === "delivery" ? storeDeliveryFee : 0;
     const total = subtotal + deliveryFee;
 
     if (subtotalEl) subtotalEl.textContent = `₹${subtotal.toFixed(2)}`;

@@ -83,30 +83,53 @@ import LocationPicker from "./LocationPicker.astro";
                                 >Delivery Method</label
                             >
 
-                            <div class="delivery-container">
-                                <label class="delivery-option">
-                                    <input
-                                        type="radio"
-                                        name="delivery-mode"
-                                        value="pickup"
-                                        checked
-                                        onchange="toggleDeliveryFields()"
-                                    />
-                                    <span class="material-symbols-rounded"
-                                        >storefront</span
-                                    > Pickup
-                                </label>
-                                <label class="delivery-option">
-                                    <input
-                                        type="radio"
-                                        name="delivery-mode"
-                                        value="delivery"
-                                        onchange="toggleDeliveryFields()"
-                                    />
-                                    <span class="material-symbols-rounded"
-                                        >local_shipping</span
-                                    > Delivery
-                                </label>
+                            <div
+                                class="delivery-container"
+                                style={safeStore.allows_pickup === false ||
+                                safeStore.allows_delivery === false
+                                    ? "display: none;"
+                                    : ""}
+                            >
+                                {
+                                    safeStore.allows_pickup !== false && (
+                                        <label class="delivery-option">
+                                            <input
+                                                type="radio"
+                                                name="delivery-mode"
+                                                value="pickup"
+                                                checked={
+                                                    safeStore.allows_delivery ===
+                                                        false || true
+                                                }
+                                                onchange="toggleDeliveryFields()"
+                                            />
+                                            <span class="material-symbols-rounded">
+                                                storefront
+                                            </span>{" "}
+                                            Pickup
+                                        </label>
+                                    )
+                                }
+                                {
+                                    safeStore.allows_delivery !== false && (
+                                        <label class="delivery-option">
+                                            <input
+                                                type="radio"
+                                                name="delivery-mode"
+                                                value="delivery"
+                                                checked={
+                                                    safeStore.allows_pickup ===
+                                                    false
+                                                }
+                                                onchange="toggleDeliveryFields()"
+                                            />
+                                            <span class="material-symbols-rounded">
+                                                local_shipping
+                                            </span>{" "}
+                                            Delivery
+                                        </label>
+                                    )
+                                }
                             </div>
 
                             <div id="address-fields" style="display: none;">
@@ -247,41 +270,71 @@ import LocationPicker from "./LocationPicker.astro";
                     </div>
 
                     <div class="step-content">
-                        <div class="payment-options">
-                            <label class="payment-card">
-                                <input
-                                    type="radio"
-                                    name="payment"
-                                    value="online"
-                                    checked
-                                />
-                                <span class="custom-radio"></span>
-                                <div class="payment-info">
-                                    <span class="payment-title"
-                                        >UPI / Online</span
-                                    >
-                                    <span class="payment-desc"
-                                        >GPay, PhonePe, Cards</span
-                                    >
-                                </div>
-                            </label>
+                        <div
+                            class="payment-options"
+                            style={safeStore.payment_methods?.length === 1
+                                ? "display: none;"
+                                : ""}
+                        >
+                            {
+                                (safeStore.payment_methods?.includes("upi") ||
+                                    !safeStore.payment_methods) && (
+                                    <label class="payment-card">
+                                        <input
+                                            type="radio"
+                                            name="payment"
+                                            value="online"
+                                            checked={
+                                                !safeStore.payment_methods?.includes(
+                                                    "cod",
+                                                )
+                                            }
+                                        />
+                                        <span class="custom-radio" />
+                                        <div class="payment-info">
+                                            <span class="payment-title">
+                                                UPI / Online
+                                            </span>
+                                            <span class="payment-desc">
+                                                GPay, PhonePe, Cards
+                                            </span>
+                                        </div>
+                                    </label>
+                                )
+                            }
 
-                            <label class="payment-card">
-                                <input
-                                    type="radio"
-                                    name="payment"
-                                    value="pickup"
-                                />
-                                <span class="custom-radio"></span>
-                                <div class="payment-info">
-                                    <span class="payment-title"
-                                        >Pay on Pickup</span
-                                    >
-                                    <span class="payment-desc"
-                                        >Cash or QR at store</span
-                                    >
-                                </div>
-                            </label>
+                            {
+                                (safeStore.payment_methods?.includes("cod") ||
+                                    !safeStore.payment_methods) && (
+                                    <label class="payment-card">
+                                        <input
+                                            type="radio"
+                                            name="payment"
+                                            value="pickup"
+                                            checked={
+                                                safeStore.payment_methods
+                                                    ?.length === 1 &&
+                                                safeStore.payment_methods.includes(
+                                                    "cod",
+                                                )
+                                            }
+                                        />
+                                        <span class="custom-radio" />
+                                        <div class="payment-info">
+                                            <span class="payment-title">
+                                                Pay on{" "}
+                                                {safeStore.allows_delivery ===
+                                                false
+                                                    ? "Pickup"
+                                                    : "Delivery / Pickup"}
+                                            </span>
+                                            <span class="payment-desc">
+                                                Cash or QR at your doorstep
+                                            </span>
+                                        </div>
+                                    </label>
+                                )
+                            }
                         </div>
 
                         <button class="pay-btn" id="final-pay-btn">

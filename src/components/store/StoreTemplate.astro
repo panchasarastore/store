@@ -33,6 +33,10 @@ const safeStore = {
   whatsapp: store.whatsapp_number,
   instagram: store.instagram_url,
   facebook: store.facebook_url,
+  allows_delivery: store.allows_delivery,
+  allows_pickup: store.allows_pickup,
+  payment_methods: store.payment_methods,
+  operating_hours: store.operating_hours,
 };
 
 // 2. Color Mapping
@@ -79,6 +83,11 @@ const displayProducts = products;
   data-products={JSON.stringify(displayProducts)}
   data-store-id={safeStore.id}
   data-is-preview={isPreview}
+  data-delivery-fee={store.delivery_fee || 0}
+  data-allows-delivery={safeStore.allows_delivery !== false}
+  data-allows-pickup={safeStore.allows_pickup !== false}
+  data-blackout-dates={JSON.stringify(store.blackout_dates || [])}
+  data-operating-hours={JSON.stringify(store.operating_hours || {})}
 >
   <StoreNavbar safeStore={safeStore} />
 
