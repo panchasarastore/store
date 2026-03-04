@@ -82,6 +82,7 @@ const displayProducts = products;
   data-layout={layout}
   data-products={JSON.stringify(displayProducts)}
   data-store-id={safeStore.id}
+  data-store-slug={store.store_url_slug}
   data-is-preview={isPreview}
   data-delivery-fee={store.delivery_fee || 0}
   data-allows-delivery={safeStore.allows_delivery !== false}
