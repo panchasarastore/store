@@ -79,7 +79,10 @@ import LocationPicker from "./LocationPicker.astro";
                             style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(0,0,0,0.05);"
                         >
                             <label
-                                style="display:block; margin-bottom: 0.8rem; font-weight: bold;"
+                                style={safeStore.allows_pickup === false ||
+                                safeStore.allows_delivery === false
+                                    ? "display: none;"
+                                    : "display:block; margin-bottom: 0.8rem; font-weight: bold;"}
                                 >Delivery Method</label
                             >
 
@@ -99,7 +102,9 @@ import LocationPicker from "./LocationPicker.astro";
                                                 value="pickup"
                                                 checked={
                                                     safeStore.allows_delivery ===
-                                                        false || true
+                                                        false ||
+                                                    safeStore.allows_pickup !==
+                                                        false
                                                 }
                                                 onchange="toggleDeliveryFields()"
                                             />
@@ -270,12 +275,7 @@ import LocationPicker from "./LocationPicker.astro";
                     </div>
 
                     <div class="step-content">
-                        <div
-                            class="payment-options"
-                            style={safeStore.payment_methods?.length === 1
-                                ? "display: none;"
-                                : ""}
-                        >
+                        <div class="payment-options">
                             {
                                 (safeStore.payment_methods?.includes("upi") ||
                                     !safeStore.payment_methods) && (
@@ -285,6 +285,10 @@ import LocationPicker from "./LocationPicker.astro";
                                             name="payment"
                                             value="online"
                                             checked={
+                                                safeStore.payment_methods?.includes(
+                                                    "upi",
+                                                ) ||
+                                                !safeStore.payment_methods ||
                                                 !safeStore.payment_methods?.includes(
                                                     "cod",
                                                 )
@@ -312,10 +316,11 @@ import LocationPicker from "./LocationPicker.astro";
                                             name="payment"
                                             value="pickup"
                                             checked={
-                                                safeStore.payment_methods
-                                                    ?.length === 1 &&
-                                                safeStore.payment_methods.includes(
+                                                safeStore.payment_methods?.includes(
                                                     "cod",
+                                                ) &&
+                                                !safeStore.payment_methods?.includes(
+                                                    "upi",
                                                 )
                                             }
                                         />
