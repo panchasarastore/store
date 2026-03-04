@@ -35,6 +35,7 @@
                 margin-top: 6px;
                 border-radius: 6px;
                 border: 1px solid #ccc;
+                box-sizing: border-box;
             }
 
             button {
@@ -75,37 +76,102 @@
             <label>Email</label>
             <input id="email" value="abrahammadamana@gmail.com" />
 
+            <label>Full Address</label>
+            <input id="address" placeholder="Flat, street, area" />
+
+            <label>Pincode</label>
+            <input id="pincode" />
+
+            <label>Landmark</label>
+            <input id="landmark" placeholder="Near temple, mall etc" />
+
+            <div
+                style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #eee;"
+            >
+                <h3 style="font-size: 14px; color: #666; margin-bottom: 8px;">
+                    Test Configuration
+                </h3>
+                <label>Store ID</label>
+                <input
+                    id="storeId"
+                    value="893c317f-3464-4778-9603-447ae3ba322e"
+                />
+
+                <label>Product ID</label>
+                <input
+                    id="productId"
+                    value="3d36ce94-b774-4549-bb39-880b2516f085"
+                />
+            </div>
+
+            <label>Delivery Notes</label>
+            <input id="notes" placeholder="Call before arriving" />
+
             <button id="payBtn">Pay Now</button>
             <div id="error" class="error"></div>
         </div>
 
         <script>
+            // @ts-nocheck
             const btn = document.getElementById("payBtn");
             const errorDiv = document.getElementById("error");
+
+            // Pre-fill from URL params
+            const params = new URLSearchParams(window.location.search);
+            if (params.has("store")) {
+                document.getElementById("storeId").value = params.get("store");
+            }
+            if (params.has("product")) {
+                document.getElementById("productId").value =
+                    params.get("product");
+            }
 
             btn.addEventListener("click", async () => {
                 btn.disabled = true;
                 errorDiv.textContent = "";
 
                 try {
+                    const deliveryData = {
+                        method: "delivery",
+                        address: document.getElementById("address").value,
+                        pincode: document.getElementById("pincode").value,
+                        landmark: document.getElementById("landmark").value,
+                        notes: document.getElementById("notes").value,
+                        lat: window.checkoutLocation?.lat ?? 10.0,
+                        lng: window.checkoutLocation?.lng ?? 76.0,
+                        date: null,
+                    };
+
+                    const store_id = document.getElementById("storeId").value;
+                    const product_id =
+                        document.getElementById("productId").value;
+
+                    // Validation
+                    if (!deliveryData.address || !deliveryData.pincode) {
+                        errorDiv.textContent =
+                            "Please fill delivery address and pincode";
+                        btn.disabled = false;
+                        return;
+                    }
+
+                    if (!store_id || !product_id) {
+                        errorDiv.textContent =
+                            "Store ID and Product ID are required";
+                        btn.disabled = false;
+                        return;
+                    }
+
                     const payload = {
-                        store_id: "893c317f-3464-4778-9603-447ae3ba322e",
+                        store_id: store_id,
                         customer: {
                             name: document.getElementById("name").value,
                             phone: document.getElementById("phone").value,
                             email: document.getElementById("email").value,
                         },
-                        delivery: {
-                            method: "pickup",
-                            address: null,
-                            lat: null,
-                            lng: null,
-                            date: null,
-                        },
+                        delivery: deliveryData,
                         items: [
                             {
-                                product_id:
-                                    "3d36ce94-b774-4549-bb39-880b2516f085",
+                                product_id: product_id,
                                 quantity: 1,
                                 variant: null,
                                 custom_note: "Test order via payment link",

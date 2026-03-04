@@ -4,11 +4,37 @@ const { displayProducts = [] } = Astro.props;
 ---
 
 <section class="store-products" id="shop">
-    <div class="products-grid">
-        {displayProducts.map((product) => <ProductCard product={product} />)}
+    <div class="products-grid" id="products-grid">
+        {
+            displayProducts.length > 0 ? (
+                displayProducts.map((product) => (
+                    <ProductCard product={product} />
+                ))
+            ) : (
+                <div class="empty-state">
+                    <h3>Your store is currently empty</h3>
+                    <p>
+                        Start adding products from your dashboard to see them
+                        here.
+                    </p>
+                </div>
+            )
+        }
     </div>
-</section>
 
+    {
+        displayProducts.length >= 24 && (
+            <div id="load-more-container" class="load-more-container">
+                <button id="load-more-btn" class="load-more-btn">
+                    LOAD MORE
+                    <span class="loader-spinner" style="display: none;">
+                        ...
+                    </span>
+                </button>
+            </div>
+        )
+    }
+</section>
 <style is:inline>
     .store-products {
         padding: 0 0 4rem;
@@ -27,5 +53,64 @@ const { displayProducts = [] } = Astro.props;
             grid-template-columns: 1fr;
             gap: 2rem;
         }
+    }
+
+    .load-more-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 3rem;
+        padding-bottom: 2rem;
+    }
+    .load-more-btn {
+        background: transparent;
+        border: 2px solid var(--theme-ink);
+        color: var(--theme-ink);
+        padding: 0.8rem 2.5rem;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        letter-spacing: 0.1em;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .load-more-btn:hover {
+        background: var(--theme-ink);
+        color: var(--theme-page);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .load-more-btn:active {
+        transform: translateY(0);
+    }
+    .loader-spinner {
+        font-weight: bold;
+    }
+
+    .empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 5rem 2rem;
+        background: rgba(0, 0, 0, 0.02);
+        border-radius: 24px;
+        border: 2px dashed rgba(0, 0, 0, 0.05);
+    }
+    .empty-icon {
+        font-size: 3rem;
+        margin-bottom: 1.5rem;
+        opacity: 0.5;
+    }
+    .empty-state h3 {
+        font-family: var(--font-heading);
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+        color: var(--theme-brand);
+    }
+    .empty-state p {
+        color: var(--theme-ink);
+        opacity: 0.6;
+        font-size: 0.95rem;
     }
 </style>

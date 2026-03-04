@@ -2,41 +2,43 @@
 // src/pages/signup.astro
 export const prerender = false;
 
-import { supabase } from '../lib/supabase';
-import { getSession } from '../lib/auth';
+import { supabase, STORAGE_KEY } from "../lib/supabase";
+import { getSession } from "../lib/auth";
 
 // --------------------------------------------------
 // 1️⃣ If already logged in → send to create-store
 // --------------------------------------------------
 const session = await getSession();
 if (session) {
-  return Astro.redirect('/create-store');
+  return Astro.redirect("/create-store");
 }
 
-let error = '';
-let success = '';
+let error = "";
+let success = "";
 
 // --------------------------------------------------
 // 2️⃣ Handle SIGNUP submit
 // --------------------------------------------------
-if (Astro.request.method === 'POST') {
+if (Astro.request.method === "POST") {
   try {
     const formData = await Astro.request.formData();
 
-    const email = formData.get('email')?.toString().trim();
-    const password = formData.get('password')?.toString();
-    const confirmPassword = formData.get('confirmPassword')?.toString();
+    const email = formData.get("email")?.toString().trim();
+    const password = formData.get("password")?.toString();
+    const confirmPassword = formData.get("confirmPassword")?.toString();
 
     if (!email || !password || !confirmPassword) {
-      error = 'All fields are required';
+      error = "All fields are required";
     } else if (password !== confirmPassword) {
-      error = 'Passwords do not match';
+      error = "Passwords do not match";
     } else {
-      const { data, error: signUpError } =
-        await supabase.auth.signUp({ email, password });
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+      });
 
-      if (signUpError?.code === 'over_email_send_rate_limit') {
-        error = 'Please wait a few seconds before trying again.';
+      if (signUpError?.code === "over_email_send_rate_limit") {
+        error = "Please wait a few seconds before trying again.";
       } else if (signUpError) {
         error = signUpError.message;
       } else {
@@ -44,152 +46,203 @@ if (Astro.request.method === 'POST') {
         // ✅ NEW USER → ALWAYS go to create-store
         // --------------------------------------------------
         if (data?.session) {
-          return Astro.redirect('/create-store');
+          // Manually set cookie so middleware sees it immediately on redirect
+          Astro.cookies.set(STORAGE_KEY, JSON.stringify(data.session), {
+            path: "/",
+            maxAge: 31536000,
+            sameSite: "lax",
+            secure: false, // Set to true in production if HTTPS
+          });
+          return Astro.redirect("/create-store");
         } else {
-          success = 'Signup successful! Please log in to continue.';
+          success = "Signup successful! Please log in to continue.";
         }
       }
     }
   } catch {
-    error = 'Something went wrong. Please try again.';
+    error = "Something went wrong. Please try again.";
   }
 }
 ---
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" class="h-full">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sign Up | Panchasara</title>
-  
-  <link href="https://fonts.googleapis.com" rel="preconnect" />
-  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
-  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-</head>
-<body class="h-full font-sans text-slate-900 bg-white">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign Up | Panchasara</title>
+    <link rel="icon" href="/favicon.svg" />
 
-  <div class="min-h-full flex flex-col lg:flex-row">
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="h-full font-sans text-slate-900 bg-white">
+    <div class="min-h-full flex flex-col lg:flex-row">
+      <div class="lg:hidden relative h-28 w-full bg-slate-100 shrink-0">
+        <img
+          class="absolute inset-0 h-full w-full object-cover"
+          src="https://images.unsplash.com/photo-1517433367423-c7e5b0f35086?q=80&w=1000&auto=format&fit=crop"
+          alt="Baker working in a warm kitchen"
+        />
+        <div class="absolute inset-0 bg-primary mix-blend-multiply opacity-20">
+        </div>
+      </div>
 
-    <div class="lg:hidden relative h-28 w-full bg-slate-100 shrink-0">
-      <img 
-        class="absolute inset-0 h-full w-full object-cover" 
-        src="https://images.unsplash.com/photo-1517433367423-c7e5b0f35086?q=80&w=1000&auto=format&fit=crop" 
-        alt="Baker working in a warm kitchen"
+      <div
+        class="flex-1 flex flex-col justify-center py-10 px-4 sm:px-6 lg:flex-none lg:px-20 xl:px-24 bg-white z-10 relative"
       >
-      <div class="absolute inset-0 bg-primary mix-blend-multiply opacity-20"></div>
-    </div>
-    
-    <div class="flex-1 flex flex-col justify-center py-10 px-4 sm:px-6 lg:flex-none lg:px-20 xl:px-24 bg-white z-10 relative">
-      <div class="mx-auto w-full max-w-sm lg:w-96">
-        
-        <div>
-          <a href="/" class="inline-flex items-center gap-2 group decoration-transparent">
-            <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-              <span class="text-white font-display font-bold text-lg">P</span>
+        <div class="mx-auto w-full max-w-sm lg:w-96">
+          <div>
+            <a
+              href="/"
+              class="inline-flex items-center gap-2 group decoration-transparent"
+            >
+              <div
+                class="w-8 h-8 bg-primary rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"
+              >
+                <span class="text-white font-display font-bold text-lg">P</span>
+              </div>
+              <span
+                class="font-display font-bold text-xl tracking-tight text-slate-900"
+                >Panchasara.</span
+              >
+            </a>
+            <h2 class="mt-8 text-3xl font-display font-bold text-slate-900">
+              Get started today
+            </h2>
+            <p class="mt-2 text-sm text-slate-500">
+              Create your store owner account.
+            </p>
+          </div>
+
+          <div class="mt-8">
+            <div class="mt-6">
+              <form method="POST" class="space-y-6">
+                <div>
+                  <label
+                    for="email"
+                    class="block text-sm font-semibold text-slate-700"
+                    >Email Address</label
+                  >
+                  <div class="mt-1">
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      autocomplete="email"
+                      required
+                      placeholder="maker@example.com"
+                      class="appearance-none block w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-slate-50/50"
+                    />
+                  </div>
+                </div>
+
+                <div class="space-y-1">
+                  <label
+                    for="password"
+                    class="block text-sm font-semibold text-slate-700"
+                    >Password</label
+                  >
+                  <div class="mt-1">
+                    <input
+                      id="password"
+                      name="password"
+                      type="password"
+                      autocomplete="new-password"
+                      required
+                      placeholder="••••••••"
+                      class="appearance-none block w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-slate-50/50"
+                    />
+                  </div>
+                </div>
+
+                <div class="space-y-1">
+                  <label
+                    for="confirmPassword"
+                    class="block text-sm font-semibold text-slate-700"
+                    >Confirm Password</label
+                  >
+                  <div class="mt-1">
+                    <input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type="password"
+                      autocomplete="new-password"
+                      required
+                      placeholder="••••••••"
+                      class="appearance-none block w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-slate-50/50"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <button
+                    type="submit"
+                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-display font-bold text-white bg-primary hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors cursor-pointer"
+                  >
+                    Create Account
+                  </button>
+                </div>
+              </form>
             </div>
-            <span class="font-display font-bold text-xl tracking-tight text-slate-900">Panchasara.</span>
-          </a>
-          <h2 class="mt-8 text-3xl font-display font-bold text-slate-900">Get started today</h2>
-          <p class="mt-2 text-sm text-slate-500">
-            Create your store owner account.
-          </p>
-        </div>
-
-        <div class="mt-8">
-          <div class="mt-6">
-            <form method="POST" class="space-y-6">
-              
-              <div>
-                <label for="email" class="block text-sm font-semibold text-slate-700">Email Address</label>
-                <div class="mt-1">
-                  <input 
-                    id="email" 
-                    name="email" 
-                    type="email" 
-                    autocomplete="email" 
-                    required 
-                    placeholder="maker@example.com"
-                    class="appearance-none block w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-slate-50/50"
-                  >
-                </div>
-              </div>
-
-              <div class="space-y-1">
-                <label for="password" class="block text-sm font-semibold text-slate-700">Password</label>
-                <div class="mt-1">
-                  <input 
-                    id="password" 
-                    name="password" 
-                    type="password" 
-                    autocomplete="new-password" 
-                    required 
-                    placeholder="••••••••"
-                    class="appearance-none block w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-slate-50/50"
-                  >
-                </div>
-              </div>
-
-              <div class="space-y-1">
-                <label for="confirmPassword" class="block text-sm font-semibold text-slate-700">Confirm Password</label>
-                <div class="mt-1">
-                  <input 
-                    id="confirmPassword" 
-                    name="confirmPassword" 
-                    type="password" 
-                    autocomplete="new-password" 
-                    required 
-                    placeholder="••••••••"
-                    class="appearance-none block w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-slate-50/50"
-                  >
-                </div>
-              </div>
-
-              <div>
-                <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-display font-bold text-white bg-primary hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors cursor-pointer">
-                  Create Account
-                </button>
-              </div>
-            </form>
           </div>
-        </div>
 
-        {error && (
-          <div class="mt-6 p-4 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm text-center font-medium animate-pulse">
-            {error}
-          </div>
-        )}
-        
-        {success && (
-          <div class="mt-6 p-4 rounded-xl bg-green-50 border border-green-100 text-green-600 text-sm text-center font-medium">
-            {success} <br />
-            <a href="/login" class="underline hover:text-green-700 mt-1 inline-block">Go to Login</a>
-          </div>
-        )}
+          {
+            error && (
+              <div class="mt-6 p-4 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm text-center font-medium animate-pulse">
+                {error}
+              </div>
+            )
+          }
 
-        <div class="mt-6 relative">
-          <div class="absolute inset-0 flex items-center" aria-hidden="true">
-            <div class="w-full border-t border-slate-200"></div>
-          </div>
-          <div class="relative flex justify-center text-sm">
-            <span class="px-2 bg-white text-slate-500">
-              Already have an account? <a href="/login" class="font-bold text-primary hover:text-orange-600 transition-colors">Log in</a>
-            </span>
+          {
+            success && (
+              <div class="mt-6 p-4 rounded-xl bg-green-50 border border-green-100 text-green-600 text-sm text-center font-medium">
+                {success} <br />
+                <a
+                  href="/login"
+                  class="underline hover:text-green-700 mt-1 inline-block"
+                >
+                  Go to Login
+                </a>
+              </div>
+            )
+          }
+
+          <div class="mt-6 relative">
+            <div class="absolute inset-0 flex items-center" aria-hidden="true">
+              <div class="w-full border-t border-slate-200"></div>
+            </div>
+            <div class="relative flex justify-center text-sm">
+              <span class="px-2 bg-white text-slate-500">
+                Already have an account? <a
+                  href="/login"
+                  class="font-bold text-primary hover:text-orange-600 transition-colors"
+                  >Log in</a
+                >
+              </span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="hidden lg:block relative w-0 flex-1">
-      <img 
-        class="absolute inset-0 h-full w-full object-cover" 
-        src="https://images.unsplash.com/photo-1517433367423-c7e5b0f35086?q=80&w=2000&auto=format&fit=crop" 
-        alt="Baker working in a warm kitchen"
-      >
-      <div class="absolute inset-0 bg-primary mix-blend-multiply opacity-20"></div>
-      <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-40"></div>
+      <div class="hidden lg:block relative w-0 flex-1">
+        <img
+          class="absolute inset-0 h-full w-full object-cover"
+          src="https://images.unsplash.com/photo-1517433367423-c7e5b0f35086?q=80&w=2000&auto=format&fit=crop"
+          alt="Baker working in a warm kitchen"
+        />
+        <div class="absolute inset-0 bg-primary mix-blend-multiply opacity-20">
+        </div>
+        <div
+          class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-40"
+        >
+        </div>
+      </div>
     </div>
-  </div>
-
-</body>
+  </body>
 </html>

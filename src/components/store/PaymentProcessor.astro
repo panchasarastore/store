@@ -1,0 +1,189 @@
+---
+// PaymentProcessor.astro
+// This component handles the final order placement logic, talking to Supabase Edge Functions or the Database.
+---
+
+<script>
+    import { supabase } from "../../lib/supabase";
+    import { cartItems, clearCart } from "../../lib/cartStore";
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const finalPayBtn = document.getElementById("final-pay-btn");
+        const wrapper = document.querySelector(
+            ".store-template-wrapper",
+        ) as HTMLElement;
+
+        if (!finalPayBtn || !wrapper) return;
+
+        // Helper to get delivery data from the DOM
+        function getDeliveryData() {
+            const deliveryMode = (
+                document.querySelector(
+                    'input[name="delivery-mode"]:checked',
+                ) as HTMLInputElement
+            )?.value;
+
+            if (deliveryMode === "pickup") {
+                return {
+                    method: "pickup",
+                    delivery_address: null,
+                    delivery_pincode: null,
+                    delivery_landmark: null,
+                    delivery_notes: null,
+                    delivery_lat: null,
+                    delivery_lng: null,
+                };
+            }
+
+            return {
+                method: "delivery",
+                delivery_address:
+                    (
+                        document.getElementById(
+                            "fullAddress",
+                        ) as HTMLTextAreaElement
+                    )?.value || "",
+                delivery_pincode:
+                    (document.getElementById("pincode") as HTMLInputElement)
+                        ?.value || "",
+                delivery_landmark:
+                    (document.getElementById("landmark") as HTMLInputElement)
+                        ?.value || "",
+                delivery_notes:
+                    (
+                        document.getElementById(
+                            "deliveryNotes",
+                        ) as HTMLTextAreaElement
+                    )?.value || "",
+                delivery_lat: (window as any).checkoutLocation?.lat || null,
+                delivery_lng: (window as any).checkoutLocation?.lng || null,
+            };
+        }
+
+        finalPayBtn.addEventListener("click", async () => {
+            // 1️⃣ Generate a NEW checkout_session_id (UUID) for every attempt
+            let checkoutSessionId = crypto.randomUUID();
+
+            const paymentMethod = (
+                document.querySelector(
+                    'input[name="payment"]:checked',
+                ) as HTMLInputElement
+            )?.value;
+
+            const deliveryData = getDeliveryData();
+
+            const storeId = (wrapper as HTMLElement).dataset.storeId;
+            const name = (
+                document.getElementById("input-name") as HTMLInputElement
+            )?.value;
+            const phone = (
+                document.getElementById("input-phone") as HTMLInputElement
+            )?.value;
+            const email = (
+                document.getElementById("input-email") as HTMLInputElement
+            )?.value;
+            const customerNotes =
+                (document.getElementById("input-note") as HTMLTextAreaElement)
+                    ?.value || null;
+            const orderDate = (
+                document.getElementById("input-date") as HTMLInputElement
+            )?.value;
+            const timeSlot = (
+                document.getElementById("input-time") as HTMLSelectElement
+            )?.value;
+
+            // Access shared cart state from our store
+            const items = cartItems
+                .get()
+                .filter((item) => item.quantity > 0)
+                .map((item) => ({
+                    product_id: item.id,
+                    quantity: item.quantity,
+                    variant: null,
+                    custom_note: item.custom_note || null,
+                }));
+
+            if (items.length === 0) {
+                alert("Your cart is empty!");
+                return;
+            }
+
+            finalPayBtn.setAttribute("disabled", "true");
+            const originalText = finalPayBtn.innerHTML;
+            finalPayBtn.textContent =
+                paymentMethod === "online"
+                    ? "PROCESSING..."
+                    : "PLACING ORDER...";
+
+            try {
+                const payload = {
+                    checkout_session_id: checkoutSessionId,
+                    store_id: storeId,
+                    customer: { name, phone, email },
+                    delivery: {
+                        method: deliveryData.method,
+                        address: deliveryData.delivery_address,
+                        lat: deliveryData.delivery_lat,
+                        lng: deliveryData.delivery_lng,
+                        date: orderDate,
+                        time_slot: timeSlot,
+                        pincode: deliveryData.delivery_pincode,
+                        landmark: deliveryData.delivery_landmark,
+                        notes: deliveryData.delivery_notes,
+                    },
+                    items: items,
+                    notes: customerNotes,
+                    payment_method: paymentMethod,
+                };
+
+                console.log("Placing order with payload:", payload);
+
+                const { data, error: funcError } =
+                    await supabase.functions.invoke("Place-Order", {
+                        body: payload,
+                    });
+
+                if (funcError) {
+                    console.error("Supabase Function Error:", funcError);
+                    throw new Error(
+                        funcError.message || "Order creation failed",
+                    );
+                }
+
+                console.log("Response from Edge Function:", data);
+
+                if (paymentMethod === "online") {
+                    if (data.payment_link_url) {
+                        // For online payments, we clear cart after successful payment verification normally,
+                        // but here we redirect to a payment link.
+                        // If the user abandons payment, we might want the cart to persist.
+                        window.location.href = data.payment_link_url;
+                    } else {
+                        throw new Error(
+                            "Order placed, but no payment link received.",
+                        );
+                    }
+                } else {
+                    // Success feedback for COD
+                    const toast = document.getElementById("success-toast");
+                    if (toast) toast.classList.add("show");
+
+                    // Clear cart on successful order placement
+                    clearCart();
+
+                    setTimeout(() => {
+                        window.location.href = "/orders/success";
+                    }, 2000);
+                }
+            } catch (err: any) {
+                console.error("Payment Step Error:", err);
+                alert(
+                    err.message ||
+                        "Something went wrong while placing your order.",
+                );
+                finalPayBtn.removeAttribute("disabled");
+                finalPayBtn.innerHTML = originalText;
+            }
+        });
+    });
+</script>

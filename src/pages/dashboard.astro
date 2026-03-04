@@ -1,25 +1,26 @@
 ---
 export const prerender = false;
 
-import { requireAuth, logout } from '../lib/auth';
-import { hasStore, getUserStore } from '../lib/stores';
-import type { Session } from '@supabase/supabase-js';
+import { requireAuth, logout } from "../lib/auth";
+import { hasStore, getUserStore } from "../lib/stores";
+import type { Session } from "@supabase/supabase-js";
 
 // 🔐 Require authentication
 const session = (await requireAuth(Astro)) as Session;
+if (session instanceof Response) return session;
 
 // 🏪 Check if user has a store
 const userHasStore = await hasStore();
 
 if (!userHasStore) {
-  return Astro.redirect('/create-store');
+  return Astro.redirect("/create-store");
 }
 
 // 🏬 Fetch store (safe because hasStore = true)
 const store = await getUserStore();
 
 // 🚪 Handle logout
-if (Astro.request.method === 'POST') {
+if (Astro.request.method === "POST") {
   return await logout(Astro);
 }
 ---

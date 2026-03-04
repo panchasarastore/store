@@ -1,30 +1,73 @@
 ---
 const { product } = Astro.props;
+const isLowStock =
+    product.stock_quantity !== null &&
+    product.stock_quantity > 0 &&
+    product.stock_quantity <= (product.min_stock_level || 5);
+const isOutOfStock =
+    product.is_in_stock === false ||
+    (product.track_inventory && product.stock_quantity !== null && product.stock_quantity <= 0);
 ---
 
 <div
     class="product-card group"
     data-product={JSON.stringify(product)}
     data-id={product.id}
+    data-category={product.category || "Uncategorized"}
 >
-    <div class="product-image">
-        <img src={product.image} alt={product.name} loading="lazy" />
+    <div class="product-image premium-shadow">
+        <div class="image-wrapper slideshow-container">
+            {
+                (product.images && product.images.length > 0
+                    ? product.images
+                    : ["https://placehold.co/600x400?text=No+Image"]
+                ).map((src: string, idx: number) => (
+                    <img
+                        src={src}
+                        alt={product.name}
+                        class={`slide-img ${idx === 0 ? "active" : ""}`}
+                        data-index={idx}
+                        loading={idx === 0 ? "eager" : "lazy"}
+                    />
+                ))
+            }
+        </div>
         <div class="card-badges">
             {
+                product.category && (
+                    <span class="badge category-badge glass-effect">
+                        {product.category}
+                    </span>
+                )
+            }
+            {
+                isLowStock && (
+                    <span class="badge warning-badge glass-effect warning">
+                        Selling Fast!
+                    </span>
+                )
+            }
+            {
                 product.accepts_custom_note && (
-                    <span class="badge icon-badge" title="Customizable">
+                    <span
+                        class="badge icon-badge glass-effect"
+                        title="Customizable"
+                    >
                         ✎
                     </span>
                 )
             }
-            {
-                product.product_notice && (
-                    <span class="badge icon-badge" title="Has Notice">
-                        !
-                    </span>
-                )
-            }
         </div>
+        {
+            isOutOfStock && (
+                <div class="sold-out-ribbon-wrapper">
+                    <span class="sold-out-ribbon">
+                        SOLD OUT
+                    </span>
+                </div>
+                <div class="out-of-stock-overlay" />
+            )
+        }
     </div>
 
     <div class="product-content">
@@ -37,20 +80,69 @@ const { product } = Astro.props;
         </div>
 
         <div class="add-action-wrapper" onclick="event.stopPropagation()">
-            <button class="big-add-btn">ADD TO CART</button>
+            <button class="big-add-btn" disabled={isOutOfStock}>
+                {isOutOfStock ? "SOLD OUT" : "ADD TO CART"}
+            </button>
             <div class="stepper-controls" style="display: none;">
-                <button class="step-btn minus"
-                    ><span class="material-symbols-rounded">remove</span
-                    ></button
-                >
+                <button class="step-btn minus">
+                    <span class="material-symbols-rounded">remove</span>
+                </button>
                 <span class="qty-display">1</span>
-                <button class="step-btn plus"
-                    ><span class="material-symbols-rounded">add</span></button
-                >
+                <button class="step-btn plus">
+                    <span class="material-symbols-rounded">add</span>
+                </button>
             </div>
         </div>
     </div>
 </div>
+
+<script is:inline>
+    // Premium Slideshow Logic
+    document.querySelectorAll(".product-card").forEach((card) => {
+        const images = card.querySelectorAll(".slide-img");
+        if (images.length <= 1) return;
+
+        let interval = null;
+        let currentIndex = 0;
+
+        const startSlideshow = () => {
+            if (interval) return;
+            interval = setInterval(() => {
+                images[currentIndex].classList.remove("active");
+                currentIndex = (currentIndex + 1) % images.length;
+                images[currentIndex].classList.add("active");
+            }, 1000); // Snappier cycle timing
+        };
+
+        const stopSlideshow = () => {
+            clearInterval(interval);
+            interval = null;
+            // Reset to first image
+            images.forEach((img) => img.classList.remove("active"));
+            images[0].classList.add("active");
+            currentIndex = 0;
+        };
+
+        card.addEventListener("mouseenter", startSlideshow);
+        card.addEventListener("mouseleave", stopSlideshow);
+
+        // Preload other images for this product
+        card.addEventListener(
+            "mouseenter",
+            () => {
+                const product = JSON.parse(card.dataset.product || "{}");
+                const imageUrls = product.images || [];
+                imageUrls.forEach((src) => {
+                    if (src) {
+                        const img = new Image();
+                        img.src = src;
+                    }
+                });
+            },
+            { once: true },
+        );
+    });
+</script>
 
 <style is:inline>
     .product-card {
@@ -64,15 +156,81 @@ const { product } = Astro.props;
         position: relative;
         aspect-ratio: 1;
         overflow: hidden;
-        background: rgba(0, 0, 0, 0.03);
-        margin-bottom: 1rem;
+        background: rgba(0, 0, 0, 0.02);
+        margin-bottom: 1.25rem;
+        border-radius: 20px;
+    }
+    .out-of-stock-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 4;
+        pointer-events: none;
+    }
+    .sold-out-ribbon-wrapper {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100px;
+        height: 100px;
+        z-index: 6;
+        overflow: hidden;
+        pointer-events: none;
+    }
+    .sold-out-ribbon {
+        position: absolute;
+        top: 18px;
+        left: -32px;
+        width: 140px;
+        background: var(--theme-ink);
+        color: white;
+        text-align: center;
+        font-size: 0.65rem;
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 6px 0;
+        transform: rotate(-45deg);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    .big-add-btn:disabled {
+        background: #f1f1f1 !important;
+        color: #999 !important;
+        cursor: not-allowed;
+        transform: none !important;
+        box-shadow: none !important;
+        border: 1px solid #e1e1e1 !important;
+    }
+    .image-wrapper {
+        width: 100%;
+        height: 100%;
+        position: relative;
     }
     .product-image img {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        transition: transform 0.5s ease;
+        position: absolute;
+        top: 0;
+        left: 0;
+        transition:
+            opacity 0.4s ease,
+            transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        opacity: 0;
     }
+    .slide-img.active {
+        opacity: 1;
+    }
+    .product-card:hover .slide-img {
+        transform: scale(1.1) !important;
+    }
+    .product-card:active {
+        transform: scale(0.98);
+    }
+
     .product-content {
         display: flex;
         flex-direction: column;
@@ -80,61 +238,61 @@ const { product } = Astro.props;
     }
     .product-name {
         font-family: var(--font-heading);
-        font-size: 1.15rem;
+        font-size: 1.25rem;
+        font-weight: 700;
         margin: 0 0 0.25rem;
-        color: var(--theme-ink);
+        color: var(--theme-brand);
     }
     .product-short-desc {
         font-size: 0.85rem;
-        opacity: 0.6;
-        margin-bottom: 1rem;
+        opacity: 0.5;
+        margin-bottom: 1.25rem;
         display: -webkit-box;
-        -webkit-line-clamp: 2;
+        -webkit-line-clamp: 1;
         -webkit-box-orient: vertical;
         overflow: hidden;
         line-height: 1.4;
-        min-height: 2.8em;
     }
     .product-footer {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 1rem;
+        margin-bottom: 0.75rem;
     }
     .product-price {
-        font-weight: 600;
-        color: var(--theme-accent);
-        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--theme-brand);
+        font-size: 1.15rem;
     }
 
     .add-action-wrapper {
-        min-height: 40px;
-        height: auto;
-        margin-top: auto;
         width: 100%;
         display: flex;
         justify-content: flex-start;
     }
     .big-add-btn {
-        height: 100%;
+        width: 100%;
+        min-height: 44px;
         background-color: var(--theme-accent);
         color: white;
         border: none;
-        border-radius: 4px;
-        font-weight: 700;
-        font-size: 0.8rem;
-        letter-spacing: 0.05em;
+        border-radius: 12px;
+        font-weight: 800;
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: var(--transition-smooth);
         display: flex;
-        justify-content: center !important;
-        align-items: center !important;
-        text-align: center !important;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(var(--theme-accent-rgb, 196, 106, 43), 0.2);
     }
     .big-add-btn:hover {
         opacity: 0.9;
-        transform: translateY(-1px);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(var(--theme-accent-rgb, 196, 106, 43), 0.3);
     }
 
     .stepper-controls {
@@ -184,24 +342,61 @@ const { product } = Astro.props;
 
     .card-badges {
         position: absolute;
-        top: 10px;
-        left: 10px;
+        top: 12px;
+        left: 12px;
         z-index: 5;
         display: flex;
-        gap: 5px;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .category-badge {
+        font-size: 0.65rem;
+        font-weight: 800;
+        padding: 4px 10px;
+        border-radius: 50px;
+        color: var(--theme-brand);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
     .icon-badge {
-        background: white;
-        width: 24px;
-        height: 24px;
+        width: 28px;
+        height: 28px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.7rem;
+        font-size: 0.75rem;
         font-weight: bold;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        color: var(--theme-ink);
+        color: var(--theme-brand);
+    }
+    .warning-badge {
+        background: #f59e0b !important; /* Vibrant Amber */
+        color: white !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        font-size: 0.65rem;
+        font-weight: 900;
+        padding: 5px 12px;
+        border-radius: 50px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        animation: pulse-soft 2s infinite;
+        backdrop-filter: blur(4px);
+    }
+    @keyframes pulse-soft {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        50% {
+            transform: scale(1.02);
+            opacity: 0.8;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
     }
 
     .store-template-wrapper[data-layout="natural"] .product-image {
@@ -226,16 +421,7 @@ const { product } = Astro.props;
     }
     .store-template-wrapper[data-layout="gallery"] .big-add-btn {
         border-radius: 0;
-        background: var(--theme-ink);
-    }
-    .store-template-wrapper[data-layout="gallery"] .stepper-controls {
-        border-radius: 0;
-    }
-    .store-template-wrapper[data-layout="gallery"]
-        .product-card:hover
-        .product-image
-        img {
-        opacity: 0.9;
+        background: var(--theme-accent);
     }
 
     .store-template-wrapper[data-layout="pop"] .product-card {
@@ -250,14 +436,11 @@ const { product } = Astro.props;
     .store-template-wrapper[data-layout="pop"] .big-add-btn {
         border-radius: 12px;
         font-weight: 800;
-        border: 2px solid var(--theme-ink);
-        color: var(--theme-ink);
-        background: white;
-    }
-    .store-template-wrapper[data-layout="pop"] .big-add-btn:hover {
         background: var(--theme-accent);
         color: white;
-        border-color: var(--theme-accent);
+    }
+    .store-template-wrapper[data-layout="pop"] .big-add-btn:hover {
+        opacity: 0.9;
     }
     .store-template-wrapper[data-layout="pop"] .stepper-controls {
         border-radius: 12px;

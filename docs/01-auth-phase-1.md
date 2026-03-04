@@ -1,6 +1,6 @@
 # Phase 1 – Authentication
 
-Last updated: 2026-01-07
+Last updated: 2026-02-06
 
 ## Goal
 Allow store owners to sign up, log in, and securely access protected pages.
@@ -8,14 +8,13 @@ Allow store owners to sign up, log in, and securely access protected pages.
 ## What is included
 - Email + password signup
 - Email + password login
-- Session handling
+- Session handling (Supabase GoTrue)
 - Protected dashboard
-- Logout
-- Clean auth structure
+- Logout functionality
+- Centralized auth helper structure
 
-## What is NOT included
-- Stores
-- Products
+## What is NOT included (In this phase)
+- Stores & Products
 - Payments
 - Buyers
 - Public storefront
@@ -24,35 +23,21 @@ Allow store owners to sign up, log in, and securely access protected pages.
 
 Auth logic is centralized in `src/lib/auth.ts`.
 
-Helpers:
-- getSession() → returns current session or null
-- requireAuth(Astro) → enforces authentication and redirects if needed
-- logout(Astro) → signs out and redirects to login
+### Helpers:
+- `getSession()` → returns current session via `supabase.auth.getSession()`
+- `requireAuth(Astro)` → enforces authentication; redirects to `/login` if missing
+- `logout(Astro)` → signs out and redirects to login
 
 ## Redirect Rules
-
-- Logged-in users visiting /login or /signup are redirected to /dashboard
-- Logged-out users visiting /dashboard are redirected to /login
+- Logged-in users visiting `/login` or `/signup` are redirected to `/dashboard`
+- Logged-out users visiting `/dashboard` are redirected to `/login`
 
 ## Route Protection
-
-Protected pages:
-- Disable prerendering
-- Check Supabase session server-side
-- Redirect immediately if session is missing
-
-Client-side auth checks are not used.
-
-## Logout
-
-- Implemented as a POST action on /dashboard
-- Uses supabase.auth.signOut()
-- Clears session and redirects to /login
+1. Disable prerendering (`export const prerender = false`)
+2. Check Supabase session server-side using `requireAuth()`
+3. Redirect immediately if session is missing
 
 ## Known Gotchas
-
-- Astro prerendering must be disabled for auth pages
-- Supabase signup may return session = null if email confirmation is enabled
-- Supabase rate-limits rapid signup attempts
-- TypeScript may require session type assertion when using redirect helpers
-
+- **Server-Side Only**: Auth checks are performed on the server to prevent UI flickers.
+- **Rate Limiting**: Supabase may rate-limit rapid signup attempts.
+- **Prerendering**: Pages using auth helpers must not be prerendered.

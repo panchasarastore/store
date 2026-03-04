@@ -2,25 +2,23 @@
  * Helper functions for managing stores in Panchasara.
  * This is the ONLY interface between the app and the stores table.
  */
-import { supabase } from './supabase';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Fetch the current user's active store.
  * Returns the store row or null if no store is found.
- *
- * Note: This only returns stores with status != 'deleted'.
  */
-export async function getUserStore() {
+export async function getUserStore(supabaseClient: SupabaseClient) {
   const {
     data: { user },
     error: authError,
-  } = await supabase.auth.getUser();
+  } = await supabaseClient.auth.getUser();
 
   if (authError || !user) {
     throw new Error('Not authenticated');
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('stores')
     .select('*')
     .eq('owner_id', user.id)
@@ -42,9 +40,9 @@ export async function getUserStore() {
 /**
  * Check if the current user already has a store.
  */
-export async function hasStore() {
+export async function hasStore(supabaseClient: SupabaseClient) {
   try {
-    const store = await getUserStore();
+    const store = await getUserStore(supabaseClient);
     return store !== null;
   } catch (error) {
     if (error instanceof Error && error.message === 'Not authenticated') {
@@ -71,18 +69,25 @@ export interface CreateStoreInput {
   instagram_url?: string | null;
   facebook_url?: string | null;
 
-  logo?: File | null;
+  contact_email?: string | null;
+  show_email?: boolean;
+  show_whatsapp?: boolean;
+  show_instagram?: boolean;
+  show_facebook?: boolean;
 
+  logo?: File | null;
+  layout_preset?: string | null;
   theme?: {
     colors?: {
       primary?: string;
       secondary?: string;
       background?: string;
       text?: string;
+      header?: string;
     };
     fonts?: {
       heading?: string;
-      body?: string;
+      // body is being deprecated in favor of layout_preset at the top level
     };
   };
 }
@@ -90,7 +95,10 @@ export interface CreateStoreInput {
 /**
  * Create a store for the current user.
  */
-export async function createStore(input: CreateStoreInput) {
+/**
+ * Create a store for the current user.
+ */
+export async function createStore(supabaseClient: SupabaseClient, input: CreateStoreInput) {
   const {
     name,
     slug,
@@ -100,8 +108,14 @@ export async function createStore(input: CreateStoreInput) {
     store_address = null,
     instagram_url = null,
     facebook_url = null,
+    contact_email = null,
+    show_email = true,
+    show_whatsapp = true,
+    show_instagram = true,
+    show_facebook = true,
     logo = null,
     theme = undefined,
+    layout_preset = 'natural',
   } = input;
 
   // ----------------------------
@@ -153,7 +167,7 @@ export async function createStore(input: CreateStoreInput) {
   const {
     data: { user },
     error: authError,
-  } = await supabase.auth.getUser();
+  } = await supabaseClient.auth.getUser();
 
   if (authError || !user) {
     throw new Error('Not authenticated');
@@ -163,7 +177,7 @@ export async function createStore(input: CreateStoreInput) {
   // 1. Insert store record
   // ----------------------------
 
-  const { data: store, error: insertError } = await supabase
+  const { data: store, error: insertError } = await supabaseClient
     .from('stores')
     .insert({
       owner_id: user.id,
@@ -178,9 +192,16 @@ export async function createStore(input: CreateStoreInput) {
 
       instagram_url,
       facebook_url,
+      contact_email,
 
+      show_email,
+      show_whatsapp,
+      show_instagram,
+      show_facebook,
+
+      layout_preset,
       theme,
-      status: 'draft',
+      status: 'active',
     })
     .select()
     .single();
@@ -192,7 +213,7 @@ export async function createStore(input: CreateStoreInput) {
         throw new Error('You already have a store');
       }
       if (detail.includes('store_url_slug')) {
-        throw new Error('This store URL is already taken');
+        throw new Error('FIELD_ERROR:store_url_slug:This store URL is already taken');
       }
       throw new Error('A store with these details already exists');
     }
@@ -209,7 +230,7 @@ export async function createStore(input: CreateStoreInput) {
     const fileExt = logo.name.split('.').pop() || 'png';
     const filePath = `stores/${store.id}/logo/logo.${fileExt}`;
 
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabaseClient.storage
       .from('store-assets')
       .upload(filePath, logo, {
         upsert: true,
@@ -219,11 +240,166 @@ export async function createStore(input: CreateStoreInput) {
     if (!uploadError) {
       const {
         data: { publicUrl },
-      } = supabase.storage
+      } = supabaseClient.storage
         .from('store-assets')
         .getPublicUrl(filePath);
 
-      await supabase
+      await supabaseClient
+        .from('stores')
+        .update({ logo_url: publicUrl })
+        .eq('id', store.id);
+
+      store.logo_url = publicUrl;
+    } else {
+      console.error('Logo upload failed:', uploadError);
+    }
+  }
+
+  return store;
+}
+
+/**
+ * Update an existing store.
+ */
+export async function updateStore(supabaseClient: SupabaseClient, id: string, input: CreateStoreInput) {
+  const {
+    name,
+    slug,
+    tagline = null,
+    about_us = null,
+    whatsapp_number = null,
+    store_address = null,
+    instagram_url = null,
+    facebook_url = null,
+    contact_email = null,
+    show_email = true,
+    show_whatsapp = true,
+    show_instagram = true,
+    show_facebook = true,
+    logo = null,
+    theme = undefined,
+    layout_preset = 'natural',
+  } = input;
+
+  // ----------------------------
+  // Validation
+  // ----------------------------
+
+  if (!name?.trim()) {
+    throw new Error('Store name is required');
+  }
+
+  if (!slug?.trim()) {
+    throw new Error('Store URL is required');
+  }
+
+  const normalizedName = name.trim();
+  const normalizedSlug = slug
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, '-')
+    .replace(/(^-|-$)/g, '');
+
+  if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(normalizedSlug)) {
+    throw new Error(
+      'Store URL can only contain lowercase letters, numbers, and hyphens'
+    );
+  }
+
+  // Normalize WhatsApp number
+  let normalizedWhatsapp =
+    whatsapp_number?.replace(/[^\d+]/g, '') || null;
+
+  if (normalizedWhatsapp && !normalizedWhatsapp.startsWith('+')) {
+    normalizedWhatsapp = `+${normalizedWhatsapp}`;
+  }
+
+  if (
+    normalizedWhatsapp &&
+    !/^\+[1-9]\d{7,14}$/.test(normalizedWhatsapp)
+  ) {
+    throw new Error(
+      'Invalid WhatsApp number format. Include country code (e.g. +91...)'
+    );
+  }
+
+  // ----------------------------
+  // Auth check
+  // ----------------------------
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabaseClient.auth.getUser();
+
+  if (authError || !user) {
+    throw new Error('Not authenticated');
+  }
+
+  // ----------------------------
+  // 1. Update store record
+  // ----------------------------
+
+  const { data: store, error: updateError } = await supabaseClient
+    .from('stores')
+    .update({
+      store_name: normalizedName,
+      store_url_slug: normalizedSlug,
+      store_tagline: tagline,
+      about_us,
+
+      whatsapp_number: normalizedWhatsapp,
+      store_address,
+
+      instagram_url,
+      facebook_url,
+      contact_email,
+
+      show_email,
+      show_whatsapp,
+      show_instagram,
+      show_facebook,
+
+      layout_preset,
+      theme,
+    })
+    .eq('id', id)
+    .eq('owner_id', user.id) // Security: Ensure owner
+    .select()
+    .single();
+
+  if (updateError) {
+    if (updateError.code === '23505') {
+      throw new Error('FIELD_ERROR:store_url_slug:This store URL is already taken');
+    }
+
+    console.error('Error updating store:', updateError);
+    throw new Error('Failed to update store');
+  }
+
+  // ----------------------------
+  // 2. Logo upload (optional)
+  // ----------------------------
+
+  if (logo && logo.size > 0) {
+    const fileExt = logo.name.split('.').pop() || 'png';
+    const filePath = `stores/${store.id}/logo/logo.${fileExt}`;
+
+    const { error: uploadError } = await supabaseClient.storage
+      .from('store-assets')
+      .upload(filePath, logo, {
+        upsert: true,
+        cacheControl: '3600',
+      });
+
+    if (!uploadError) {
+      const {
+        data: { publicUrl },
+      } = supabaseClient.storage
+        .from('store-assets')
+        .getPublicUrl(filePath);
+
+      await supabaseClient
         .from('stores')
         .update({ logo_url: publicUrl })
         .eq('id', store.id);

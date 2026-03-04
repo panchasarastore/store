@@ -5,8 +5,11 @@ const { categories = [] } = Astro.props;
 <div class="category-bar-wrapper">
     <div class="category-scroll">
         {
-            categories.map((cat, index) => (
-                <button class={`category-pill ${index === 0 ? "active" : ""}`}>
+            categories.map((cat: string, index: number) => (
+                <button
+                    class={`category-pill ${index === 0 ? "active" : ""}`}
+                    data-category={cat}
+                >
                     {cat}
                 </button>
             ))
@@ -14,40 +17,86 @@ const { categories = [] } = Astro.props;
     </div>
 </div>
 
+<script is:inline>
+    const pills = document.querySelectorAll(".category-pill");
+
+    pills.forEach((pill) => {
+        pill.addEventListener("click", () => {
+            const selectedCat = pill.dataset.category?.trim().toLowerCase();
+            const products = document.querySelectorAll(".product-card");
+
+            // Update active state
+            pills.forEach((p) => p.classList.remove("active"));
+            pill.classList.add("active");
+
+            // Filter products
+            products.forEach((card) => {
+                const productCat = card.dataset.category?.trim().toLowerCase();
+
+                const isMatch =
+                    selectedCat === "all" || productCat === selectedCat;
+
+                if (isMatch) {
+                    card.style.display = "flex";
+                    // Add a small fade-in effect
+                    card.animate(
+                        [
+                            { opacity: 0, transform: "translateY(10px)" },
+                            { opacity: 1, transform: "translateY(0)" },
+                        ],
+                        { duration: 400, easing: "ease-out" },
+                    );
+                } else {
+                    card.style.display = "none";
+                }
+            });
+        });
+    });
+</script>
+
 <style is:inline>
     .category-bar-wrapper {
         width: var(--spacing-container);
         max-width: var(--max-width);
-        margin: 0 auto 3rem;
+        margin: 0 auto 4rem;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
-        padding-bottom: 10px;
+        padding-bottom: 2px;
+        scrollbar-width: none; /* Firefox */
+    }
+    .category-bar-wrapper::-webkit-scrollbar {
+        display: none; /* Safari and Chrome */
     }
     .category-scroll {
         display: flex;
-        gap: 0.8rem;
+        gap: 0.75rem;
         justify-content: center;
+        padding: 4px;
     }
     .category-pill {
-        padding: 0.6rem 1.5rem;
+        padding: 0.7rem 1.75rem;
         border-radius: 50px;
-        border: 1px solid rgba(0, 0, 0, 0.1);
-        background: transparent;
-        color: var(--theme-ink);
-        font-size: 0.85rem;
-        font-weight: 600;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        background: white;
+        color: var(--theme-brand);
+        font-size: 0.8rem;
+        font-weight: 700;
         cursor: pointer;
         white-space: nowrap;
-        transition: all 0.2s;
+        transition: var(--transition-smooth);
+        box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.03);
     }
     .category-pill:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px -5px rgba(0, 0, 0, 0.08);
         border-color: var(--theme-accent);
-        color: var(--theme-accent);
     }
     .category-pill.active {
         background: var(--theme-brand);
         color: white;
         border-color: var(--theme-brand);
+        box-shadow: 0 10px 25px -5px
+            rgba(var(--theme-accent-rgb, 196, 106, 43), 0.3);
     }
 
     @media (max-width: 768px) {

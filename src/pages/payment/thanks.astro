@@ -1,0 +1,436 @@
+---
+// src/pages/payment/thanks.astro
+---
+
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Order Confirmed - Your Store</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap"
+            rel="stylesheet"
+        />
+        <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0"
+        />
+    </head>
+    <body>
+        <div class="success-container">
+            <div class="success-card">
+                <div class="icon-circle">
+                    <span class="material-symbols-rounded">check_circle</span>
+                </div>
+                <h1>Order Confirmed!</h1>
+                <p>
+                    Thank you for your purchase. We've received your order and
+                    it's currently being processed.
+                </p>
+
+                <div class="order-details-card" id="details-skeleton">
+                    <div class="skeleton-line" style="width: 60%"></div>
+                    <div class="skeleton-line" style="width: 40%"></div>
+                    <div class="skeleton-line" style="width: 80%"></div>
+                </div>
+
+                <div class="order-details-card hidden" id="order-details">
+                    <div class="detail-row">
+                        <span class="label">Order Number</span>
+                        <span class="value" id="order-number">...</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Customer</span>
+                        <span class="value" id="customer-name">...</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Total Paid</span>
+                        <span class="value" id="order-total">...</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Status</span>
+                        <span class="value status-badge" id="order-status"
+                            >Processing</span
+                        >
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <a href="#" id="back-store-btn" class="primary-btn">
+                        <span class="material-symbols-rounded">store</span>
+                        BACK TO STORE
+                    </a>
+                    <a href="/" class="secondary-btn">
+                        <span class="material-symbols-rounded">home</span>
+                        GO HOME
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            import { supabase } from "../../lib/supabase";
+
+            async function loadOrder() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const orderId = urlParams.get("order_id");
+
+                if (!orderId) {
+                    document
+                        .getElementById("details-skeleton")
+                        ?.classList.add("hidden");
+                    return;
+                }
+
+                try {
+                    // Fetch order with store slug
+                    const { data: order, error } = await supabase
+                        .from("orders")
+                        .select(
+                            `
+                            id, 
+                            order_number, 
+                            total_amount, 
+                            customer_name, 
+                            payment_status,
+                            stores (store_url_slug)
+                        `,
+                        )
+                        .eq("id", orderId)
+                        .single();
+
+                    if (error) throw error;
+
+                    // Update UI
+                    document.getElementById("order-number")!.textContent =
+                        order.order_number;
+                    document.getElementById("customer-name")!.textContent =
+                        order.customer_name;
+                    document.getElementById("order-total")!.textContent =
+                        `₹${order.total_amount}`;
+
+                    const statusEl = document.getElementById("order-status")!;
+                    statusEl.textContent = order.payment_status.toUpperCase();
+                    if (
+                        order.payment_status === "completed" ||
+                        order.payment_status === "paid"
+                    ) {
+                        statusEl.classList.add("paid");
+                    }
+
+                    // Update Back to Store button
+                    const storeBtn = document.getElementById(
+                        "back-store-btn",
+                    ) as HTMLAnchorElement;
+                    if (order.stores?.store_url_slug) {
+                        storeBtn.href = `/${order.stores.store_url_slug}`;
+                    } else {
+                        storeBtn.classList.add("hidden");
+                    }
+
+                    // Show content
+                    document
+                        .getElementById("details-skeleton")
+                        ?.classList.add("hidden");
+                    document
+                        .getElementById("order-details")
+                        ?.classList.remove("hidden");
+                } catch (err) {
+                    console.error("Error loading order:", err);
+                    document
+                        .getElementById("details-skeleton")
+                        ?.classList.add("hidden");
+                }
+            }
+
+            loadOrder();
+
+            // --- TEST RECEIPT LOGIC ---
+            async function sendTestReceipt() {
+                const btn = document.getElementById(
+                    "test-receipt-btn",
+                ) as HTMLButtonElement;
+                const originalText = btn.innerHTML;
+
+                try {
+                    btn.disabled = true;
+                    btn.textContent = "Sending...";
+
+                    // 1. Get Session
+                    const {
+                        data: { session },
+                        error: sessionError,
+                    } = await supabase.auth.getSession();
+                    if (sessionError || !session)
+                        throw new Error("No active session found");
+
+                    const { access_token, user } = session;
+
+                    // 2. Build Payload
+                    const payload = {
+                        receipt: {
+                            order_id: "TEST-12345",
+                            date: new Date().toLocaleDateString(),
+                            currency: "INR",
+                            items: [
+                                {
+                                    name: "Silk Thread Earrings",
+                                    quantity: 2,
+                                    price: 299,
+                                },
+                                {
+                                    name: "Handmade Bracelet",
+                                    quantity: 1,
+                                    price: 450,
+                                },
+                            ],
+                            subtotal: 1048,
+                            total: 1048,
+                            customer: {
+                                name:
+                                    user.user_metadata?.full_name ||
+                                    "Test Customer",
+                                email: user.email,
+                            },
+                            store: {
+                                name: "Panchasara Store",
+                                email: "support@panchasara.com",
+                                phone: "+91 98765 43210",
+                                address: "123 Craft Lane, Gujarat, India",
+                            },
+                        },
+                    };
+
+                    // 3. Call Edge Function
+                    const response = await fetch(
+                        `${import.meta.env.PUBLIC_SUPABASE_URL}/functions/v1/resend`,
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${access_token}`,
+                            },
+                            body: JSON.stringify(payload),
+                        },
+                    );
+
+                    const result = await response.json();
+
+                    if (!response.ok)
+                        throw new Error(
+                            result.error || "Failed to send receipt",
+                        );
+
+                    alert("Receipt sent successfully! Check your inbox.");
+                    console.log("Resend Response:", result);
+                } catch (err: any) {
+                    console.error("Test Receipt Error:", err);
+                    alert(`Error: ${err.message}`);
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            }
+
+            document
+                .getElementById("test-receipt-btn")
+                ?.addEventListener("click", sendTestReceipt);
+        </script>
+
+        <style is:global>
+            :root {
+                --theme-brand: #5b3a1e;
+                --theme-accent: #c46a2b;
+                --theme-page: #fffaf0;
+                --theme-ink: #1f1f1f;
+                --theme-success: #4caf50;
+                --font-display: "Playfair Display", serif;
+                --font-body: "Inter", sans-serif;
+            }
+
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                background-color: var(--theme-page);
+                color: var(--theme-ink);
+                font-family: var(--font-body);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                padding: 1.5rem;
+            }
+
+            .success-container {
+                width: 100%;
+                max-width: 480px;
+                animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+
+            @keyframes slideUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .success-card {
+                background: white;
+                padding: 3rem 2rem;
+                border-radius: 32px;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+                text-align: center;
+                border: 1px solid rgba(0, 0, 0, 0.02);
+            }
+
+            .icon-circle {
+                width: 72px;
+                height: 72px;
+                background: rgba(76, 175, 80, 0.1);
+                color: var(--theme-success);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 1.5rem;
+            }
+
+            .icon-circle .material-symbols-rounded {
+                font-size: 3rem;
+            }
+
+            h1 {
+                font-family: var(--font-display);
+                font-size: 2.25rem;
+                color: var(--theme-brand);
+                margin-bottom: 0.75rem;
+            }
+
+            p {
+                line-height: 1.6;
+                color: #6b7280;
+                margin-bottom: 2rem;
+                font-size: 0.95rem;
+            }
+
+            .order-details-card {
+                background: #fdfaf6;
+                padding: 1.5rem;
+                border-radius: 20px;
+                margin-bottom: 2.5rem;
+                border: 1px solid #f3e8d9;
+                text-align: left;
+            }
+
+            .detail-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.75rem 0;
+                border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+            }
+            .detail-row:last-child {
+                border: none;
+            }
+
+            .label {
+                color: #8d7a66;
+                font-size: 0.85rem;
+                font-weight: 500;
+            }
+            .value {
+                color: var(--theme-brand);
+                font-weight: 700;
+                font-size: 0.9rem;
+            }
+
+            .status-badge {
+                background: #fef3c7;
+                color: #92400e;
+                padding: 4px 12px;
+                border-radius: 50px;
+                font-size: 0.75rem;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
+            .status-badge.paid {
+                background: #dcfce7;
+                color: #166534;
+            }
+
+            .actions {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .primary-btn,
+            .secondary-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                padding: 1.1rem;
+                border-radius: 16px;
+                font-weight: 700;
+                font-size: 0.85rem;
+                letter-spacing: 0.05em;
+                text-decoration: none;
+                transition: all 0.2s;
+            }
+
+            .primary-btn {
+                background: var(--theme-accent);
+                color: white;
+                box-shadow: 0 10px 20px -5px rgba(196, 106, 43, 0.3);
+            }
+            .primary-btn:hover {
+                transform: translateY(-2px);
+                filter: brightness(1.1);
+            }
+
+            .secondary-btn {
+                background: white;
+                color: var(--theme-brand);
+                border: 1px solid #e5e7eb;
+            }
+            .secondary-btn:hover {
+                background: #f9fafb;
+            }
+
+            .hidden {
+                display: none;
+            }
+
+            /* Skeleton Loaders */
+            .skeleton-line {
+                height: 12px;
+                background: #eee;
+                border-radius: 6px;
+                margin-bottom: 12px;
+                animation: pulse 1.5s infinite ease-in-out;
+            }
+            @keyframes pulse {
+                0% {
+                    opacity: 0.5;
+                }
+                50% {
+                    opacity: 1;
+                }
+                100% {
+                    opacity: 0.5;
+                }
+            }
+        </style>
+    </body>
+</html>
