@@ -171,9 +171,8 @@
                     // Clear cart on successful order placement
                     clearCart();
 
-                    const slug = (wrapper as HTMLElement).dataset.storeSlug;
                     setTimeout(() => {
-                        window.location.href = `/orders/success${slug ? `?slug=${slug}` : ""}`;
+                        window.location.href = "/orders/success";
                     }, 2000);
                 }
             } catch (err: any) {

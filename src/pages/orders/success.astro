@@ -40,11 +40,6 @@ const bgColor = "#FFFAF7";
     </head>
     <body>
         <div class="success-container">
-            <!-- Receipt Header / Panchasara Branding -->
-            <div class="panchasara-brand">
-                Panchasara<span>·</span>🍯
-            </div>
-
             <!-- Receipt Roller -->
             <div class="receipt-roller">
                 <div class="roller-holes">
@@ -103,12 +98,6 @@ const bgColor = "#FFFAF7";
                     }
                 </div>
             </div>
-
-            <div class="footer-note">
-                Sent via <b>Panchasara</b> for <b
-                    >{store?.store_name || "the store"}</b
-                >
-            </div>
         </div>
 
         <style define:vars={{ primaryColor, storeAccent, bgColor }}>
@@ -146,21 +135,6 @@ const bgColor = "#FFFAF7";
                 }
             }
 
-            .panchasara-brand {
-                text-align: center;
-                font-family: "Lexend", sans-serif;
-                font-size: 13px;
-                font-weight: 800;
-                letter-spacing: 5px;
-                text-transform: uppercase;
-                color: #4a4540;
-                margin-bottom: 24px;
-            }
-
-            .panchasara-brand span {
-                color: var(--primaryColor);
-            }
-
             .receipt-roller {
                 background: #1e1c1a;
                 border-radius: 12px 12px 0 0;
@@ -182,8 +156,8 @@ const bgColor = "#FFFAF7";
                 width: 10px;
                 height: 10px;
                 border-radius: 50%;
-                background: #0d0c0b;
-                box-shadow: inset 0 1px 3px rgba(0, 0, 0, 1);
+                background: #e2ddd6;
+                box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
             }
 
             .success-card {
@@ -337,18 +311,6 @@ const bgColor = "#FFFAF7";
                 background: var(--bgColor);
                 border-radius: 50%;
                 margin: 0 2px;
-            }
-
-            .footer-note {
-                text-align: center;
-                margin-top: 40px;
-                font-size: 12px;
-                color: #9a948d;
-                line-height: 1.8;
-            }
-
-            .footer-note b {
-                color: #4a4540;
             }
         </style>
     </body>
