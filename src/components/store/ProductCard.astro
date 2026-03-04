@@ -273,7 +273,7 @@ const isOutOfStock =
     .big-add-btn {
         width: 100%;
         min-height: 44px;
-        background-color: var(--theme-ink);
+        background-color: var(--theme-accent);
         color: white;
         border: none;
         border-radius: 12px;
@@ -287,13 +287,12 @@ const isOutOfStock =
         justify-content: center;
         align-items: center;
         text-align: center;
-        box-shadow: var(--shadow-premium);
+        box-shadow: 0 4px 15px rgba(var(--theme-accent-rgb, 196, 106, 43), 0.2);
     }
     .big-add-btn:hover {
-        background-color: var(--theme-accent);
+        opacity: 0.9;
         transform: translateY(-2px);
-        box-shadow: 0 8px 15px -4px
-            rgba(var(--theme-accent-rgb, 196, 106, 43), 0.3);
+        box-shadow: 0 8px 20px rgba(var(--theme-accent-rgb, 196, 106, 43), 0.3);
     }
 
     .stepper-controls {
@@ -422,16 +421,7 @@ const isOutOfStock =
     }
     .store-template-wrapper[data-layout="gallery"] .big-add-btn {
         border-radius: 0;
-        background: var(--theme-ink);
-    }
-    .store-template-wrapper[data-layout="gallery"] .stepper-controls {
-        border-radius: 0;
-    }
-    .store-template-wrapper[data-layout="gallery"]
-        .product-card:hover
-        .product-image
-        img {
-        opacity: 0.9;
+        background: var(--theme-accent);
     }
 
     .store-template-wrapper[data-layout="pop"] .product-card {
@@ -446,14 +436,11 @@ const isOutOfStock =
     .store-template-wrapper[data-layout="pop"] .big-add-btn {
         border-radius: 12px;
         font-weight: 800;
-        border: 2px solid var(--theme-ink);
-        color: var(--theme-ink);
-        background: white;
-    }
-    .store-template-wrapper[data-layout="pop"] .big-add-btn:hover {
         background: var(--theme-accent);
         color: white;
-        border-color: var(--theme-accent);
+    }
+    .store-template-wrapper[data-layout="pop"] .big-add-btn:hover {
+        opacity: 0.9;
     }
     .store-template-wrapper[data-layout="pop"] .stepper-controls {
         border-radius: 12px;

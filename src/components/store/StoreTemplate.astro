@@ -278,6 +278,11 @@ const displayProducts = products;
       font-weight: 400;
     }
 
+    .store-template-wrapper[data-font-preset="loom"] .store-template-name {
+      font-family: "Abril Fatface", serif;
+      font-weight: 400;
+    }
+
     /* LAYOUT PRESETS */
     .store-template-wrapper[data-layout="gallery"] {
       --spacing-container: 100%;
@@ -297,6 +302,10 @@ const displayProducts = products;
     }
     .store-template-wrapper[data-layout="pop"] .product-card:nth-child(even) {
       transform: rotate(0.5deg);
+    }
+
+    .store-template-wrapper[data-layout="pop"] .product-card:hover {
+      transform: translateY(-5px);
     }
 
     /* Global Scroll & Helper Styles */
