@@ -20,7 +20,9 @@ if (session instanceof Response) return session;
 
 // 2. Redirect if store already exists
 if (await hasStore(Astro.locals.supabase)) {
-  return Astro.redirect(import.meta.env.PUBLIC_DASHBOARD_URL);
+  return Astro.redirect(
+    import.meta.env.PUBLIC_DASHBOARD_URL || "https://dashboard.pnsara.store",
+  );
 }
 
 let errors: Record<string, string> = {};
@@ -63,7 +65,9 @@ if (Astro.request.method === "POST") {
     };
 
     await createStore(Astro.locals.supabase, data);
-    return Astro.redirect(import.meta.env.PUBLIC_DASHBOARD_URL);
+    return Astro.redirect(
+      import.meta.env.PUBLIC_DASHBOARD_URL || "https://dashboard.pnsara.store",
+    );
   } catch (e: any) {
     const msg = e.message || "";
     if (msg.startsWith("FIELD_ERROR:")) {

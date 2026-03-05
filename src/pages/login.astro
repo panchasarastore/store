@@ -6,7 +6,8 @@ import { supabase } from "../lib/supabase";
 import { getSession } from "../lib/auth";
 import { hasStore } from "../lib/stores";
 
-const dashboardUrl = import.meta.env.PUBLIC_DASHBOARD_URL;
+const dashboardUrl =
+  import.meta.env.PUBLIC_DASHBOARD_URL || "https://dashboard.pnsara.store";
 
 // --------------------------------------------------
 // 1️⃣ If user is ALREADY logged in → route them
