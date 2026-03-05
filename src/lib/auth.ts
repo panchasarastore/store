@@ -59,7 +59,7 @@ export async function requireAuth(Astro: AstroGlobal) {
   const session = await getSession(Astro);
 
   if (!session) {
-    return Astro.redirect('/login');
+    return Astro.redirect('https://dashboard.pnsara.store/login');
   }
 
   return session;
@@ -71,5 +71,5 @@ export async function requireAuth(Astro: AstroGlobal) {
 export async function logout(Astro: AstroGlobal) {
   const supabaseClient = Astro.locals.supabase || supabase;
   await supabaseClient.auth.signOut();
-  return Astro.redirect('/login');
+  return Astro.redirect('https://dashboard.pnsara.store/login');
 }
