@@ -165,7 +165,8 @@ if (session) {
             "submit-btn",
           ) as HTMLButtonElement;
           const dashboardUrl =
-            document.body.dataset.dashboardUrl || "http://localhost:8080";
+            document.body.dataset.dashboardUrl ||
+            "https://dashboard.pnsara.store";
 
           form.addEventListener("submit", async (e) => {
             e.preventDefault();
