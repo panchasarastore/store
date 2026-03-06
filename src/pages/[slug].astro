@@ -20,7 +20,7 @@ if (
   store.status === "deleted" ||
   store.status === "suspended"
 ) {
-  return new Response("Store not found", { status: 404 });
+  return Astro.redirect("/404");
 }
 
 // Handle Maintenance/Draft Mode

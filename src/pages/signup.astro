@@ -101,15 +101,11 @@ if (Astro.request.method === "POST") {
               href="/"
               class="inline-flex items-center gap-2 group decoration-transparent"
             >
-              <div
-                class="w-8 h-8 bg-primary rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"
-              >
-                <span class="text-white font-display font-bold text-lg">P</span>
-              </div>
-              <span
-                class="font-display font-bold text-xl tracking-tight text-slate-900"
-                >Panchasara.</span
-              >
+              <img
+                src="/logo_pnsara.png"
+                alt="Panchasara Logo"
+                class="h-8 w-auto group-hover:scale-110 transition-transform"
+              />
             </a>
             <h2 class="mt-8 text-3xl font-display font-bold text-slate-900">
               Get started today
@@ -204,7 +200,7 @@ if (Astro.request.method === "POST") {
               <div class="mt-6 p-4 rounded-xl bg-green-50 border border-green-100 text-green-600 text-sm text-center font-medium">
                 {success} <br />
                 <a
-                  href="/login"
+                  href="https://dashboard.pnsara.store/login"
                   class="underline hover:text-green-700 mt-1 inline-block"
                 >
                   Go to Login
@@ -220,7 +216,7 @@ if (Astro.request.method === "POST") {
             <div class="relative flex justify-center text-sm">
               <span class="px-2 bg-white text-slate-500">
                 Already have an account? <a
-                  href="/login"
+                  href="https://dashboard.pnsara.store/login"
                   class="font-bold text-primary hover:text-orange-600 transition-colors"
                   >Log in</a
                 >

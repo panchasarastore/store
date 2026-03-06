@@ -15,12 +15,16 @@ const cookieStorage = {
   },
   setItem: (key: string, value: string) => {
     if (typeof document === 'undefined') return;
-    // Set cookie for the whole localhost domain to share across ports
-    document.cookie = `${key}=${encodeURIComponent(value)}; path=/; max-age=31536000; SameSite=Lax`;
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const domain = isLocal ? '' : '; domain=.pnsara.store';
+    // Set cookie for the whole domain to share across subdomains
+    document.cookie = `${key}=${encodeURIComponent(value)}; path=/; max-age=31536000; SameSite=Lax${domain}`;
   },
   removeItem: (key: string) => {
     if (typeof document === 'undefined') return;
-    document.cookie = `${key}=; path=/; max-age=-1; SameSite=Lax`;
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const domain = isLocal ? '' : '; domain=.pnsara.store';
+    document.cookie = `${key}=; path=/; max-age=-1; SameSite=Lax${domain}`;
   }
 };
 

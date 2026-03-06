@@ -70,7 +70,13 @@ if (Astro.request.method === "POST") {
         };
 
         await updateStore(Astro.locals.supabase, store.id, data);
-        return Astro.redirect(import.meta.env.PUBLIC_DASHBOARD_URL);
+        const dashboardUrl = import.meta.env.PUBLIC_DASHBOARD_URL;
+        const finalRedirect =
+            !dashboardUrl || dashboardUrl === "undefined"
+                ? "https://dashboard.pnsara.store"
+                : dashboardUrl;
+
+        return Astro.redirect(finalRedirect);
     } catch (e: any) {
         const msg = e.message || "";
         if (msg.startsWith("FIELD_ERROR:")) {
