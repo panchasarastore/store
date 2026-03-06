@@ -18,11 +18,14 @@ import { requireAuth } from "../lib/auth";
 const session = await requireAuth(Astro);
 if (session instanceof Response) return session;
 
-// 2. Redirect if store already exists
+const dashboardUrl = import.meta.env.PUBLIC_DASHBOARD_URL;
+const finalRedirect =
+  !dashboardUrl || dashboardUrl === "undefined"
+    ? "https://dashboard.pnsara.store"
+    : dashboardUrl;
+
 if (await hasStore(Astro.locals.supabase)) {
-  return Astro.redirect(
-    import.meta.env.PUBLIC_DASHBOARD_URL || "https://dashboard.pnsara.store",
-  );
+  return Astro.redirect(finalRedirect);
 }
 
 let errors: Record<string, string> = {};
@@ -65,9 +68,14 @@ if (Astro.request.method === "POST") {
     };
 
     await createStore(Astro.locals.supabase, data);
-    return Astro.redirect(
-      import.meta.env.PUBLIC_DASHBOARD_URL || "https://dashboard.pnsara.store",
-    );
+
+    const dashboardUrl = import.meta.env.PUBLIC_DASHBOARD_URL;
+    const finalRedirect =
+      !dashboardUrl || dashboardUrl === "undefined"
+        ? "https://dashboard.pnsara.store"
+        : dashboardUrl;
+
+    return Astro.redirect(finalRedirect);
   } catch (e: any) {
     const msg = e.message || "";
     if (msg.startsWith("FIELD_ERROR:")) {
