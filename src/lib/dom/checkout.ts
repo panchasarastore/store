@@ -82,11 +82,28 @@ export function setupCheckoutLogic(renderCheckoutSummary: () => void, toggleCart
 
                             if (isToday) {
                                 activeSlots = slots.filter((s: string) => {
-                                    const [start] = s.split(' - ');
-                                    const [hours, mins] = start.split(':').map(Number);
-                                    const slotTime = new Date();
-                                    slotTime.setHours(hours, mins, 0, 0);
-                                    return slotTime > now;
+                                    // Robustly extract the start time from varied formats (e.g. "09:00-18:00", "9 AM - 5 PM", "14:00 - 18:00")
+                                    const parts = s.split('-');
+                                    if (parts.length === 0) return true; // fallback
+                                    // We need to check if the END of the slot has passed, not the START.
+                                    // Otherwise, a slot of '09:00 - 18:00' becomes invalid at 09:01.
+                                    let parseStr = parts.length > 1 ? parts[1].trim() : parts[0].trim();
+
+                                    const match = parseStr.match(/(\d+)(?::(\d+))?\s*(am|pm)?/i);
+                                    if (!match) return true; // keep slot if unable to parse format
+
+                                    let hours = parseInt(match[1], 10);
+                                    const mins = match[2] ? parseInt(match[2], 10) : 0;
+                                    const ampm = match[3]?.toLowerCase();
+
+                                    if (ampm === 'pm' && hours < 12) hours += 12;
+                                    if (ampm === 'am' && hours === 12) hours = 0;
+
+                                    const slotEndTime = new Date();
+                                    slotEndTime.setHours(hours, mins, 0, 0);
+
+                                    // The slot is still active if the current time is before the slot's END time
+                                    return slotEndTime > now;
                                 });
                             }
 
