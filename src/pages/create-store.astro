@@ -2,14 +2,21 @@
 // src/pages/create-store.astro
 export const prerender = false;
 
-import StoreTemplate from "../components/store/StoreTemplate.astro";
+import SetupLayout from "../components/setup/SetupLayout.astro";
+import SetupHeader from "../components/setup/SetupHeader.astro";
+import SetupBasics from "../components/setup/SetupBasics.astro";
+import SetupBrand from "../components/setup/SetupBrand.astro";
+import SetupVisual from "../components/setup/SetupVisual.astro";
+import SetupContact from "../components/setup/SetupContact.astro";
+import SetupPreview from "../components/setup/SetupPreview.astro";
+import SetupFooter from "../components/setup/SetupFooter.astro";
+import SetupScripts from "../components/setup/SetupScripts.astro";
+import { createStore, hasStore } from "../lib/stores";
 import { requireAuth } from "../lib/auth";
-import { hasStore, createStore } from "../lib/stores";
 
-// -----------------------------------------------------------------------------
-// Auth Guard
-// -----------------------------------------------------------------------------
-await requireAuth(Astro);
+// 1. Guard
+const session = await requireAuth(Astro);
+if (session instanceof Response) return session;
 
 // If user already has a store → go straight to dashboard
 if (await hasStore()) {
@@ -18,50 +25,43 @@ if (await hasStore()) {
   return Astro.redirect(`${DASHBOARD_URL}/login`);
 }
 
-let error = "";
+let errors: Record<string, string> = {};
+const isEditMode = false;
 
-// -----------------------------------------------------------------------------
-// Handle form submit
-// -----------------------------------------------------------------------------
+// 3. Handle Form Submission
 if (Astro.request.method === "POST") {
   try {
     const formData = await Astro.request.formData();
-
-    // -----------------------------
-    // Theme construction
-    // -----------------------------
-    const theme = {
-      colors: {
-        primary: formData.get("color_primary")?.toString(),
-        secondary: formData.get("color_secondary")?.toString(),
-        background: formData.get("color_background")?.toString(),
-        text: formData.get("color_text")?.toString(),
-      },
-      fonts: {
-        heading:
-          formData.get("font_preset")?.toString() === "editorial"
-            ? "Playfair Display"
-            : formData.get("font_preset")?.toString() === "maker"
-              ? "Quicksand"
-              : "Lexend",
-        body: "Plus Jakarta Sans",
-      },
-    };
-
-    // -----------------------------
-    // Store payload
-    // -----------------------------
-    const storeData = {
-      name: formData.get("store_name")?.toString() || "",
-      slug: formData.get("store_url_slug")?.toString() || "",
-      tagline: formData.get("store_tagline")?.toString(),
-      about_us: formData.get("about_us")?.toString(),
-      whatsapp_number: formData.get("whatsapp_number")?.toString(),
-      store_address: formData.get("store_address")?.toString(),
-      instagram_url: formData.get("instagram_url")?.toString(),
-      facebook_url: formData.get("facebook_url")?.toString(),
+    // ... (rest of data collection)
+    const data = {
+      name: formData.get("store_name") as string,
+      slug: formData.get("store_url_slug") as string,
+      tagline: formData.get("store_tagline") as string,
+      about_us: formData.get("about_us") as string,
+      whatsapp_number: formData.get("whatsapp_number") as string,
+      store_address: formData.get("store_address") as string,
+      instagram_url: formData.get("instagram_url") as string,
+      facebook_url: formData.get("facebook_url") as string,
+      contact_email: formData.get("contact_email") as string,
+      show_email: formData.get("show_email") === "on",
+      show_whatsapp: formData.get("show_whatsapp") === "on",
+      show_instagram: formData.get("show_instagram") === "on",
+      show_facebook: formData.get("show_facebook") === "on",
       logo: formData.get("logo") as File,
-      theme,
+      theme: {
+        colors: {
+          primary: formData.get("color_primary") as string,
+          secondary: formData.get("color_secondary") as string,
+          background: formData.get("color_background") as string,
+          text: formData.get("color_text") as string,
+          header: formData.get("color_header") as string,
+        },
+        fonts: {
+          heading: formData.get("font_preset") as string,
+          body: "", // body is deprecated
+        },
+      },
+      layout_preset: formData.get("layout_preset") as string,
     };
 
     // -----------------------------
@@ -78,138 +78,59 @@ if (Astro.request.method === "POST") {
   }
 }
 
-// -----------------------------------------------------------------------------
-// Preview-only placeholder data (UI preview)
-// -----------------------------------------------------------------------------
-const previewStore = {
-  name: "The Sourdough Studio",
-  tagline: "Slow-fermented love from my heart to yours",
-  about:
-    "Every loaf I bake is a 48-hour labor of love. I began my journey in a small kitchen in Tuscany, learning the ancient art of wild yeast fermentation.",
+// 4. Initial State for Preview
+const initialStore = {
+  name: "",
+  slug: "",
+  tagline: "",
+  about: "",
   logo: "",
-  whatsapp_number: "+91 98765 43210",
-  address: "Fort Kochi, Kerala",
+  address: "",
+  email: "",
+  whatsapp_number: "",
+  instagram: "",
+  facebook: "",
+  show_email: true,
+  show_whatsapp: true,
+  show_instagram: true,
+  show_facebook: true,
 };
 
 const previewTheme = {
-  primary: "#5b3a1e",
-  secondary: "#c46a2b",
-  background: "#fffaf0",
-  text: "#1f1f1f",
+  primary: "#5D4037",
+  secondary: "#8D6E63",
+  background: "#EFEBE9",
+  text: "#3E2723",
+  header: "#EFEBE9",
 };
 
-const previewProducts = [];
+const previewFonts = {
+  heading: "editorial",
+  body: "natural",
+};
+
+const previewProducts = [
+  {
+    id: 1,
+    name: "Sample Product 1",
+    price: 1200,
+    image_url:
+      "https://images.unsplash.com/photo-1515562141207-7a88bd7ce3ee?auto=format&fit=crop&q=80&w=800",
+  },
+  {
+    id: 2,
+    name: "Sample Product 2",
+    price: 2500,
+    image_url:
+      "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&q=80&w=800",
+  },
+];
 ---
 
-<!doctype html>
-<html lang="en" class="h-full overflow-hidden">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Create Store – Panchasara</title>
-
-    <link href="https://fonts.googleapis.com" rel="preconnect" />
-    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
-
-    <link
-      href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;600&family=Oswald:wght@400;500;700&family=Quicksand:wght@400;500;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
-      rel="stylesheet"
-    />
-
-    <script is:inline src="https://cdn.tailwindcss.com?plugins=forms"></script>
-    <script is:inline>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              primary: "#FF9D42",
-              "primary-hover": "#e88b32",
-              "background-light": "#FFFAF7",
-            },
-            fontFamily: {
-              display: ["Lexend", "sans-serif"],
-              sans: ["Plus Jakarta Sans", "sans-serif"],
-            },
-            borderRadius: {
-              DEFAULT: "1rem",
-              pill: "9999px",
-              "2xl": "2rem",
-              "3xl": "3rem",
-            },
-          },
-        },
-      };
-    </script>
-
-    <style>
-      .editor-scroll::-webkit-scrollbar {
-        width: 6px;
-      }
-      .editor-scroll::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      .editor-scroll::-webkit-scrollbar-thumb {
-        background-color: #e2e8f0;
-        border-radius: 20px;
-      }
-      .editor-scroll::-webkit-scrollbar-thumb:hover {
-        background-color: #cbd5e1;
-      }
-
-      .mobile-view-editor .editor-panel {
-        display: flex;
-      }
-      .mobile-view-editor .preview-panel {
-        display: none;
-      }
-      .mobile-view-preview .editor-panel {
-        display: none;
-      }
-      .mobile-view-preview .preview-panel {
-        display: flex;
-      }
-
-      @media (min-width: 1024px) {
-        .mobile-view-editor .preview-panel {
-          display: flex;
-        }
-        .mobile-view-editor .editor-panel {
-          display: flex;
-        }
-        .mobile-view-preview .editor-panel {
-          display: flex;
-        }
-      }
-
-      .advanced-colors {
-        transition:
-          max-height 0.3s ease-in-out,
-          opacity 0.3s ease-in-out;
-        max-height: 0;
-        opacity: 0;
-        overflow: hidden;
-      }
-      .advanced-colors.open {
-        max-height: 500px;
-        opacity: 1;
-      }
-    </style>
-  </head>
-
-  <body
-    class="h-screen bg-slate-50 text-slate-900 font-sans overflow-hidden mobile-view-editor"
-    id="app-body"
-  >
-    <div
-      class="lg:hidden h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 fixed top-0 left-0 right-0 z-50 shrink-0"
+<SetupLayout title="Create Your Store">
+  <div class="flex h-screen pt-14 lg:pt-0 overflow-hidden">
+    <aside
+      class="editor-panel w-full lg:w-[40%] bg-white h-full border-r border-slate-200 flex flex-col z-20 shadow-2xl lg:shadow-none shrink-0 relative"
     >
       <span class="font-display font-bold text-base">Setup Store</span>
       <div class="flex bg-slate-100 rounded-lg p-1">
@@ -799,276 +720,35 @@ const previewProducts = [];
         <div
           class="absolute bottom-0 left-0 w-80 h-80 bg-slate-200 rounded-full blur-3xl opacity-60 translate-y-1/2 -translate-x-1/2 pointer-events-none"
         >
-        </div>
-
-        <div
-          class="w-full h-full bg-white rounded-2xl shadow-2xl border border-slate-300/50 flex flex-col overflow-hidden relative z-10"
-        >
-          <div
-            class="h-10 bg-slate-50 border-b border-slate-200 flex items-center px-4 gap-3 shrink-0"
-          >
-            <div class="flex gap-1.5">
-              <div class="w-2.5 h-2.5 rounded-full bg-red-400"></div>
-              <div class="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>
-              <div class="w-2.5 h-2.5 rounded-full bg-green-400"></div>
-            </div>
-            <div class="flex-1 flex justify-center px-4">
-              <div
-                class="bg-white border border-slate-200 text-slate-400 text-[10px] px-4 py-1 rounded-md w-full max-w-md text-center font-mono truncate browser-url opacity-70"
-              >
-                panchasara.com/sourdough-studio
+          {
+            errors.form && (
+              <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm font-medium animate-pulse">
+                {errors.form}
               </div>
-            </div>
-            <button
-              id="open-preview-btn"
-              type="button"
-              title="Open in new tab"
-              class="text-slate-400 hover:text-primary transition-colors"
-            >
-              <span class="material-symbols-rounded text-lg">open_in_new</span>
-            </button>
-          </div>
-
-          <div class="flex-1 overflow-y-auto bg-white preview-scroll-container">
-            <StoreTemplate
-              store={previewStore}
-              theme={previewTheme}
-              products={previewProducts}
-              isPreview={true}
-            />
-          </div>
-        </div>
-      </main>
-    </div>
-
-    <script>
-      const form = document.querySelector(".store-form");
-      // FIXED: Select the actual component root inside our new container
-      // Note: We use .querySelector inside the event listener to be safe,
-      // or define it here if we trust DOM order. Let's make it robust.
-      let previewContainer = document.querySelector(".store-template-wrapper");
-
-      const browserUrl = document.querySelector(".browser-url");
-      const broadcast = new BroadcastChannel("panchasara_preview_sync");
-
-      // Vibe Presets
-      const vibes = {
-        natural: {
-          primary: "#5D4037",
-          secondary: "#8D6E63",
-          bg: "#EFEBE9",
-          text: "#3E2723",
-          header: "#EFEBE9",
-        },
-        gallery: {
-          primary: "#000000",
-          secondary: "#616161",
-          bg: "#FFFFFF",
-          text: "#212121",
-          header: "#FFFFFF",
-        },
-        pop: {
-          primary: "#E91E63",
-          secondary: "#FF80AB",
-          bg: "#FFF0F5",
-          text: "#880E4F",
-          header: "#FFF0F5",
-        },
-      };
-
-      const textMappings = {
-        store_name: [".store-template-name", ".store-template-name-footer"],
-        store_tagline: ".store-template-tagline",
-        about_us: ".store-template-about",
-        store_address: ".footer-address-text",
-        contact_email: ".footer-email-text",
-        whatsapp_number: ".footer-whatsapp-text",
-      };
-
-      const cssVarMappings = {
-        color_primary: "--theme-brand",
-        color_secondary: "--theme-accent",
-        color_background: "--theme-page",
-        color_text: "--theme-ink",
-        color_header: "--theme-header-bg",
-      };
-
-      const toggleVisibility = (selector, isVisible) => {
-        const el = document.querySelector(selector);
-        if (el) el.style.display = isVisible ? "flex" : "none";
-      };
-
-      const updateColorInputs = (preset) => {
-        document.querySelector('input[name="color_primary"]').value =
-          preset.primary;
-        document.querySelector('input[name="color_secondary"]').value =
-          preset.secondary;
-        document.querySelector('input[name="color_background"]').value =
-          preset.bg;
-        document.querySelector('input[name="color_text"]').value = preset.text;
-        document.querySelector('input[name="color_header"]').value =
-          preset.header;
-
-        applyChanges(); // Trigger sync
-      };
-
-      // MAIN UPDATE FUNCTION
-      const applyChanges = () => {
-        // Ensure we have the container
-        if (!previewContainer)
-          previewContainer = document.querySelector(".store-template-wrapper");
-        if (!previewContainer) return;
-
-        const formData = new FormData(form);
-        const data = Object.fromEntries(formData.entries());
-
-        // 1. URL Sync (FIXED)
-        if (data.store_url_slug !== undefined) {
-          const slug = data.store_url_slug
-            .trim()
-            .toLowerCase()
-            .replace(/[^a-z0-9-]/g, "-");
-          browserUrl.textContent = slug
-            ? `panchasara.com/${slug}`
-            : "panchasara.com/your-store";
-        }
-
-        // 2. CSS Variables Sync (FIXED)
-        for (const [key, cssVar] of Object.entries(cssVarMappings)) {
-          if (data[key]) {
-            previewContainer.style.setProperty(cssVar, data[key]);
+            )
           }
-        }
 
-        // 3. Fonts & Layout Sync (FIXED)
-        if (data.font_preset)
-          previewContainer.setAttribute("data-font-preset", data.font_preset);
-        if (data.vibe_preset)
-          previewContainer.setAttribute("data-layout", data.vibe_preset);
+          <SetupBasics initialStore={initialStore} errors={errors} />
+          <SetupBrand initialStore={initialStore} errors={errors} />
+          <SetupVisual
+            previewTheme={previewTheme}
+            previewFonts={previewFonts}
+            errors={errors}
+          />
+          <SetupContact initialStore={initialStore} errors={errors} />
+        </form>
+      </div>
 
-        // 4. Text Sync
-        for (const [name, selectorList] of Object.entries(textMappings)) {
-          if (data[name]) {
-            const selectors = Array.isArray(selectorList)
-              ? selectorList
-              : [selectorList];
-            selectors.forEach((s) => {
-              document
-                .querySelectorAll(s)
-                .forEach((el) => (el.textContent = data[name]));
-            });
-          }
-        }
+      <SetupFooter isEditMode={isEditMode} />
+    </aside>
 
-        // 5. Visibility Sync
-        toggleVisibility(
-          ".footer-email-link",
-          form.querySelector('[name="show_email"]').checked,
-        );
-        toggleVisibility(
-          ".footer-whatsapp-link",
-          form.querySelector('[name="show_whatsapp"]').checked,
-        );
-        toggleVisibility(
-          ".footer-insta-link",
-          form.querySelector('[name="show_instagram"]').checked,
-        );
-        toggleVisibility(
-          ".footer-fb-link",
-          form.querySelector('[name="show_facebook"]').checked,
-        );
-        const addressVal = data.store_address ? data.store_address.trim() : "";
-        toggleVisibility(".footer-address-link", addressVal.length > 0);
+    <SetupPreview
+      initialStore={initialStore}
+      previewTheme={previewTheme}
+      previewFonts={previewFonts}
+      previewProducts={previewProducts}
+    />
+  </div>
 
-        // 6. Broadcast
-        broadcast.postMessage({ type: "UPDATE_STORE", payload: data });
-      };
-
-      form.addEventListener("input", (e) => {
-        const input = e.target;
-        if (input.name === "vibe_preset" && vibes[input.value]) {
-          updateColorInputs(vibes[input.value]);
-        } else {
-          applyChanges();
-        }
-      });
-
-      // --- LOGO HANDLING ---
-      const logoInput = form.querySelector('input[name="logo"]');
-      logoInput.addEventListener("change", (e) => {
-        const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            const result = e.target.result;
-            document.querySelectorAll(".store-template-logo").forEach((img) => {
-              img.src = result;
-              img.style.display = "block";
-            });
-            document
-              .querySelectorAll(".store-logo-initial")
-              .forEach((el) => (el.style.display = "none"));
-
-            broadcast.postMessage({ type: "UPDATE_LOGO", payload: result });
-          };
-          reader.readAsDataURL(file);
-        }
-      });
-
-      // --- OPEN NEW TAB ---
-      const openPreviewBtn = document.getElementById("open-preview-btn");
-      openPreviewBtn.addEventListener("click", () => {
-        if (!previewContainer)
-          previewContainer = document.querySelector(".store-template-wrapper");
-        const formData = new FormData(form);
-        const data = Object.fromEntries(formData.entries());
-
-        // Add Computed Styles for perfect match
-        const computed = getComputedStyle(previewContainer);
-        data.cssVars = {
-          "--theme-brand": computed.getPropertyValue("--theme-brand"),
-          "--theme-accent": computed.getPropertyValue("--theme-accent"),
-          "--theme-page": computed.getPropertyValue("--theme-page"),
-          "--theme-ink": computed.getPropertyValue("--theme-ink"),
-          "--theme-header-bg": computed.getPropertyValue("--theme-header-bg"),
-        };
-
-        const logoImg = document.querySelector(".store-template-logo");
-        if (logoImg && logoImg.src && logoImg.style.display !== "none") {
-          data.logoSrc = logoImg.src;
-        }
-
-        sessionStorage.setItem("panchasara_preview_data", JSON.stringify(data));
-        window.open("/preview", "_blank");
-      });
-
-      // --- TOGGLES ---
-      const advToggle = document.getElementById("toggle-advanced");
-      advToggle.addEventListener("click", () =>
-        document.getElementById("advanced-options").classList.toggle("open"),
-      );
-
-      const btnEdit = document.getElementById("tab-edit");
-      const btnPreview = document.getElementById("tab-preview");
-      const body = document.getElementById("app-body");
-
-      btnEdit.addEventListener("click", () => {
-        body.classList.remove("mobile-view-preview");
-        body.classList.add("mobile-view-editor");
-        btnEdit.classList.add("bg-white", "shadow-sm", "text-primary");
-        btnEdit.classList.remove("text-slate-500");
-        btnPreview.classList.remove("bg-white", "shadow-sm", "text-primary");
-        btnPreview.classList.add("text-slate-500");
-      });
-
-      btnPreview.addEventListener("click", () => {
-        body.classList.remove("mobile-view-editor");
-        body.classList.add("mobile-view-preview");
-        btnPreview.classList.add("bg-white", "shadow-sm", "text-primary");
-        btnPreview.classList.remove("text-slate-500");
-        btnEdit.classList.remove("bg-white", "shadow-sm", "text-primary");
-        btnEdit.classList.add("text-slate-500");
-      });
-    </script>
-  </body>
-</html>
+  <SetupScripts />
+</SetupLayout>

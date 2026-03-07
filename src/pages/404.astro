@@ -1,0 +1,122 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/landing/Navbar.astro";
+import Footer from "../components/landing/Footer.astro";
+---
+
+<Layout title="404 - Page Not Found | Panchasara">
+    <Navbar />
+
+    <main
+        class="min-h-[80vh] flex items-center justify-center px-6 pt-32 pb-20 relative overflow-hidden"
+    >
+        <!-- Background Blobs -->
+        <div
+            class="absolute -top-24 -left-24 w-96 h-96 bg-primary/10 rounded-full blur-3xl -z-10 animate-pulse"
+        >
+        </div>
+        <div
+            class="absolute -bottom-24 -right-24 w-96 h-96 bg-orange-200/20 rounded-full blur-3xl -z-10"
+            style="animation-delay: 2s;"
+        >
+        </div>
+
+        <div class="max-w-2xl w-full text-center relative z-10">
+            <!-- Animated 404 Text -->
+            <h1
+                class="text-[12rem] md:text-[16rem] font-display font-black leading-none tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-primary to-orange-600/20 mb-4 select-none animate-bounce-subtle"
+            >
+                404
+            </h1>
+
+            <div class="space-y-6">
+                <h2
+                    class="text-4xl md:text-5xl font-display font-bold text-slate-900 dark:text-white"
+                >
+                    Oops! Out of stock.
+                </h2>
+                <p
+                    class="text-xl text-slate-600 dark:text-slate-400 max-w-md mx-auto leading-relaxed"
+                >
+                    The page you're looking for seems to have disappeared from
+                    our studio. Don't worry, even the best makers lose track of
+                    things sometimes.
+                </p>
+
+                <div
+                    class="pt-8 flex flex-col sm:flex-row items-center justify-center gap-4"
+                >
+                    <a
+                        href="/"
+                        class="px-8 py-4 bg-primary text-white font-bold rounded-full hover:shadow-xl hover:shadow-orange-500/30 hover:-translate-y-1 transition-all duration-300 flex items-center gap-2 group"
+                    >
+                        <span
+                            class="material-symbols-rounded group-hover:-translate-x-1 transition-transform"
+                            >arrow_back</span
+                        >
+                        Back to Home
+                    </a>
+                    <a
+                        href="/track"
+                        class="px-8 py-4 bg-white dark:bg-neutral-900 text-slate-900 dark:text-white border border-slate-200 dark:border-neutral-800 font-bold rounded-full hover:bg-slate-50 dark:hover:bg-neutral-800 transition-all"
+                    >
+                        Track an Order
+                    </a>
+                </div>
+            </div>
+
+            <!-- Floating Maker Icons -->
+            <div class="hidden lg:block">
+                <span
+                    class="material-symbols-rounded absolute -top-10 -left-10 text-6xl text-primary/20 animate-float"
+                    >palette</span
+                >
+                <span
+                    class="material-symbols-rounded absolute top-40 -right-20 text-5xl text-orange-400/20 animate-float"
+                    style="animation-delay: 1s;">bakery_dining</span
+                >
+                <span
+                    class="material-symbols-rounded absolute -bottom-20 left-20 text-4xl text-primary/30 animate-float"
+                    style="animation-delay: 2s;">diamond</span
+                >
+                <span
+                    class="material-symbols-rounded absolute top-0 right-0 text-7xl text-orange-500/10 animate-float"
+                    style="animation-delay: 1.5s;">cake</span
+                >
+            </div>
+        </div>
+    </main>
+
+    <Footer />
+</Layout>
+
+<style>
+    @keyframes bounce-subtle {
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+    .animate-bounce-subtle {
+        animation: bounce-subtle 4s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0%,
+        100% {
+            transform: translate(0, 0) rotate(0deg);
+        }
+        33% {
+            transform: translate(10px, -15px) rotate(5deg);
+        }
+        66% {
+            transform: translate(-5px, 10px) rotate(-5deg);
+        }
+    }
+    .animate-float {
+        animation: float 6s ease-in-out infinite;
+    }
+</style>

@@ -11,37 +11,53 @@ const { data: store, error } = await supabase
   .from("stores")
   .select("*")
   .eq("store_url_slug", slug)
-  .eq("status", "active")
   .single();
 
 // Handle not found
-if (error || !store) {
-  return new Response("Store not found", { status: 404 });
+if (
+  error ||
+  !store ||
+  store.status === "deleted" ||
+  store.status === "suspended"
+) {
+  return Astro.redirect("/404");
 }
 
-// Theme mapping (adapt if needed)
-const theme = store.theme || {};
+// Handle Maintenance/Draft Mode
+const isMaintenance = store.status === "draft";
 
-// Fetch products for this store
+// Theme mapping (adapt if needed)
+const storeTheme = store.theme || {};
+const colors = storeTheme.colors || storeTheme;
+const fonts = storeTheme.fonts || {};
+
+// Fetch products for this store (initial page)
+const PAGE_SIZE = 24;
 const { data: productsData, error: productsError } = await supabase
   .from("products")
   .select("*")
   .eq("store_id", store.id)
-  .eq("is_in_stock", true)
-  .order("created_at", { ascending: false });
+  .eq("status", "active")
+  .order("created_at", { ascending: false })
+  .range(0, PAGE_SIZE - 1);
 
 const products = (productsData || []).map((p) => ({
   id: p.id,
   name: p.name,
   price: p.price,
-  image:
+  images:
     p.images && p.images.length > 0
-      ? p.images[0]
-      : "https://placehold.co/600x400?text=No+Image",
+      ? p.images
+      : ["https://placehold.co/600x400?text=No+Image"],
   description: p.description,
   full_details: p.description, // Using description as full_details for now
   product_notice: p.product_notice,
   accepts_custom_note: p.accepts_custom_note,
+  category: p.category,
+  stock_quantity: p.stock_quantity,
+  min_stock_level: p.min_stock_level,
+  is_in_stock: p.is_in_stock,
+  track_inventory: p.track_inventory,
 }));
 ---
 
@@ -55,7 +71,7 @@ const products = (productsData || []).map((p) => ({
       content={store.store_tagline || store.store_name}
     />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" href="/favicon.ico" />
+    <link rel="icon" href={store.logo_url || "/favicon.svg"} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -69,30 +85,159 @@ const products = (productsData || []).map((p) => ({
   </head>
 
   <body>
-    <StoreTemplate
-      store={{
-        id: store.id,
-        name: store.store_name,
-        tagline: store.store_tagline,
-        about: store.about_us,
+    {
+      isMaintenance ? (
+        <div class="maintenance-container">
+          <div class="maintenance-card glass-effect animate-fade-in">
+            <div class="logo-wrapper">
+              {store.logo_url ? (
+                <img src={store.logo_url} alt="Logo" class="m-logo" />
+              ) : (
+                <span class="m-icon">🏪</span>
+              )}
+            </div>
+            <h1 class="m-title">{store.store_name}</h1>
+            <div class="m-divider" />
+            <p class="m-message">
+              We're currently polishing few things. Please check back soon!
+            </p>
+            <div class="m-tagline">
+              “{store.store_tagline || "Coming Soon"}”
+            </div>
 
-        logo: store.logo_url,
+            <div class="m-footer">
+              <p>Powered by Panchasara</p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <StoreTemplate
+          store={{
+            id: store.id,
+            name: store.store_name,
+            tagline: store.store_tagline,
+            about: store.about_us,
 
-        address: store.store_address,
-        contact_email: store.contact_email,
+            logo: store.logo_url,
 
-        whatsapp_number: store.whatsapp_number,
-        instagram_url: store.instagram_url,
-        facebook_url: store.facebook_url,
+            address: store.store_address,
+            contact_email: store.contact_email,
 
-        show_email: store.show_email,
-        show_whatsapp: store.show_whatsapp,
-        show_instagram: store.show_instagram,
-        show_facebook: store.show_facebook,
-      }}
-      theme={store.theme}
-      products={products}
-      isPreview={false}
-    />
+            whatsapp_number: store.whatsapp_number,
+            instagram_url: store.instagram_url,
+            facebook_url: store.facebook_url,
+
+            show_email: store.show_email,
+            show_whatsapp: store.show_whatsapp,
+            show_instagram: store.show_instagram,
+            show_facebook: store.show_facebook,
+            allows_delivery: store.allows_delivery,
+            allows_pickup: store.allows_pickup,
+            payment_methods: store.payment_methods,
+            delivery_fee: store.delivery_fee,
+            blackout_dates: store.blackout_dates,
+            operating_hours: store.operating_hours,
+          }}
+          theme={colors}
+          font={fonts.heading}
+          layout={store.layout_preset || fonts.body}
+          products={products}
+          isPreview={false}
+        />
+      )
+    }
+
+    <style is:inline>
+      .maintenance-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(circle at top right, #fff5eb, #ffffff);
+        font-family: "Inter", sans-serif;
+        padding: 2rem;
+      }
+      .maintenance-card {
+        max-width: 480px;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        padding: 3rem;
+        border-radius: 2rem;
+        text-align: center;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
+      }
+      .logo-wrapper {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1.5rem;
+        background: white;
+        border-radius: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+      }
+      .m-logo {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        padding: 0.5rem;
+      }
+      .m-icon {
+        font-size: 2.5rem;
+      }
+      .m-title {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #1a1a1a;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.02em;
+      }
+      .m-divider {
+        width: 40px;
+        height: 3px;
+        background: #ff9d42;
+        margin: 1.5rem auto;
+        border-radius: 10px;
+      }
+      .m-message {
+        font-size: 1rem;
+        color: #666;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+      }
+      .m-tagline {
+        font-style: italic;
+        color: #ff9d42;
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+      .m-footer {
+        margin-top: 3rem;
+        font-size: 0.75rem;
+        color: #999;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+
+      .animate-fade-in {
+        animation: fadeIn 0.8s ease-out;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
   </body>
 </html>

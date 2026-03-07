@@ -1,0 +1,348 @@
+<script>
+    // Ensure we select existing DOM elements
+    const form = document.querySelector(".store-form") as HTMLFormElement;
+    let previewContainer = document.querySelector(
+        ".store-template-wrapper",
+    ) as HTMLElement;
+    const browserUrl = document.querySelector(".browser-url");
+    const broadcast = new BroadcastChannel("panchasara_preview_sync");
+
+    // Layout Presets
+    const layouts = {
+        natural: {
+            primary: "#5D4037",
+            secondary: "#8D6E63",
+            bg: "#EFEBE9",
+            text: "#3E2723",
+            header: "#EFEBE9",
+        },
+        gallery: {
+            primary: "#000000",
+            secondary: "#616161",
+            bg: "#FFFFFF",
+            text: "#212121",
+            header: "#FFFFFF",
+        },
+        pop: {
+            primary: "#E91E63",
+            secondary: "#FF80AB",
+            bg: "#FFF0F5",
+            text: "#880E4F",
+            header: "#FFF0F5",
+        },
+    };
+
+    const textMappings = {
+        store_name: [".store-template-name", ".store-template-name-footer"],
+        store_tagline: ".store-template-tagline",
+        about_us: ".store-template-about",
+        store_address: ".footer-address-text",
+        contact_email: ".footer-email-text",
+        whatsapp_number: ".footer-whatsapp-text",
+    };
+
+    const cssVarMappings = {
+        color_primary: "--theme-brand",
+        color_secondary: "--theme-accent",
+        color_background: "--theme-page",
+        color_text: "--theme-ink",
+        color_header: "--theme-header-bg",
+    };
+
+    const toggleVisibility = (selector: string, isVisible: boolean) => {
+        const el = document.querySelector(selector) as HTMLElement;
+        if (el) el.style.display = isVisible ? "flex" : "none";
+    };
+
+    const updateColorInputs = (preset: any) => {
+        (
+            document.querySelector(
+                'input[name="color_primary"]',
+            ) as HTMLInputElement
+        ).value = preset.primary;
+        (
+            document.querySelector(
+                'input[name="color_secondary"]',
+            ) as HTMLInputElement
+        ).value = preset.secondary;
+        (
+            document.querySelector(
+                'input[name="color_background"]',
+            ) as HTMLInputElement
+        ).value = preset.bg;
+        (
+            document.querySelector(
+                'input[name="color_text"]',
+            ) as HTMLInputElement
+        ).value = preset.text;
+        (
+            document.querySelector(
+                'input[name="color_header"]',
+            ) as HTMLInputElement
+        ).value = preset.header;
+
+        applyChanges(); // Trigger sync
+    };
+
+    // MAIN UPDATE FUNCTION
+    const applyChanges = () => {
+        if (!previewContainer)
+            previewContainer = document.querySelector(
+                ".store-template-wrapper",
+            ) as HTMLElement;
+        if (!previewContainer) return;
+
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries()) as any;
+
+        // 1. URL Sync
+        if (data.store_url_slug !== undefined) {
+            const slug = data.store_url_slug
+                .trim()
+                .toLowerCase()
+                .replace(/[^a-z0-9-]/g, "-");
+            if (browserUrl) {
+                browserUrl.textContent = slug
+                    ? `panchasara.com/${slug}`
+                    : "panchasara.com/your-store";
+            }
+        }
+
+        // 2. CSS Variables Sync
+        for (const [key, cssVar] of Object.entries(cssVarMappings)) {
+            if (data[key]) {
+                previewContainer.style.setProperty(cssVar, data[key]);
+            }
+        }
+
+        // 3. Fonts & Layout Sync
+        if (data.font_preset)
+            previewContainer.setAttribute("data-font-preset", data.font_preset);
+        if (data.layout_preset)
+            previewContainer.setAttribute("data-layout", data.layout_preset);
+
+        // 4. Text Sync
+        for (const [name, selectorList] of Object.entries(textMappings)) {
+            if (data[name]) {
+                const selectors = Array.isArray(selectorList)
+                    ? selectorList
+                    : [selectorList];
+                selectors.forEach((s) => {
+                    document
+                        .querySelectorAll(s)
+                        .forEach((el) => (el.textContent = data[name]));
+                });
+            }
+        }
+
+        // 5. Visibility Sync
+        toggleVisibility(
+            ".footer-email-link",
+            (form.querySelector('[name="show_email"]') as HTMLInputElement)
+                .checked,
+        );
+        toggleVisibility(
+            ".footer-whatsapp-link",
+            (form.querySelector('[name="show_whatsapp"]') as HTMLInputElement)
+                .checked,
+        );
+        toggleVisibility(
+            ".footer-insta-link",
+            (form.querySelector('[name="show_instagram"]') as HTMLInputElement)
+                .checked,
+        );
+        toggleVisibility(
+            ".footer-fb-link",
+            (form.querySelector('[name="show_facebook"]') as HTMLInputElement)
+                .checked,
+        );
+        const addressVal = data.store_address ? data.store_address.trim() : "";
+        toggleVisibility(".footer-address-link", addressVal.length > 0);
+
+        // 6. Broadcast
+        broadcast.postMessage({ type: "UPDATE_STORE", payload: data });
+    };
+
+    // CONDITIONAL VALIDATION HANDLER
+    const updateSocialValidation = () => {
+        const fields = [
+            {
+                name: "show_email",
+                inputId: "contact_email_input",
+                hintId: null,
+                pattern: null,
+                type: "email",
+            },
+            {
+                name: "show_whatsapp",
+                inputId: "whatsapp_number_input",
+                hintId: "whatsapp_hint",
+                pattern: null,
+                type: "tel",
+            },
+            {
+                name: "show_instagram",
+                inputId: "instagram_url_input",
+                hintId: "instagram_hint",
+                pattern: "^https?://(www\\.)?instagram\\.com/[a-zA-Z0-9._]+/?$",
+                type: "url",
+            },
+            {
+                name: "show_facebook",
+                inputId: "facebook_url_input",
+                hintId: "facebook_hint",
+                pattern: "^https?://(www\\.)?facebook\\.com/[a-zA-Z0-9.]+/?$",
+                type: "url",
+            },
+        ];
+
+        fields.forEach((field) => {
+            const toggle = form.querySelector(
+                `[name="${field.name}"]`,
+            ) as HTMLInputElement;
+            const input = document.getElementById(
+                field.inputId,
+            ) as HTMLInputElement;
+            const hint = field.hintId
+                ? document.getElementById(field.hintId)
+                : null;
+
+            if (input && toggle) {
+                if (toggle.checked) {
+                    input.type = field.type;
+                    if (field.pattern)
+                        input.setAttribute("pattern", field.pattern);
+                    input.classList.remove("opacity-30", "grayscale-[0.5]");
+                    if (hint) hint.style.opacity = "1";
+                } else {
+                    // When OFF, we turn it into type="text" and remove pattern so it doesn't block submission
+                    input.type = "text";
+                    input.removeAttribute("pattern");
+                    input.classList.add("opacity-30", "grayscale-[0.5]");
+                    if (hint) hint.style.opacity = "0.3";
+                }
+            }
+        });
+    };
+
+    // Initial check
+    updateSocialValidation();
+
+    form?.addEventListener("input", (e) => {
+        const input = e.target as HTMLInputElement;
+        if (
+            input.name === "layout_preset" &&
+            layouts[input.value as keyof typeof layouts]
+        ) {
+            updateColorInputs(layouts[input.value as keyof typeof layouts]);
+        } else if (input.name.startsWith("show_")) {
+            updateSocialValidation();
+            applyChanges();
+        } else {
+            applyChanges();
+        }
+    });
+
+    form?.addEventListener("change", (e) => {
+        const input = e.target as HTMLInputElement;
+        if (input.name.startsWith("show_")) {
+            updateSocialValidation();
+            applyChanges();
+        }
+    });
+
+    // --- LOGO HANDLING ---
+    const logoInput = form?.querySelector('input[name="logo"]');
+    logoInput?.addEventListener("change", (e: any) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e: any) => {
+                const result = e.target.result;
+                document
+                    .querySelectorAll(".store-template-logo")
+                    .forEach((img: any) => {
+                        img.src = result;
+                        img.style.display = "block";
+                    });
+                document
+                    .querySelectorAll(".store-logo-initial")
+                    .forEach((el: any) => (el.style.display = "none"));
+                broadcast.postMessage({ type: "UPDATE_LOGO", payload: result });
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // --- OPEN NEW TAB ---
+    const openPreviewBtn = document.getElementById("open-preview-btn");
+    openPreviewBtn?.addEventListener("click", () => {
+        if (!previewContainer)
+            previewContainer = document.querySelector(
+                ".store-template-wrapper",
+            ) as HTMLElement;
+
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries()) as any;
+
+        data.show_email = (
+            form.querySelector('[name="show_email"]') as HTMLInputElement
+        ).checked;
+        data.show_whatsapp = (
+            form.querySelector('[name="show_whatsapp"]') as HTMLInputElement
+        ).checked;
+        data.show_instagram = (
+            form.querySelector('[name="show_instagram"]') as HTMLInputElement
+        ).checked;
+        data.show_facebook = (
+            form.querySelector('[name="show_facebook"]') as HTMLInputElement
+        ).checked;
+
+        const computed = getComputedStyle(previewContainer);
+        data.cssVars = {
+            "--theme-brand": computed.getPropertyValue("--theme-brand"),
+            "--theme-accent": computed.getPropertyValue("--theme-accent"),
+            "--theme-page": computed.getPropertyValue("--theme-page"),
+            "--theme-ink": computed.getPropertyValue("--theme-ink"),
+            "--theme-header-bg": computed.getPropertyValue("--theme-header-bg"),
+        };
+
+        const logoImg = document.querySelector(
+            ".store-template-logo",
+        ) as HTMLImageElement;
+        if (logoImg && logoImg.src && logoImg.style.display !== "none") {
+            data.logoSrc = logoImg.src;
+        }
+
+        sessionStorage.setItem("panchasara_preview_data", JSON.stringify(data));
+        window.open("/preview", "_blank");
+    });
+
+    // --- TOGGLES ---
+    const advToggle = document.getElementById("toggle-advanced");
+    advToggle?.addEventListener("click", () =>
+        document.getElementById("advanced-options")?.classList.toggle("open"),
+    );
+
+    const btnEdit = document.getElementById("tab-edit");
+    const btnPreview = document.getElementById("tab-preview");
+    const body = document.getElementById("app-body");
+
+    btnEdit?.addEventListener("click", () => {
+        body?.classList.remove("mobile-view-preview");
+        body?.classList.add("mobile-view-editor");
+        btnEdit.classList.add("bg-white", "shadow-sm", "text-primary");
+        btnEdit.classList.remove("text-slate-500");
+        btnPreview?.classList.remove("bg-white", "shadow-sm", "text-primary");
+        btnPreview?.classList.add("text-slate-500");
+    });
+
+    btnPreview?.addEventListener("click", () => {
+        body?.classList.remove("mobile-view-editor");
+        body?.classList.add("mobile-view-preview");
+        btnPreview.classList.add("bg-white", "shadow-sm", "text-primary");
+        btnPreview.classList.remove("text-slate-500");
+        btnEdit?.classList.remove("bg-white", "shadow-sm", "text-primary");
+        btnEdit?.classList.add("text-slate-500");
+    });
+</script>

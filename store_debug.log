@@ -1,0 +1,26 @@
+[2026-02-12T10:35:05.862Z] [Middleware] Request: http://localhost:4321/login
+[2026-02-12T10:35:05.862Z] [Middleware] Cookie found for sb-auth-token: true
+[2026-02-12T10:35:05.862Z] [Middleware] Decoded cookie length: 2144
+[2026-02-12T10:35:05.863Z] [Middleware] Attempting to set session...
+[2026-02-12T10:35:05.863Z] [Middleware] Request: http://localhost:4321/alen-crochets
+[2026-02-12T10:35:05.864Z] [Middleware] Cookie found for sb-auth-token: true
+[2026-02-12T10:35:05.864Z] [Middleware] Decoded cookie length: 2144
+[2026-02-12T10:35:05.864Z] [Middleware] Attempting to set session...
+[2026-02-12T10:35:06.705Z] [Middleware] Session set successfully
+[2026-02-12T10:35:06.716Z] [Middleware] Session set successfully
+[2026-02-12T10:35:06.717Z] [Middleware] Locals.user set: false (ID: undefined)
+[2026-02-12T10:35:06.717Z] [Middleware] getUser Error: Auth session missing!
+[2026-02-12T10:35:06.717Z] [Middleware] Locals.user set: false (ID: undefined)
+[2026-02-12T10:35:06.718Z] [Middleware] getUser Error: Auth session missing!
+[2026-02-12T10:37:23.804Z] [Middleware] Request: http://localhost:4321/login
+[2026-02-12T10:37:23.805Z] [Middleware] Cookie found for sb-auth-token: true
+[2026-02-12T10:37:23.805Z] [Middleware] Decoded cookie length: 2144
+[2026-02-12T10:37:23.806Z] [Middleware] Attempting to set session...
+[2026-02-12T10:37:23.806Z] [Middleware] Request: http://localhost:4321/alen-crochets
+[2026-02-12T10:37:23.807Z] [Middleware] Cookie found for sb-auth-token: true
+[2026-02-12T10:37:23.808Z] [Middleware] Decoded cookie length: 2144
+[2026-02-12T10:37:23.808Z] [Middleware] Attempting to set session...
+[2026-02-12T10:37:24.249Z] [Middleware] Session set successfully
+[2026-02-12T10:37:24.254Z] [Middleware] Session set successfully
+[2026-02-12T10:37:24.300Z] [Middleware] Locals.user set: true (ID: d0b31188-aa73-4af0-a53c-9bc2f0376cfd)
+[2026-02-12T10:37:24.337Z] [Middleware] Locals.user set: true (ID: d0b31188-aa73-4af0-a53c-9bc2f0376cfd)
