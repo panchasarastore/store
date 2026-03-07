@@ -755,4 +755,23 @@ const { safeStore } = Astro.props;
             order: -1;
         }
     }
+
+    @media (max-width: 600px) {
+        .checkout-header {
+            padding: 1rem;
+        }
+        .checkout-container {
+            padding: 1rem;
+        }
+        .step-header {
+            padding: 1rem;
+        }
+        .step-content {
+            padding: 1rem;
+        }
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+    }
 </style>

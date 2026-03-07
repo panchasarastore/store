@@ -13,7 +13,9 @@ await requireAuth(Astro);
 
 // If user already has a store → go straight to dashboard
 if (await hasStore()) {
-  return Astro.redirect("http://localhost:8080");
+  const DASHBOARD_URL =
+    import.meta.env.PUBLIC_DASHBOARD_URL || "http://localhost:8080";
+  return Astro.redirect(`${DASHBOARD_URL}/login`);
 }
 
 let error = "";
@@ -68,8 +70,9 @@ if (Astro.request.method === "POST") {
     await createStore(storeData);
 
     // ✅ FINAL STEP: redirect to React dashboard
-    return Astro.redirect("http://localhost:8080");
-
+    const DASHBOARD_URL =
+      import.meta.env.PUBLIC_DASHBOARD_URL || "http://localhost:8080";
+    return Astro.redirect(`${DASHBOARD_URL}/login`);
   } catch (e) {
     error = e instanceof Error ? e.message : "Something went wrong";
   }
@@ -628,9 +631,13 @@ const previewProducts = [];
                 <h2 class="font-display font-bold text-lg">Contact</h2>
               </div>
 
-              <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
+              <div
+                class="p-4 rounded-xl border border-slate-100 bg-slate-50/50"
+              >
                 <div class="flex justify-between items-center mb-2">
-                  <span class="text-xs font-bold text-slate-500 uppercase">Location</span>
+                  <span class="text-xs font-bold text-slate-500 uppercase"
+                    >Location</span
+                  >
                 </div>
                 <input
                   type="text"
